@@ -1,0 +1,15 @@
+@baseUrl = http://localhost:3020
+
+### Health check
+GET {{baseUrl}}/health
+
+### API ping
+GET {{baseUrl}}/api/ping
+
+### Send a log from the frontend
+POST {{baseUrl}}/front-logs/
+Content-Type: application/json
+
+{
+  "frontLog": "Test log from frontend"
+}
