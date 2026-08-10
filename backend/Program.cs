@@ -4,6 +4,7 @@ using backend;
 using backend_csharp.Controllers;
 using backend_csharp.Endpoints;
 using backend.Data;
+using backend_csharp.data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,7 @@ builder.Services.AddCors( options =>
 
 var connString  = builder.Configuration.GetConnectionString("MyTurn");
 builder.Services.AddSqlite<MyTurnContext>(connString);
+builder.Services.AddSqlite<UserContext>(connString);
 
 var app = builder.Build();
 
