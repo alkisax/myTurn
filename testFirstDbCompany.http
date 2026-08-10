@@ -1,0 +1,34 @@
+@baseUrl = http://localhost:3020
+
+### Get all companies
+GET {{baseUrl}}/companies
+
+###
+
+### Get company by id
+GET {{baseUrl}}/companies/1
+
+###
+
+### Create company
+POST {{baseUrl}}/companies
+Content-Type: application/json
+
+{
+  "name": "Test Company"
+}
+
+###
+
+### Update company
+PUT {{baseUrl}}/companies/1
+Content-Type: application/json
+
+{
+  "name": "Updated Company"
+}
+
+###
+
+### Delete company
+DELETE {{baseUrl}}/companies/2

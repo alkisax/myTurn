@@ -1,13 +1,17 @@
 // backend\Program.cs
 
+using backend;
 using backend_csharp.Controllers;
 using backend_csharp.Endpoints;
+using backend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // για να βάζω [required] etc
 builder.Services.AddValidation();
 builder.Services.AddScoped<LogController>();
+builder.Services.AddScoped<CompanyDao>();
+builder.Services.AddScoped<CompanyController>();
 
 builder.Services.AddCors( options =>
 {
@@ -23,8 +27,12 @@ builder.Services.AddCors( options =>
   });
 });
 
+var connString  = builder.Configuration.GetConnectionString("MyTurn");
+builder.Services.AddSqlite<MyTurnContext>(connString);
+
 var app = builder.Build();
 
+app.MigrateDb();
 // για να κάνουμε server τα static pages που έχω στο wwwroot
 app.UseStaticFiles();
 
@@ -36,6 +44,7 @@ app.MapGet("/api/ping", () =>
   return "Pong";
 });
 app.MapFrontLogEndpoints();
+app.MapCompanyEndpoints();
 
 app.Urls.Add("http://localhost:3020");
 app.Run();

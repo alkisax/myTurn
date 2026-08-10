@@ -158,3 +158,5 @@ local.properties
 release-key.keystore
 gradle.properties
 android_old
+
+context7-api-key.md
