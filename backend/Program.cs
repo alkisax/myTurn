@@ -3,8 +3,11 @@
 using backend;
 using backend_csharp.Controllers;
 using backend_csharp.Endpoints;
-using backend.Data;
-using backend_csharp.data;
+using backend.auth.Extensions;
+using backend.auth.Services;
+using backend.auth.Controllers;
+using backend.auth.Daos;
+using backend.auth.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +16,12 @@ builder.Services.AddValidation();
 builder.Services.AddScoped<LogController>();
 builder.Services.AddScoped<CompanyDao>();
 builder.Services.AddScoped<CompanyController>();
+builder.Services.AddScoped<UserDao>();
+builder.Services.AddScoped<UserController>();
+builder.Services.AddScoped<AuthController>();
+builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddJwtAuth(builder.Configuration);
 
 builder.Services.AddCors( options =>
 {
@@ -30,9 +39,9 @@ builder.Services.AddCors( options =>
 
 var connString  = builder.Configuration.GetConnectionString("MyTurn");
 builder.Services.AddSqlite<MyTurnContext>(connString);
-builder.Services.AddSqlite<UserContext>(connString);
 
 var app = builder.Build();
+app.UseCors("AllowedFrontend");
 
 app.MigrateDb();
 // για να κάνουμε server τα static pages που έχω στο wwwroot
@@ -47,6 +56,12 @@ app.MapGet("/api/ping", () =>
 });
 app.MapFrontLogEndpoints();
 app.MapCompanyEndpoints();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapUsersEndpoints();
+app.MapAuthEndpoints();
 
 app.Urls.Add("http://localhost:3020");
 app.Run();

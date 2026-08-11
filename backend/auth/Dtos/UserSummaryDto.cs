@@ -1,12 +1,13 @@
 // backend\auth\Dtos\UserSummaryDto.cs
-namespace backend_csharp.Dtos;
+namespace backend.auth.Dtos;
 
+// δεν στέλνει καθόλου password (ούτε Plain Ούτε hashed)
 public record UserSummaryDto(
   int Id,
   string Username,
   string? Name,
   string? Email,
   string Role,
-  string? CreatedAt,
-  string? UpdatedAt
+  DateTime CreatedAt,
+  DateTime  UpdatedAt
 );

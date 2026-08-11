@@ -1,6 +1,8 @@
 // backend\auth\Dtos\LoginUserDto.cs
-namespace backend_csharp.Dtos;
+using System.ComponentModel.DataAnnotations;
+namespace backend.auth.Dtos;
 
+// μόνο username password
 public record class LoginUserDto
 (
   [Required]

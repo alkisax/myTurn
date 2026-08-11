@@ -1,8 +1,7 @@
 // backend\auth\Dtos\UpdateRoleDto.cs
-using backend_csharp.Models;
+namespace backend.auth.Dtos;
 
-namespace backend_csharp.Dtos;
-
+// η αλλαγή του να είναι self or admin protected
 public record class UpdateRoleDto
 (
   string Role

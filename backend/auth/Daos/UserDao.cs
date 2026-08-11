@@ -1,41 +1,44 @@
 // backend\auth\Daos\UserDao.cs
-using backend_csharp.data;
-using backend_csharp.Models;
+using backend.auth.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend_csharp.Dao;
+namespace backend.auth.Daos;
 
 public class UserDao
 {
-  // φτιάχνω μια μεταβλητή που μέσα της θα βάλω την λειτουργικότητα της db. Στο ονομα βάζω _ γιατι ...
-  private readonly UserContext _db;
+  // φτιάχνω μια μεταβλητή που μέσα της θα βάλω την λειτουργικότητα της db. Στο ονομα βάζω _ γιατι είναι convention για τα private fields.
+  private readonly MyTurnContext _db;
 
-  public UserDao(UserContext db)
+  // DI καλό την ίδια την UserDao μεσα στην οποία είμαστε ήδη μεσα. Η UserDao χρειάζεται για να δουλέψει ένα db, δεν το φτιάχνει με new αλλα βλέπει οτι υπάρχει στο περιβάλλον του προγραμματος (είναι δηλωμένο στην program με builder.Services.AddSqlite<MyTurnContext>(connString);)
+  public UserDao(MyTurnContext db)
   {
     _db = db;
   }
 
+  // εδω χρησιμοποιώ παντου type User γιατί αυτο το αρχείο μιλάει με την βάση απευθείας. τον ελεγχο με τα Dto τον κάνω στον controller
+
   // mapper DB → app (εδώ απλά επιστρέφουμε το entity)
   private static User Map(User user) => user;
 
-  // GET ALL
+  // GET ALL → .ToListAsync();
   public async Task<List<User>> GetAll()
   {
     var users = await _db.Users
-      .AsNoTracking()
+      .AsNoTracking() //Φέρε μου τα δεδομένα μόνο για να τα διαβάσω. Μην τα παρακολουθείς για αλλαγές - μια φωτοτυπία της λίστας. Δεν σκοπεύω να την επεξεργαστώ..
       .ToListAsync();
 
+    // Πάρε όλους τους users, πέρασε τον καθένα από τη Map, και ξανακανε τους λίστα. Αλλά επειδή η Map κάνει μόνο: User Map(User user) => user; αυτή η γραμμή είναι ουσιαστικά άχρηστη. Θα μπορούσα απλά: return users;
     return users.Select(Map).ToList();
   }
 
-  // GET BY ID
+  // GET BY ID → .FindAsync(id)
   public async Task<User?> GetById(int id)
   {
     var user = await _db.Users.FindAsync(id);
     return user is null ? null : Map(user);
   }
 
-  // GET BY USERNAME
+  // GET BY USERNAME → .FirstOrDefaultAsync
   public async Task<User?> GetByUsername(string username)
   {
     var user = await _db.Users
@@ -53,7 +56,7 @@ public class UserDao
     return user is null ? null : Map(user);
   }
 
-  // CREATE
+  // CREATE → .Add
   public async Task<User> Create(User user)
   {
     _db.Users.Add(user);
@@ -64,20 +67,22 @@ public class UserDao
   // UPDATE
   public async Task<User?> Update(int id, User updatedData)
   {
+    // πρώτα ψάχνουμε να δούμε αν υπάρχει
     var user = await _db.Users.FindAsync(id);
     if (user is null) return null;
 
-    user.Username = updatedData.Username ?? user.Username;
-    user.Name = updatedData.Name ?? user.Name;
-    user.Email = updatedData.Email ?? user.Email;
-    user.Role = updatedData.Role ?? user.Role;
-    user.HashedPassword = updatedData.HashedPassword ?? user.HashedPassword;
+    user.Username = updatedData.Username;
+    user.Name = updatedData.Name;
+    user.Email = updatedData.Email;
+    user.Role = updatedData.Role;
+    user.HashedPassword = updatedData.HashedPassword;
+    user.UpdatedAt = DateTime.UtcNow;
 
     await _db.SaveChangesAsync();
     return user;
   }
 
-  // DELETE
+  // DELETE → .Remove
   public async Task<User?> Delete(int id)
   {
     var user = await _db.Users.FindAsync(id);

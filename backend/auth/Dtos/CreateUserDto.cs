@@ -1,18 +1,20 @@
-// backend\auth\Dtos\CreateUserDto.csusing System.ComponentModel.DataAnnotations;
+// backend\auth\Dtos\CreateUserDto.cs
+using System.ComponentModel.DataAnnotations;
 
-namespace backend_csharp.Dtos;
+namespace backend.auth.Dtos;
 
+// δεν έχει id, role (είναι αυτόματα user), created at (φτιάχνετε αυτόματα)
+// αλλα έχει plain text password γιατί είναι αυτό που μας στέλνει ο user. δεν θα αποθηκευτεί έτσι ομως. Εδω αυτό είναι μόνο για την μεταφορα κατα την δημιουργία
 public record class CreateUserDto(
-  int Id,
   [Required]
   string Username,
+
   string? Name,
+
   [EmailAddress]
   string? Email,
-  string Role,
+
   [Required]
   [MinLength(6)]
-  string Password,
-  string? CreatedAt,
-  string? UpdatedAt
+  string Password
 );

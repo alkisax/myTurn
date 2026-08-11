@@ -1,8 +1,8 @@
 // backend\auth\Endpoints\UserEndpoint.cs
-using backend_csharp.Controllers;
-using backend_csharp.Dtos;
+using backend.auth.Controllers;
+using backend.auth.Dtos;
 
-namespace backend_csharp.Endpoints;
+namespace backend.auth.Endpoints;
 
 public static class UserEndpoint
 {

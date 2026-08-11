@@ -1,17 +1,17 @@
 // backend\auth\Services\AuthService.cs
 using System.Security.Claims;
-using backend_csharp.Models;
+using backend.auth.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
-namespace backend_csharp.Services;
+namespace backend.auth.Services;
 
 public class AuthService
 {
-  // IConfiguration → διαβάζει config από: - appsettings.json - appsettings.Development.json - environment variables
+  // IConfiguration → διαβάζει config από: - appSettings.json - appSettings.Development.json - environment variables
   // Node: process.env.JWT_SECRET  ← από .env
-  // .NET: _config["JWT_SECRET"]  ← από appsettings ή env vars
+  // .NET: _config["JWT_SECRET"]  ← από appSettings ή env vars
   private readonly IConfiguration _config;
 
   // constructor injection (DI) → το .NET φτιάχνει το AuthService και περνάει το config αυτόματα
@@ -37,7 +37,7 @@ public class AuthService
     }
 
     // το convention στην C# είναι να ονομάζουν claims αυτο που σε js είναι payload
-    var Claims = new[]
+    var claims = new[]
     {
       new Claim("id", user.Id.ToString()),
       new Claim("username", user.Username),
@@ -52,7 +52,7 @@ public class AuthService
     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
     var token = new JwtSecurityToken(
-      claims: Claims,
+      claims: claims,
       expires: DateTime.UtcNow.AddHours(1),
       signingCredentials: creds
     );

@@ -1,10 +1,10 @@
 // backend\auth\Controllers\AuthController.cs
-using backend_csharp.Dao;
-using backend_csharp.Dtos;
-using backend_csharp.Models;
-using backend_csharp.Services;
+using backend.auth.Daos;
+using backend.auth.Dtos;
+using backend.auth.Models;
+using backend.auth.Services;
 
-namespace backend_csharp.Controllers;
+namespace backend.auth.Controllers;
 
 // DI → στο program έχω 
 // builder.Services.AddScoped<UserDao>();

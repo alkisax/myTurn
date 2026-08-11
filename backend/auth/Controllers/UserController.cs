@@ -1,12 +1,13 @@
 // backend\auth\Controllers\UserController.cs
-using backend_csharp.Dao;
-using backend_csharp.Dtos;
-using backend_csharp.Models;
+using backend.auth.Daos;
+using backend.auth.Dtos;
+using backend.auth.Models;
 
-namespace backend_csharp.Controllers;
+namespace backend.auth.Controllers;
 
 public class UserController
 {
+  // DI
   private readonly UserDao _dao;
 
   public UserController(UserDao dao)
@@ -19,6 +20,7 @@ public class UserController
   {
     var users = await _dao.GetAll();
 
+    // UserSummaryDto → δεν στέλνει καθόλου password (ούτε Plain Ούτε hashed)
     var data = users.Select(user => new UserSummaryDto(
       user.Id,
       user.Username,
@@ -68,6 +70,7 @@ public class UserController
   }
 
   // CREATE (με check όπως node)
+  // CreateUserDto → δεν έχει id, role (είναι αυτόματα user), created at (φτιάχνετε αυτόματα) αλλα έχει plain text password γιατί είναι αυτό που μας στέλνει ο user. δεν θα αποθηκευτεί έτσι ομως. Εδω αυτό είναι μόνο για την μεταφορα κατα την δημιουργία
   public async Task<IResult> Create(CreateUserDto newUser)
   {
     // check username exists
@@ -82,6 +85,7 @@ public class UserController
       });
     }
 
+    // ⚠️ δεν αποθηκεύουμε plain text password
     var hashed = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
 
     var user = new User
@@ -89,12 +93,13 @@ public class UserController
       Username = newUser.Username,
       Name = newUser.Name,
       Email = newUser.Email,
-      Role = newUser.Role ?? "USER",
+      Role = "USER", // εδω μπαίνει το role που δεν έρχεται απο το dto. Πάντα πρώτα User και η αλλαγή είναι αναβάθμιση που κάνει ο admin με την  TODO
       HashedPassword = hashed
     };
 
     var created = await _dao.Create(user);
 
+    // UserSummaryDto για την επιστροφή
     var dto = new UserSummaryDto(
       created.Id,
       created.Username,
@@ -105,6 +110,8 @@ public class UserController
       created.UpdatedAt
     );
 
+    // οχι Results.Ok
+    // Ο user δημιουργήθηκε επιτυχώς, γύρνα HTTP 201 Created. Το: $"/users/{created.Id}" βάζει στο response header το πού βρίσκεται ο νέος resource.
     return Results.Created($"/users/{created.Id}", new
     {
       status = true,
@@ -113,6 +120,7 @@ public class UserController
   }
 
   // UPDATE
+  // UpdateUserDto → έχει όλα τα πεδία εκτός απο role γιατι πρέπει η αλλαγή του να είναι self or admin protected και γίνετε με άλλο endpoint update role. Tο updated at το κάνει ο controller 
   public async Task<IResult> Update(int id, UpdateUserDto data)
   {
     var user = await _dao.GetById(id);
@@ -126,6 +134,7 @@ public class UserController
       });
     }
 
+    // μπορώ με το update να φτιάξω νέο password αρα χρειαζομαι να το κάνω Hashed
     if (data.Password is not null)
     {
       user.HashedPassword = BCrypt.Net.BCrypt.HashPassword(data.Password);
@@ -163,6 +172,7 @@ public class UserController
     });
   }
 
+  // UpdateRoleDto → η αλλαγή του να είναι self or admin protected
   public async Task<IResult> UpdateRole(int id, UpdateRoleDto dto)
   {
     var user = await _dao.GetById(id);
@@ -192,7 +202,7 @@ public class UserController
 
     var updated = await _dao.Update(id, user);
 
-    var data= new
+    var data = new
     {
       updated!.Id,
       updated.Username,
