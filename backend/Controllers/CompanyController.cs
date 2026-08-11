@@ -1,28 +1,86 @@
 // backend/Controllers/CompanyController.cs
 
 using Backend;
+using System.Security.Claims;
 
 namespace backend;
 
 public class CompanyController
 {
   private readonly CompanyDao _dao;
+  private readonly CompanyUserDao _companyUserDao;
 
-  public CompanyController(CompanyDao dao)
+  public CompanyController(
+    CompanyDao dao,
+    CompanyUserDao companyUserDao
+  )
   {
     _dao = dao;
+    _companyUserDao = companyUserDao;
   }
 
-  public async Task<IResult> Create(CreateCompanyDto dto)
+
+  // Ελέγχει αν ο logged-in user έχει πρόσβαση στη συγκεκριμένη company.
+  // SUPERADMIN → πάντα πρόσβαση.
+  // ADMIN → μόνο αν υπάρχει σχέση CompanyUser.
+  private async Task<bool> HasAccess(
+    int companyId,
+    ClaimsPrincipal currentUser
+  )
+  {
+    var role = currentUser.FindFirst(ClaimTypes.Role)?.Value;
+
+    if (role == "SUPERADMIN")
+    {
+      return true;
+    }
+
+    var userIdString = currentUser.FindFirst("id")?.Value;
+
+    if (!int.TryParse(userIdString, out var userId))
+    {
+      return false;
+    }
+
+    var relation = await _companyUserDao.GetByUserAndCompany(
+      userId,
+      companyId
+    );
+
+    return relation is not null;
+  }
+
+
+  public async Task<IResult> Create(
+    CreateCompanyDto dto,
+    ClaimsPrincipal currentUser
+  )
   {
     try
     {
+      var userIdString = currentUser.FindFirst("id")?.Value;
+
+      if (!int.TryParse(userIdString, out var userId))
+      {
+        return Results.Unauthorized();
+      }
+
       var company = new Company
       {
         Name = dto.Name
       };
 
       var created = await _dao.Create(company);
+
+      // όταν ένας admin δημιουργεί company δημιουργείται αυτόματα
+      // η σχέση που του δίνει πρόσβαση σε αυτή
+      var companyUser = new CompanyUser
+      {
+        UserId = userId,
+        CompanyId = created.Id
+      };
+
+      await _companyUserDao.Create(companyUser);
 
       var response = new CompanyDto(
         created.Id,
@@ -47,6 +105,8 @@ public class CompanyController
     }
   }
 
+
+  // αυτό είναι το GetAll του SUPERADMIN και επιστρέφει όλες τις companies
   public async Task<IResult> GetAll()
   {
     try
@@ -76,10 +136,59 @@ public class CompanyController
     }
   }
 
-  public async Task<IResult> GetById(int id)
+
+  // έχουμε δυο get all η απο πάνω είναι του super admin και αυτή του απλου admin που βλέπει μόνο τις δικές του
+  public async Task<IResult> GetMine(ClaimsPrincipal currentUser)
   {
     try
     {
+      var userIdString = currentUser.FindFirst("id")?.Value;
+
+      if (!int.TryParse(userIdString, out var userId))
+      {
+        return Results.Unauthorized();
+      }
+
+      var companies = await _dao.GetByUserId(userId);
+
+      var response = companies.Select(company => new CompanyDto(
+        company.Id,
+        company.Name,
+        company.CreatedAt
+      )).ToList();
+
+      return Results.Ok(new
+      {
+        status = true,
+        data = response
+      });
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex);
+
+      return Results.Problem(
+        detail: ex.Message,
+        statusCode: 500
+      );
+    }
+  }
+
+
+  public async Task<IResult> GetById(
+    int id,
+    ClaimsPrincipal currentUser
+  )
+  {
+    try
+    {
+      var hasAccess = await HasAccess(id, currentUser);
+
+      if (!hasAccess)
+      {
+        return Results.Forbid();
+      }
+
       var company = await _dao.GetById(id);
 
       if (company is null)
@@ -114,10 +223,22 @@ public class CompanyController
     }
   }
 
-  public async Task<IResult> Update(int id, CreateCompanyDto dto)
+
+  public async Task<IResult> Update(
+    int id,
+    CreateCompanyDto dto,
+    ClaimsPrincipal currentUser
+  )
   {
     try
     {
+      var hasAccess = await HasAccess(id, currentUser);
+
+      if (!hasAccess)
+      {
+        return Results.Forbid();
+      }
+
       var updatedData = new Company
       {
         Name = dto.Name
@@ -157,10 +278,21 @@ public class CompanyController
     }
   }
 
-  public async Task<IResult> Delete(int id)
+
+  public async Task<IResult> Delete(
+    int id,
+    ClaimsPrincipal currentUser
+  )
   {
     try
     {
+      var hasAccess = await HasAccess(id, currentUser);
+
+      if (!hasAccess)
+      {
+        return Results.Forbid();
+      }
+
       var deleted = await _dao.Delete(id);
 
       if (deleted is null)

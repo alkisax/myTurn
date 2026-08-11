@@ -1,5 +1,5 @@
 // backend\Endpoints\LocationEndpoints.cs
-//⚠️⚠️⚠️⚠️ αργότερα θα προσθέσουμε και έλεγχο ότι ο ADMIN έχει πρόσβαση στη συγκεκριμένη Company, όχι απλώς ότι έχει role ADMIN.
+
 using backend.Controllers;
 using backend.Dtos.LocationDtos;
 
@@ -12,36 +12,60 @@ public static class LocationEndpoints
     var group = app.MapGroup("/locations");
 
     // GET /locations
+    // SUPERADMIN → βλέπει όλα τα locations
     group.MapGet("/", async (LocationController controller) =>
     {
       return await controller.GetAll();
     })
+    .RequireAuthorization("SuperAdminOnly");
+
+    // GET /locations/mine
+    // ADMIN → βλέπει μόνο locations από companies στις οποίες έχει πρόσβαση
+    group.MapGet("/mine", async (
+      LocationController controller,
+      HttpContext context
+    ) =>
+    {
+      return await controller.GetMine(context.User);
+    })
     .RequireAuthorization("AdminOnly");
 
     // GET /locations/:id
-    group.MapGet("/{id:int}", async (int id, LocationController controller) =>
+    group.MapGet("/{id:int}", async (
+      int id,
+      LocationController controller,
+      HttpContext context
+    ) =>
     {
-      return await controller.GetById(id);
+      return await controller.GetById(id, context.User);
     })
     .RequireAuthorization("AdminOnly");
 
     // GET /locations/company/:companyId
     group.MapGet("/company/{companyId:int}", async (
       int companyId,
-      LocationController controller
+      LocationController controller,
+      HttpContext context
     ) =>
     {
-      return await controller.GetByCompanyId(companyId);
+      return await controller.GetByCompanyId(
+        companyId,
+        context.User
+      );
     })
     .RequireAuthorization("AdminOnly");
 
     // POST /locations
     group.MapPost("/", async (
       CreateLocationDto dto,
-      LocationController controller
+      LocationController controller,
+      HttpContext context
     ) =>
     {
-      return await controller.Create(dto);
+      return await controller.Create(
+        dto,
+        context.User
+      );
     })
     .RequireAuthorization("AdminOnly");
 
@@ -49,20 +73,29 @@ public static class LocationEndpoints
     group.MapPut("/{id:int}", async (
       int id,
       UpdateLocationDto dto,
-      LocationController controller
+      LocationController controller,
+      HttpContext context
     ) =>
     {
-      return await controller.Update(id, dto);
+      return await controller.Update(
+        id,
+        dto,
+        context.User
+      );
     })
     .RequireAuthorization("AdminOnly");
 
     // DELETE /locations/:id
     group.MapDelete("/{id:int}", async (
       int id,
-      LocationController controller
+      LocationController controller,
+      HttpContext context
     ) =>
     {
-      return await controller.Delete(id);
+      return await controller.Delete(
+        id,
+        context.User
+      );
     })
     .RequireAuthorization("AdminOnly");
   }

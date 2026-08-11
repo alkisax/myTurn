@@ -14,10 +14,29 @@ public class LocationDao(MyTurnContext context)
       .ToListAsync();
   }
 
+
+  // Επιστρέφει μόνο τα locations που ανήκουν σε companies
+  // στις οποίες έχει πρόσβαση ο συγκεκριμένος user μέσω CompanyUser.
+  // Χρήσιμο για ADMIN ώστε να μην βλέπει locations άλλων εταιριών.
+  public async Task<List<Location>> GetByUserId(int userId)
+  {
+    return await context.Locations
+      .AsNoTracking()
+      .Where(location =>
+        context.CompanyUsers.Any(companyUser =>
+          companyUser.UserId == userId &&
+          companyUser.CompanyId == location.CompanyId
+        )
+      )
+      .ToListAsync();
+  }
+
+
   public async Task<Location?> GetById(int id)
   {
     return await context.Locations.FindAsync(id);
   }
+
 
   public async Task<List<Location>> GetByCompanyId(int companyId)
   {
@@ -27,6 +46,7 @@ public class LocationDao(MyTurnContext context)
       .ToListAsync();
   }
 
+
   public async Task<Location> Create(Location location)
   {
     context.Locations.Add(location);
@@ -34,6 +54,7 @@ public class LocationDao(MyTurnContext context)
 
     return location;
   }
+
 
   public async Task<Location?> Update(int id, Location updatedData)
   {
@@ -53,6 +74,7 @@ public class LocationDao(MyTurnContext context)
 
     return location;
   }
+
 
   public async Task<Location?> Delete(int id)
   {

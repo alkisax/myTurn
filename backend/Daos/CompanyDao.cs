@@ -24,6 +24,30 @@ public class CompanyDao(MyTurnContext context)
     }
   }
 
+  // ο superAdmin έχει προσβαση σε όλες τις εταιρίες. ο Admin έχει πρόσβαση μόνο στις εταιριες που έχει δημιουργήσει ο ίδιος
+  public async Task<List<Company>> GetByUserId(int userId)
+  {
+    try
+    {
+      return await context.Companies
+        .AsNoTracking()
+        .Where(company =>
+          context.CompanyUsers.Any(companyUser =>
+            companyUser.UserId == userId &&
+            companyUser.CompanyId == company.Id
+          )
+        )
+        .ToListAsync();
+    }
+    catch (Exception error)
+    {
+      throw new Exception(
+        $"DAO: Failed to fetch user's companies, {error.Message}",
+        error
+      );
+    }
+  }
+
   public async Task<Company?> GetById(int id)
   {
     try

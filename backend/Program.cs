@@ -22,6 +22,8 @@ builder.Services.AddScoped<AuthController>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<LocationDao>();
 builder.Services.AddScoped<LocationController>();
+builder.Services.AddScoped<CompanyUserDao>();
+builder.Services.AddScoped<CompanyUserController>();
 
 builder.Services.AddJwtAuth(builder.Configuration);
 
@@ -57,7 +59,6 @@ app.MapGet("/api/ping", () =>
   return "Pong";
 });
 app.MapFrontLogEndpoints();
-app.MapCompanyEndpoints();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -65,7 +66,9 @@ app.UseAuthorization();
 app.MapUsersEndpoints();
 app.MapAuthEndpoints();
 
+app.MapCompanyEndpoints();
 app.MapLocationEndpoints();
+app.MapCompanyUserEndpoints();
 
 app.Urls.Add("http://localhost:3020");
 app.Run();
