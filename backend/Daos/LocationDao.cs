@@ -1,0 +1,71 @@
+// backend\Daos\LocationDao.cs
+
+using Backend;
+using Microsoft.EntityFrameworkCore;
+
+namespace backend;
+
+public class LocationDao(MyTurnContext context)
+{
+  public async Task<List<Location>> GetAll()
+  {
+    return await context.Locations
+      .AsNoTracking()
+      .ToListAsync();
+  }
+
+  public async Task<Location?> GetById(int id)
+  {
+    return await context.Locations.FindAsync(id);
+  }
+
+  public async Task<List<Location>> GetByCompanyId(int companyId)
+  {
+    return await context.Locations
+      .AsNoTracking()
+      .Where(location => location.CompanyId == companyId)
+      .ToListAsync();
+  }
+
+  public async Task<Location> Create(Location location)
+  {
+    context.Locations.Add(location);
+    await context.SaveChangesAsync();
+
+    return location;
+  }
+
+  public async Task<Location?> Update(int id, Location updatedData)
+  {
+    var location = await context.Locations.FindAsync(id);
+
+    if (location is null)
+    {
+      return null;
+    }
+
+    location.Name = updatedData.Name;
+    location.Address = updatedData.Address;
+    location.IsActive = updatedData.IsActive;
+    location.UpdatedAt = DateTime.UtcNow;
+
+    await context.SaveChangesAsync();
+
+    return location;
+  }
+
+  public async Task<Location?> Delete(int id)
+  {
+    var location = await context.Locations.FindAsync(id);
+
+    if (location is null)
+    {
+      return null;
+    }
+
+    context.Locations.Remove(location);
+    await context.SaveChangesAsync();
+
+    return location;
+  }
+}

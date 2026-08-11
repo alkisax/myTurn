@@ -1100,6 +1100,9 @@ app.Urls.Add("http://localhost:3020");
 app.Run();
 ```
 
+13. ⚠️⚠️⚠️ 
+θα χρειαστώ `dotnet ef migrations add AddUsers --output-dir Data\Migrations`
+
 ## Super admin
 Added a new global `SUPERADMIN` role for the platform owner.
 

@@ -1,4 +1,4 @@
-namespace backend_csharp.Dtos;
+namespace backend.Dtos;
 
 public record class FrontLogDto
 (

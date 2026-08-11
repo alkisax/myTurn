@@ -1,13 +1,13 @@
 // backend\Program.cs
 
 using backend;
-using backend_csharp.Controllers;
-using backend_csharp.Endpoints;
 using backend.auth.Extensions;
 using backend.auth.Services;
 using backend.auth.Controllers;
 using backend.auth.Daos;
 using backend.auth.Endpoints;
+using backend.Controllers;
+using backend.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +20,8 @@ builder.Services.AddScoped<UserDao>();
 builder.Services.AddScoped<UserController>();
 builder.Services.AddScoped<AuthController>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<LocationDao>();
+builder.Services.AddScoped<LocationController>();
 
 builder.Services.AddJwtAuth(builder.Configuration);
 
@@ -62,6 +64,8 @@ app.UseAuthorization();
 
 app.MapUsersEndpoints();
 app.MapAuthEndpoints();
+
+app.MapLocationEndpoints();
 
 app.Urls.Add("http://localhost:3020");
 app.Run();

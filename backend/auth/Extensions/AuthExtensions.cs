@@ -92,7 +92,7 @@ public static class AuthExtensions
 
       // Policy: επιτρέπεται μόνο ADMIN.
       options.AddPolicy("AdminOnly", policy =>
-        policy.RequireRole("ADMIN")
+        policy.RequireRole("ADMIN", "SUPERADMIN")
       );
 
       // Policy: επιτρέπεται μόνο SUPERADMIN.

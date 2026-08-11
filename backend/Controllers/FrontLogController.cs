@@ -1,8 +1,8 @@
 // backend\Controllers\FrontLogController.cs
 
-using backend_csharp.Dtos;
+using backend.Dtos;
 
-namespace backend_csharp.Controllers;
+namespace backend.Controllers;
 
 public class LogController
 {

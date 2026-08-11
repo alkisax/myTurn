@@ -2,7 +2,7 @@
 
 using backend;
 
-namespace backend_csharp.Endpoints;
+namespace backend.Endpoints;
 
 public static class CompanyEndpoints
 {

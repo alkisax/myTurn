@@ -1,9 +1,9 @@
 // backend\Endpoints\FrontLogEndpoints.cs
 
-using backend_csharp.Controllers;
-using backend_csharp.Dtos;
+using backend.Controllers;
+using backend.Dtos;
 
-namespace backend_csharp.Endpoints;
+namespace backend.Endpoints;
 
 public static class FrontLogEndpoints
 {
