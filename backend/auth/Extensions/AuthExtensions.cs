@@ -68,7 +68,7 @@ public static class AuthExtensions
     // Εδώ ορίζουμε authorization rules/policies.
     services.AddAuthorization(options =>
     {
-      // Policy: μπορεί να περάσει είτε ο ίδιος ο user είτε ADMIN.
+      // Policy: μπορεί να περάσει είτε ο ίδιος ο user είτε (super)ADMIN.
       options.AddPolicy("SelfOrAdmin", policy =>
         policy.RequireAssertion(context =>
         {
@@ -83,14 +83,21 @@ public static class AuthExtensions
             _ => null
           };
 
-          // Επιτρέπεται αν: 1. είναι ADMIN ή 2. ζητάει το δικό του user id.
-          return role == "ADMIN" || userId == routeId;
+          // Επιτρέπεται αν: 1. είναι SUPERADMIN 2. ADMIN ή 3. ζητάει το δικό του user id.
+          return role == "SUPERADMIN"
+            || role == "ADMIN"
+            || userId == routeId;
         })
       );
 
       // Policy: επιτρέπεται μόνο ADMIN.
       options.AddPolicy("AdminOnly", policy =>
         policy.RequireRole("ADMIN")
+      );
+
+      // Policy: επιτρέπεται μόνο SUPERADMIN.
+      options.AddPolicy("SuperAdminOnly", policy =>
+        policy.RequireRole("SUPERADMIN")
       );
     });
   }

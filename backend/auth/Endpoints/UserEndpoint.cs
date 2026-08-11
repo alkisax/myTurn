@@ -40,12 +40,19 @@ public static class UserEndpoint
     .RequireAuthorization("SelfOrAdmin");
 
 
-    // ADMIN ONLY
+    // ADMIN + SUPERADMIN
     group.MapPut("/{id}/role", async (int id, UpdateRoleDto dto, UserController controller) =>
     {
       return await controller.UpdateRole(id, dto);
     })
     .RequireAuthorization("AdminOnly");
+
+    // μόνο SUPERADMIN
+    group.MapPut("/{id}/superadmin", async (int id, UserController controller) =>
+    {
+      return await controller.MakeSuperAdmin(id);
+    })
+    .RequireAuthorization("SuperAdminOnly");
 
     // DELETE /users/:id
     group.MapDelete("/{id}", async (int id, UserController controller) =>

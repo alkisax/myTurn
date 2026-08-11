@@ -236,4 +236,34 @@ public class UserController
       message = $"User {deleted.Username} deleted"
     });
   }
+
+  // ⚠️ super admin
+  public async Task<IResult> MakeSuperAdmin(int id)
+  {
+    var user = await _dao.GetById(id);
+
+    if (user is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "User not found"
+      });
+    }
+
+    user.Role = "SUPERADMIN";
+
+    var updated = await _dao.Update(id, user);
+
+    return Results.Ok(new
+    {
+      status = true,
+      data = new
+      {
+        updated!.Id,
+        updated.Username,
+        updated.Role
+      }
+    });
+  }
 }

@@ -6,7 +6,7 @@ GET {{baseUrl}}/companies
 ###
 
 ### Get company by id
-GET {{baseUrl}}/companies/1
+GET {{baseUrl}}/companies/3
 
 ###
 
@@ -21,7 +21,7 @@ Content-Type: application/json
 ###
 
 ### Update company
-PUT {{baseUrl}}/companies/1
+PUT {{baseUrl}}/companies/3
 Content-Type: application/json
 
 {
@@ -31,4 +31,4 @@ Content-Type: application/json
 ###
 
 ### Delete company
-DELETE {{baseUrl}}/companies/2
+DELETE {{baseUrl}}/companies/3

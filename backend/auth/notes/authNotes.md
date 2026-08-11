@@ -1099,3 +1099,28 @@ app.MapAuthEndpoints();
 app.Urls.Add("http://localhost:3020");
 app.Run();
 ```
+
+## Super admin
+Added a new global `SUPERADMIN` role for the platform owner.
+
+Roles are now:
+- `SUPERADMIN` → full platform access across all companies
+- `ADMIN` → manages only assigned companies
+- `STAFF` → works on a location/desk
+- `USER` → normal customer, can later view personal ticket history
+
+Changes made:
+- Added `SuperAdminOnly` authorization policy.
+- Updated `AdminOnly` so `SUPERADMIN` is also allowed.
+- Updated `SelfOrAdmin` so `SUPERADMIN` is also allowed.
+- Kept normal role updates limited to:
+  - `ADMIN`
+  - `STAFF`
+  - `USER`
+- Added a separate endpoint for promotion to `SUPERADMIN`:
+PUT /users/{id}/superadmin
+
+Protected with:
+.RequireAuthorization("SuperAdminOnly");
+
+The first SUPERADMIN was bootstrapped manually by temporarily removing the endpoint protection, promoting the initial user, then restoring SuperAdminOnly.
