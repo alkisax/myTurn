@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend;
 
@@ -10,9 +11,11 @@ using backend;
 namespace backend.Data.Migrations
 {
     [DbContext(typeof(MyTurnContext))]
-    partial class MyTurnContextModelSnapshot : ModelSnapshot
+    [Migration("20260811181648_AddStaffSession")]
+    partial class AddStaffSession
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
@@ -170,42 +173,6 @@ namespace backend.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Queues");
-                });
-
-            modelBuilder.Entity("Backend.Service", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsGeneric")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("LocationId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Services");
                 });
 
             modelBuilder.Entity("Backend.StaffSession", b =>

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend;
 
@@ -10,9 +11,11 @@ using backend;
 namespace backend.Data.Migrations
 {
     [DbContext(typeof(MyTurnContext))]
-    partial class MyTurnContextModelSnapshot : ModelSnapshot
+    [Migration("20260811173032_AddQueue")]
+    partial class AddQueue
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
@@ -56,39 +59,6 @@ namespace backend.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("CompanyUsers");
-                });
-
-            modelBuilder.Entity("Backend.Desk", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("LocationId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("QueueId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Desks");
                 });
 
             modelBuilder.Entity("Backend.Location", b =>
@@ -170,90 +140,6 @@ namespace backend.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Queues");
-                });
-
-            modelBuilder.Entity("Backend.Service", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsGeneric")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("LocationId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Services");
-                });
-
-            modelBuilder.Entity("Backend.StaffSession", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("BreakStartedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("DeskId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("EndedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("LocationId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("QueueId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("StartedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TotalBreakSeconds")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("StaffSessions");
                 });
 
             modelBuilder.Entity("backend.auth.Models.User", b =>

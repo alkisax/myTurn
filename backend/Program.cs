@@ -24,6 +24,14 @@ builder.Services.AddScoped<LocationDao>();
 builder.Services.AddScoped<LocationController>();
 builder.Services.AddScoped<CompanyUserDao>();
 builder.Services.AddScoped<CompanyUserController>();
+builder.Services.AddScoped<QueueDao>();
+builder.Services.AddScoped<QueueController>();
+builder.Services.AddScoped<DeskDao>();
+builder.Services.AddScoped<DeskController>();
+builder.Services.AddScoped<StaffSessionDao>();
+builder.Services.AddScoped<StaffSessionController>();
+builder.Services.AddScoped<ServiceDao>();
+builder.Services.AddScoped<ServiceController>();
 
 builder.Services.AddJwtAuth(builder.Configuration);
 
@@ -69,6 +77,10 @@ app.MapAuthEndpoints();
 app.MapCompanyEndpoints();
 app.MapLocationEndpoints();
 app.MapCompanyUserEndpoints();
+app.MapQueueEndpoints();
+app.MapDeskEndpoints();
+app.MapStaffSessionEndpoints();
+app.MapServiceEndpoints();
 
 app.Urls.Add("http://localhost:3020");
 app.Run();

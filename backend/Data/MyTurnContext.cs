@@ -14,4 +14,8 @@ public class MyTurnContext(DbContextOptions<MyTurnContext> options) : DbContext(
   public DbSet<User> Users => Set<User>();
   public DbSet<Location> Locations => Set<Location>();
   public DbSet<CompanyUser> CompanyUsers => Set<CompanyUser>();
+  public DbSet<Queue> Queues => Set<Queue>();
+  public DbSet<Desk> Desks => Set<Desk>();
+  public DbSet<StaffSession> StaffSessions => Set<StaffSession>();
+  public DbSet<Service> Services => Set<Service>();
 }
