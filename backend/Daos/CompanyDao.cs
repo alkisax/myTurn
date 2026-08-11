@@ -8,7 +8,6 @@ namespace backend;
 // το MyTurnContext context είναι ουσιαστικά η προσβαση στην DB μου
 public class CompanyDao(MyTurnContext context)
 {
-
   // task είναι ο τύπος για το await. λέμε ουσιαστικα οτι όταν ολοκληρωθεί το async o τυπος θα είναι List<Company>
   public async Task<List<Company>> GetAll()
   {
@@ -25,6 +24,8 @@ public class CompanyDao(MyTurnContext context)
   }
 
   // ο superAdmin έχει προσβαση σε όλες τις εταιρίες. ο Admin έχει πρόσβαση μόνο στις εταιριες που έχει δημιουργήσει ο ίδιος
+  // Η ίδια μέθοδος χρησιμοποιείται πλέον και από STAFF:
+  // επιστρέφει γενικά τις Companies με τις οποίες ο User έχει CompanyUser relation.
   public async Task<List<Company>> GetByUserId(int userId)
   {
     try

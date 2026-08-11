@@ -1,10 +1,13 @@
 // backend\auth\Controllers\AuthController.cs
+
 using backend.auth.Daos;
 using backend.auth.Dtos;
 using backend.auth.Models;
 using backend.auth.Services;
 
+
 namespace backend.auth.Controllers;
+
 
 // DI → στο program έχω 
 // builder.Services.AddScoped<UserDao>();
@@ -13,6 +16,7 @@ public class AuthController
 {
   private readonly UserDao _dao;
   private readonly AuthService _authService;
+
 
   // DI
   public AuthController(UserDao dao, AuthService authService)
@@ -23,7 +27,7 @@ public class AuthController
 
 
   /// <summary>
-  /// Register
+  /// Register ADMIN
   /// </summary>
   /// <param name="dto"></param>
   /// <returns>
@@ -32,7 +36,11 @@ public class AuthController
   /// - 409 Conflict → όταν το username υπάρχει ήδη
   /// </returns>
   // το Task<IResult> είναι το return type και ειναι το αντίστοιχο του Promise
-  public async Task<IResult> Register(CreateUserDto dto)
+  //
+  // Αυτό είναι το registration του βασικού χρήστη της εφαρμογής.
+  // Ο χρήστης που δημιουργεί account για να στήσει Companies,
+  // Locations κλπ δημιουργείται αυτόματα ως ADMIN.
+  public async Task<IResult> RegisterAdmin(CreateUserDto dto)
   {
     // check username exists
     // εδώ ΔΕΝ έχουμε req.body όπως στο Node
@@ -44,12 +52,11 @@ public class AuthController
     if (existing is not null)
     {
       return Results.Conflict(new
-        {
-         status = false,
-         message = "Username already taken" 
-        }
-      );
-    };
+      {
+        status = false,
+        message = "Username already taken"
+      });
+    }
 
     // hash password
     var hashed = BCrypt.Net.BCrypt.HashPassword(dto.Password);
@@ -59,7 +66,10 @@ public class AuthController
       Username = dto.Username,
       Name = dto.Name,
       Email = dto.Email,
-      Role = "USER",
+
+      // Το role ΔΕΝ έρχεται από το frontend.
+      Role = "ADMIN",
+
       HashedPassword = hashed
     };
 
@@ -79,6 +89,59 @@ public class AuthController
       }
     });
   }
+
+
+  /// <summary>
+  /// Register απλού USER / πελάτη.
+  /// </summary>
+  //
+  // Ο USER είναι ο τελικός πελάτης της εφαρμογής.
+  // Αργότερα θα μπορεί να βλέπει το προσωπικό ticket history του.
+  //
+  // Δεν συνδέεται με CompanyUser.
+  public async Task<IResult> RegisterUser(CreateUserDto dto)
+  {
+    var existing = await _dao.GetByUsername(dto.Username);
+
+    if (existing is not null)
+    {
+      return Results.Conflict(new
+      {
+        status = false,
+        message = "Username already taken"
+      });
+    }
+
+    var hashed = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
+    var user = new User
+    {
+      Username = dto.Username,
+      Name = dto.Name,
+      Email = dto.Email,
+
+      // Το role ορίζεται αποκλειστικά server-side.
+      Role = "USER",
+
+      HashedPassword = hashed
+    };
+
+    var created = await _dao.Create(user);
+
+    return Results.Created($"/users/{created.Id}", new
+    {
+      status = true,
+      data = new
+      {
+        created.Id,
+        created.Username,
+        created.Name,
+        created.Email,
+        created.Role
+      }
+    });
+  }
+
 
   /// <summary>
   /// Login χρήστη.
@@ -115,6 +178,7 @@ public class AuthController
     }
 
     var token = _authService.GenerateAccessToken(user);
+
     var userData = new
     {
       token,
@@ -135,6 +199,7 @@ public class AuthController
       data = userData
     });
   }
+
 
   /// <summary>
   /// Ανανεώνει το JWT token χρήστη.

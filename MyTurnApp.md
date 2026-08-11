@@ -51,7 +51,7 @@ Possible ticket statuses:
 
 ## Backend Roadmap
 
-- [x] Initialize Git repository
+- [ ] Initialize Git repository
 - [ ] Initialize ASP.NET Core backend
 - [ ] Configure project structure
 - [ ] Configure SQLite

@@ -45,6 +45,29 @@ namespace Backend;
   Είναι βασικό μέρος του access control της εφαρμογής.
 */
 
+
+// ΝΕΑ ΧΡΗΣΗ:
+// Το CompanyUser πλέον χρησιμοποιείται και για STAFF.
+//
+// Παράδειγμα:
+//
+//   Admin Alkis → Company 1
+//   Staff Maria → Company 1
+//
+// Και οι δύο έχουν CompanyUser relation με την Company 1,
+// αλλά τα permissions τους παραμένουν διαφορετικά επειδή καθορίζονται
+// από το User.Role.
+//
+// ADMIN → διαχειρίζεται την company.
+// STAFF → μπορεί αργότερα να εργαστεί σε location/desk της company.
+//
+// Ένας ADMIN μπορεί να προσθέσει STAFF μόνο σε company
+// στην οποία έχει ο ίδιος πρόσβαση.
+//
+// Ένας απλός ADMIN ΔΕΝ πρέπει μέσω CompanyUser endpoint
+// να μπορεί να προσθέτει αυθαίρετα άλλους ADMIN ή SUPERADMIN.
+
+
 public class CompanyUser
 {
   public int Id { get; set; }

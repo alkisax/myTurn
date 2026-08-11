@@ -1,4 +1,4 @@
-// backend-csharp\Endpoints\AuthEndpoints.cs
+// backend\auth\Endpoints\AuthEndpoints.cs
 
 using backend.auth.Controllers;
 using backend.auth.Dtos;
@@ -11,25 +11,56 @@ public static class AuthEndpoints
   {
     var group = app.MapGroup("/auth");
 
-    //Register 
-    //POST /auth
-    group.MapPost("/register", async (CreateUserDto dto, AuthController controller) =>
+
+    // Register ADMIN
+    // Αυτό είναι το βασικό registration κάποιου που χρησιμοποιεί
+    // το MyTurn για να δημιουργήσει Companies.
+    //
+    // POST /auth/register-admin
+    group.MapPost("/register-admin", async (
+      CreateUserDto dto,
+      AuthController controller
+    ) =>
     {
-      return await controller.Register(dto);
+      return await controller.RegisterAdmin(dto);
     });
+
+
+    // Register απλού USER / πελάτη
+    //
+    // POST /auth/register-user
+    group.MapPost("/register-user", async (
+      CreateUserDto dto,
+      AuthController controller
+    ) =>
+    {
+      return await controller.RegisterUser(dto);
+    });
+
 
     //login
     // POST /login
-    group.MapPost("/login", async (LoginUserDto dto, AuthController controller) =>
+    //
+    // Το ίδιο login χρησιμοποιείται για ADMIN / STAFF / USER / SUPERADMIN.
+    // Το frontend αργότερα θα βλέπει το role και θα ανοίγει
+    // το αντίστοιχο interface.
+    group.MapPost("/login", async (
+      LoginUserDto dto,
+      AuthController controller
+    ) =>
     {
       return await controller.Login(dto);
     });
 
+
     //refresh token
-    // POST  /refresh
-    group.MapPost("/refresh", async (HttpRequest request, AuthController controller) =>
+    // POST /refresh
+    group.MapPost("/refresh", async (
+      HttpRequest request,
+      AuthController controller
+    ) =>
       await controller.RefreshToken(request)
     )
     .RequireAuthorization();
   }
-};
+}

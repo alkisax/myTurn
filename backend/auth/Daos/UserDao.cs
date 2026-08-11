@@ -1,4 +1,5 @@
 // backend\auth\Daos\UserDao.cs
+
 using backend.auth.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,6 +55,22 @@ public class UserDao
       .FirstOrDefaultAsync(user => user.Email == email);
 
     return user is null ? null : Map(user);
+  }
+
+  // Επιστρέφει τους πραγματικούς User records των STAFF
+  // που είναι συνδεδεμένοι με συγκεκριμένη Company μέσω CompanyUser.
+  public async Task<List<User>> GetStaffByCompanyId(int companyId)
+  {
+    return await _db.Users
+      .AsNoTracking()
+      .Where(user =>
+        user.Role == "STAFF" &&
+        _db.CompanyUsers.Any(companyUser =>
+          companyUser.UserId == user.Id &&
+          companyUser.CompanyId == companyId
+        )
+      )
+      .ToListAsync();
   }
 
   // CREATE → .Add

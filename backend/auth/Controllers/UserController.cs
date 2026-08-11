@@ -1,7 +1,6 @@
 // backend\auth\Controllers\UserController.cs
 using backend.auth.Daos;
 using backend.auth.Dtos;
-using backend.auth.Models;
 
 namespace backend.auth.Controllers;
 
@@ -69,55 +68,6 @@ public class UserController
     });
   }
 
-  // CREATE (με check όπως node)
-  // CreateUserDto → δεν έχει id, role (είναι αυτόματα user), created at (φτιάχνετε αυτόματα) αλλα έχει plain text password γιατί είναι αυτό που μας στέλνει ο user. δεν θα αποθηκευτεί έτσι ομως. Εδω αυτό είναι μόνο για την μεταφορα κατα την δημιουργία
-  public async Task<IResult> Create(CreateUserDto newUser)
-  {
-    // check username exists
-    var existing = await _dao.GetByUsername(newUser.Username);
-
-    if (existing is not null)
-    {
-      return Results.Conflict(new
-      {
-        status = false,
-        message = "Username already taken"
-      });
-    }
-
-    // ⚠️ δεν αποθηκεύουμε plain text password
-    var hashed = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
-
-    var user = new User
-    {
-      Username = newUser.Username,
-      Name = newUser.Name,
-      Email = newUser.Email,
-      Role = "USER", // εδω μπαίνει το role που δεν έρχεται απο το dto. Πάντα πρώτα User και η αλλαγή είναι αναβάθμιση που κάνει ο admin με την  TODO
-      HashedPassword = hashed
-    };
-
-    var created = await _dao.Create(user);
-
-    // UserSummaryDto για την επιστροφή
-    var dto = new UserSummaryDto(
-      created.Id,
-      created.Username,
-      created.Name,
-      created.Email,
-      created.Role,
-      created.CreatedAt,
-      created.UpdatedAt
-    );
-
-    // οχι Results.Ok
-    // Ο user δημιουργήθηκε επιτυχώς, γύρνα HTTP 201 Created. Το: $"/users/{created.Id}" βάζει στο response header το πού βρίσκεται ο νέος resource.
-    return Results.Created($"/users/{created.Id}", new
-    {
-      status = true,
-      data = dto
-    });
-  }
 
   // UPDATE
   // UpdateUserDto → έχει όλα τα πεδία εκτός απο role γιατι πρέπει η αλλαγή του να είναι self or admin protected και γίνετε με άλλο endpoint update role. Tο updated at το κάνει ο controller 
@@ -173,6 +123,10 @@ public class UserController
   }
 
   // UpdateRoleDto → η αλλαγή του να είναι self or admin protected
+  //
+  // ⚠️ Πλέον το generic role change είναι SUPERADMIN protected.
+  // Ο ADMIN δημιουργεί STAFF από το ειδικό Company endpoint
+  // και δεν χρειάζεται να αλλάζει αυθαίρετα roles άλλων users.
   public async Task<IResult> UpdateRole(int id, UpdateRoleDto dto)
   {
     var user = await _dao.GetById(id);

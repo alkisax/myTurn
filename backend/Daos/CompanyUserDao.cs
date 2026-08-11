@@ -70,4 +70,28 @@ public class CompanyUserDao(MyTurnContext context)
 
     return companyUser;
   }
+
+  // Χρησιμοποιείται όταν ένας ADMIN αφαιρεί συγκεκριμένο STAFF
+  // από μία συγκεκριμένη Company.
+  public async Task<CompanyUser?> DeleteByUserAndCompany(
+    int userId,
+    int companyId
+  )
+  {
+    var companyUser = await context.CompanyUsers
+      .FirstOrDefaultAsync(companyUser =>
+        companyUser.UserId == userId &&
+        companyUser.CompanyId == companyId
+      );
+
+    if (companyUser is null)
+    {
+      return null;
+    }
+
+    context.CompanyUsers.Remove(companyUser);
+    await context.SaveChangesAsync();
+
+    return companyUser;
+  }
 }

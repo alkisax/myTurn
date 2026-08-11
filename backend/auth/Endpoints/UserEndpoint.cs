@@ -18,44 +18,64 @@ public static class UserEndpoint
     .RequireAuthorization("AdminOnly");
 
     // GET /users/:id
-    group.MapGet("/{id}", async (int id, UserController controller) =>
+    group.MapGet("/{id}", async (
+      int id,
+      UserController controller
+    ) =>
     {
       return await controller.GetById(id);
     })
     .RequireAuthorization("SelfOrAdmin");
 
-    // POST /users
-    group.MapPost("/", async (CreateUserDto newUser, UserController controller) =>
-    {
-      return await controller.Create(newUser);
-    })
-    .RequireAuthorization("AdminOnly");
+    // Δεν υπάρχει πλέον generic POST /users.
+    //
+    // Δημιουργία accounts γίνεται από:
+    //
+    // POST /auth/register-admin
+    // POST /auth/register-user
+    // POST /company-users/company/:companyId/staff
 
     // PUT /users/:id
     // SELF OR ADMIN
-    group.MapPut("/{id}", async (int id, UpdateUserDto data, UserController controller) =>
+    group.MapPut("/{id}", async (
+      int id,
+      UpdateUserDto data,
+      UserController controller
+    ) =>
     {
       return await controller.Update(id, data);
     })
     .RequireAuthorization("SelfOrAdmin");
 
-
-    // ADMIN + SUPERADMIN
-    group.MapPut("/{id}/role", async (int id, UpdateRoleDto dto, UserController controller) =>
+    // Generic αλλαγή role.
+    // Μόνο SUPERADMIN ώστε ένας ADMIN να μην μπορεί
+    // να αλλάζει αυθαίρετα roles άλλων χρηστών.
+    group.MapPut("/{id}/role", async (
+      int id,
+      UpdateRoleDto dto,
+      UserController controller
+    ) =>
     {
       return await controller.UpdateRole(id, dto);
     })
-    .RequireAuthorization("AdminOnly");
+    .RequireAuthorization("SuperAdminOnly");
+
 
     // μόνο SUPERADMIN
-    group.MapPut("/{id}/superadmin", async (int id, UserController controller) =>
+    group.MapPut("/{id}/superadmin", async (
+      int id,
+      UserController controller
+    ) =>
     {
       return await controller.MakeSuperAdmin(id);
     })
     .RequireAuthorization("SuperAdminOnly");
 
     // DELETE /users/:id
-    group.MapDelete("/{id}", async (int id, UserController controller) =>
+    group.MapDelete("/{id}", async (
+      int id,
+      UserController controller
+    ) =>
     {
       return await controller.Delete(id);
     })
