@@ -19,6 +19,19 @@ public class MyTurnContext(DbContextOptions<MyTurnContext> options) : DbContext(
   public DbSet<StaffSession> StaffSessions => Set<StaffSession>();
   public DbSet<Service> Services => Set<Service>();
   public DbSet<Ticket> Tickets => Set<Ticket>();
+  public DbSet<TicketService> TicketServices => Set<TicketService>();
+
+
+  // το OnModelCreating δίνει στην EF ORM επιπλέον κανόνες
+  protected override void OnModelCreating(ModelBuilder modelBuilder)
+  {
+    base.OnModelCreating(modelBuilder);
+
+    // Για τον πίνακα TicketServices, ο συνδυασμός TicketId + ServiceId πρέπει να είναι μοναδικός.
+    modelBuilder.Entity<TicketService>()
+      .HasIndex(ts => new { ts.TicketId, ts.ServiceId })
+      .IsUnique();
+  }
 }
 
 // ex: dotnet ef migrations add AddTicket --output-dir Data\Migrations

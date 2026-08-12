@@ -8,6 +8,7 @@ using backend.auth.Daos;
 using backend.auth.Endpoints;
 using backend.Controllers;
 using backend.Endpoints;
+using backend.Daos;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +35,8 @@ builder.Services.AddScoped<ServiceDao>();
 builder.Services.AddScoped<ServiceController>();
 builder.Services.AddScoped<TicketDao>();
 builder.Services.AddScoped<TicketController>();
+builder.Services.AddScoped<TicketServiceDao>();
+builder.Services.AddScoped<TicketServiceController>();
 
 builder.Services.AddJwtAuth(builder.Configuration);
 
@@ -84,6 +87,7 @@ app.MapDeskEndpoints();
 app.MapStaffSessionEndpoints();
 app.MapServiceEndpoints();
 app.MapTicketEndpoints();
+app.MapTicketServiceEndpoints();
 
 app.Urls.Add("http://localhost:3020");
 app.Run();
