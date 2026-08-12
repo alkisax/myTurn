@@ -1,5 +1,6 @@
 // backend\Dtos\TicketDtos\MyTicketDto.cs
 
+using backend.Dtos.TicketServiceDtos;
 namespace backend.Dtos.TicketDtos;
 
 // γενικό dto μη public με όλα μέσα
@@ -15,5 +16,6 @@ public record MyTicketDto(
   string Status,
   DateTime CreatedAt,
   DateTime? ServingStartedAt,
-  DateTime? CompletedAt
+  DateTime? CompletedAt,
+  List<TicketServiceInfoDto>? Services = null
 );

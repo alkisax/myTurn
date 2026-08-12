@@ -3,6 +3,7 @@
 using Backend;
 using backend.Dtos.TicketDtos;
 using System.Security.Claims;
+using backend.Dtos.TicketServiceDtos;
 
 namespace backend.Controllers;
 
@@ -12,18 +13,24 @@ public class TicketController
   private readonly QueueDao _queueDao;
   private readonly CompanyUserDao _companyUserDao;
   private readonly StaffSessionDao _staffSessionDao;
+  private readonly ServiceDao _serviceDao;
+  private readonly TicketServiceDao _ticketServiceDao;
 
   public TicketController(
     TicketDao dao,
     QueueDao queueDao,
     CompanyUserDao companyUserDao,
-    StaffSessionDao staffSessionDao
+    StaffSessionDao staffSessionDao,
+    ServiceDao serviceDao,
+    TicketServiceDao ticketServiceDao
   )
   {
     _dao = dao;
     _queueDao = queueDao;
     _companyUserDao = companyUserDao;
     _staffSessionDao = staffSessionDao;
+    _serviceDao = serviceDao;
+    _ticketServiceDao = ticketServiceDao;
   }
 
   public async Task<IResult> Create(
@@ -33,7 +40,6 @@ public class TicketController
   {
     // 1. Βρίσκουμε το Queue. έρχεται απο το request body του post στο CreateTicketDto
     var queue = await _queueDao.GetById(dto.QueueId);
-
     if (queue is null)
     {
       return Results.NotFound(new
@@ -53,13 +59,57 @@ public class TicketController
       });
     }
 
-    // 3. Βρίσκουμε τον επόμενο αριθμό.
-    var lastNumber = await _dao.GetLastNumberToday(queue.Id);
-    var nextNumber = lastNumber + 1;
+    // TICKETSERVICE 3. Παίρνουμε τα ServiceIds από το dto.
+    // Αν δεν έχουν σταλεί services, δημιουργούμε κενή λίστα.
+    var serviceIds = dto.ServiceIds ?? [];
+
+    // TICKETSERVICE Αφαιρούμε τυχόν διπλά service ids. πχ [2, 2, 5] -> [2, 5]
+    serviceIds = serviceIds
+      .Distinct()
+      .ToList();
+
+    // TICKETSERVICE Ελέγχουμε όλα τα services ΠΡΙΝ δημιουργήσουμε το Ticket.
+    foreach (var serviceId in serviceIds)
+    {
+      var service = await _serviceDao.GetById(serviceId);
+      // το service πρέπει να υπάρχει
+      if (service is null)
+      {
+        return Results.NotFound(new
+        {
+          status = false,
+          message = $"Service {serviceId} not found"
+        });
+      }
+
+      // το service πρέπει να ανήκει στο ίδιο Location με το Queue
+      if (service.LocationId != queue.LocationId)
+      {
+        return Results.BadRequest(new
+        {
+          status = false,
+          message = $"Service {serviceId} does not belong to this location"
+        });
+      }
+
+      // δεν επιτρέπουμε inactive service
+      if (!service.IsActive)
+      {
+        return Results.BadRequest(new
+        {
+          status = false,
+          message = $"Service {serviceId} is inactive"
+        });
+      }
+    }
+
+    // // 4. Βρίσκουμε τον επόμενο αριθμό.
+    // comment out γιατι η διαδικασία μεταφέρθηκε στο create του DAO για να μπορεί να γίνει atomic με δυνατότητα Rollback
+    // var lastNumber = await _dao.GetLastNumberToday(queue.Id);
+    // var nextNumber = lastNumber + 1;
 
 
-    // 4. Δημιουργούμε PIN και ελέγχουμε
-    // ότι δεν υπάρχει ήδη σήμερα στο ίδιο Location.
+    // 5. Δημιουργούμε PIN και ελέγχουμε ότι δεν υπάρχει ήδη σήμερα στο ίδιο Location.
     string pin;
 
     // δίνε pin μέχρι να μην υπάρχει σήμερα
@@ -74,13 +124,12 @@ public class TicketController
       pin
     ));
 
-    // 5. Δημιουργούμε secure tracking token.
+    // 6. Δημιουργούμε secure tracking token.
     // GUID → Globally Unique Identifier. μου το δίνει το using system
     // "N" →  32 χαρακτήρες χωρίς παύλες
     var trackingToken = Guid.NewGuid().ToString("N");
 
-    // 6. Αν υπάρχει authenticated user,
-    // παίρνουμε το id από το JWT.
+    // 7. Αν υπάρχει authenticated user, παίρνουμε το id από το JWT.
     int? userId = null;
 
     var userIdString = currentUser.FindFirst("id")?.Value;
@@ -91,7 +140,7 @@ public class TicketController
       userId = parsedUserId;
     }
 
-    // 7. Δημιουργούμε το Ticket.
+    // 8. Δημιουργούμε το Ticket.
     var ticket = new Ticket
     {
       CompanyId = queue.CompanyId,
@@ -99,14 +148,20 @@ public class TicketController
       QueueId = queue.Id,
       UserId = userId,
       CustomerEmail = dto.Email,
-      Number = nextNumber,
+      // Number = nextNumber, // Τώρα το Number προστίθεται μέσα στο TicketDao.Create(), πριν σωθεί το ticket.
       Pin = pin,
       TrackingToken = trackingToken,
       Status = "WAITING"
     };
 
-    // 8. Αποθήκευση.
-    var created = await _dao.Create(ticket);
+    // 9. Αποθήκευση.
+    // TICKETSERVICE + ATOMIC TRANSACTION
+    // Το TicketDao αναλαμβάνει πλέον να αποθηκεύσει:
+    // - το Ticket - όλα τα TicketService σαν μία ενιαία atomic λειτουργία. Αν αποτύχει κάποιο TicketService, γίνεται rollback και του Ticket.
+    var created = await _dao.Create(
+      ticket,
+      serviceIds
+    );
 
     var data = new
     {
@@ -118,10 +173,11 @@ public class TicketController
       created.Pin,
       created.TrackingToken,
       created.Status,
-      created.CreatedAt
+      created.CreatedAt,
+      ServiceIds = serviceIds
     };
 
-    // 9. Response.
+    // 10. Response.
     return Results.Created(
       $"/tickets/{created.TrackingToken}",
       new
@@ -130,6 +186,31 @@ public class TicketController
         data
       }
     );
+  }
+
+  // Βρίσκει τα services που έχουν συνδεθεί με ένα ticket και επιστρέφει id + όνομα του κάθε service.
+  private async Task<List<TicketServiceInfoDto>> GetServicesForTicket(
+    int ticketId
+  )
+  {
+    var ticketServices = await _ticketServiceDao.GetByTicketId(ticketId);
+    var services = new List<TicketServiceInfoDto>();
+
+    foreach (var ticketService in ticketServices)
+    {
+      var service = await _serviceDao.GetById(
+        ticketService.ServiceId
+      );
+
+      if (service is not null)
+      {
+        services.Add(new TicketServiceInfoDto(
+          service.Id,
+          service.Name
+        ));
+      }
+    }
+    return services;
   }
 
   // για να μπορούμε να παρακολουθούμε το ticket απο σελίδα που μας οδηγεί το qr
@@ -148,6 +229,8 @@ public class TicketController
       });
     }
 
+    var services = await GetServicesForTicket(ticket.Id);
+
     var data = new TicketTrackingDto(
       ticket.Id,
       ticket.CompanyId,
@@ -158,7 +241,8 @@ public class TicketController
       ticket.Status,
       ticket.CreatedAt,
       ticket.ServingStartedAt,
-      ticket.CompletedAt
+      ticket.CompletedAt,
+      services
     );
 
     return Results.Ok(new
@@ -175,27 +259,32 @@ public class TicketController
   {
     var userIdString = currentUser.FindFirst("id")?.Value;
 
-    if (!int.TryParse(userIdString, out var userId))
-    {
-      return Results.Unauthorized();
-    }
+    if (!int.TryParse(userIdString, out var userId)) return Results.Unauthorized();
 
     var tickets = await _dao.GetByUserId(userId);
 
-    var data = tickets.Select(ticket => new MyTicketDto(
-      ticket.Id,
-      ticket.CompanyId,
-      ticket.LocationId,
-      ticket.QueueId,
-      ticket.Number,
-      ticket.Pin,
-      ticket.TrackingToken,
-      ticket.CustomerEmail,
-      ticket.Status,
-      ticket.CreatedAt,
-      ticket.ServingStartedAt,
-      ticket.CompletedAt
-    ));
+    var data = new List<MyTicketDto>();
+
+    foreach (var ticket in tickets)
+    {
+      var services = await GetServicesForTicket(ticket.Id);
+
+      data.Add(new MyTicketDto(
+        ticket.Id,
+        ticket.CompanyId,
+        ticket.LocationId,
+        ticket.QueueId,
+        ticket.Number,
+        ticket.Pin,
+        ticket.TrackingToken,
+        ticket.CustomerEmail,
+        ticket.Status,
+        ticket.CreatedAt,
+        ticket.ServingStartedAt,
+        ticket.CompletedAt,
+        services
+      ));
+    }
 
     return Results.Ok(new
     {
@@ -281,20 +370,28 @@ public class TicketController
 
     var tickets = await _dao.GetByQueueId(queueId);
 
-    var data = tickets.Select(ticket => new MyTicketDto(
-      ticket.Id,
-      ticket.CompanyId,
-      ticket.LocationId,
-      ticket.QueueId,
-      ticket.Number,
-      ticket.Pin,
-      ticket.TrackingToken,
-      ticket.CustomerEmail,
-      ticket.Status,
-      ticket.CreatedAt,
-      ticket.ServingStartedAt,
-      ticket.CompletedAt
-    ));
+    var data = new List<MyTicketDto>();
+
+    foreach (var ticket in tickets)
+    {
+      var services = await GetServicesForTicket(ticket.Id);
+
+      data.Add(new MyTicketDto(
+        ticket.Id,
+        ticket.CompanyId,
+        ticket.LocationId,
+        ticket.QueueId,
+        ticket.Number,
+        ticket.Pin,
+        ticket.TrackingToken,
+        ticket.CustomerEmail,
+        ticket.Status,
+        ticket.CreatedAt,
+        ticket.ServingStartedAt,
+        ticket.CompletedAt,
+        services
+      ));
+    }
 
     return Results.Ok(new
     {
@@ -331,10 +428,7 @@ public class TicketController
     // 1. Ελέγχουμε ότι ο user είναι STAFF και έχει ACTIVE StaffSession.
     var session = await GetServingSession(currentUser);
 
-    if (session is null)
-    {
-      return Results.Forbid();
-    }
+    if (session is null) return Results.Forbid();
 
     // 2. Το DAO κάνει πλέον όλη την atomic διαδικασία:
     // - βρίσκει το πρώτο WAITING ticket - το κάνει SERVING - βάζει Staff - βάζει Desk - βάζει ServingStartedAt και όλα αυτά μέσα στο transaction.
@@ -355,6 +449,7 @@ public class TicketController
     }
 
     // 3. Response.
+    var services = await GetServicesForTicket(ticket.Id);
     var data = new MyTicketDto(
       ticket.Id,
       ticket.CompanyId,
@@ -367,7 +462,8 @@ public class TicketController
       ticket.Status,
       ticket.CreatedAt,
       ticket.ServingStartedAt,
-      ticket.CompletedAt
+      ticket.CompletedAt,
+      services
     );
 
     return Results.Ok(new
@@ -420,6 +516,7 @@ public class TicketController
     }
 
     // 4. Response.
+    var services = await GetServicesForTicket(ticket.Id);
     var data = new MyTicketDto(
       ticket.Id,
       ticket.CompanyId,
@@ -432,7 +529,8 @@ public class TicketController
       ticket.Status,
       ticket.CreatedAt,
       ticket.ServingStartedAt,
-      ticket.CompletedAt
+      ticket.CompletedAt,
+      services
     );
 
     return Results.Ok(new
@@ -629,6 +727,7 @@ public class TicketController
 
     if (!hasAccess) return Results.Forbid();
 
+    var services = await GetServicesForTicket(ticket.Id);
     var data = new MyTicketDto(
       ticket.Id,
       ticket.CompanyId,
@@ -641,7 +740,8 @@ public class TicketController
       ticket.Status,
       ticket.CreatedAt,
       ticket.ServingStartedAt,
-      ticket.CompletedAt
+      ticket.CompletedAt,
+      services
     );
 
     return Results.Ok(new
@@ -653,9 +753,9 @@ public class TicketController
 
   public async Task<IResult> Delete(int ticketId)
   {
-    var deleted = await _dao.Delete(ticketId);
+    var ticket = await _dao.GetById(ticketId);
 
-    if (deleted is null)
+    if (ticket is null)
     {
       return Results.NotFound(new
       {
@@ -664,10 +764,15 @@ public class TicketController
       });
     }
 
+    // Διαγράφουμε πρώτα όλες τις σχέσεις του ticket με services.
+    await _ticketServiceDao.DeleteByTicketId(ticketId);
+
+    var deleted = await _dao.Delete(ticketId);
+
     return Results.Ok(new
     {
       status = true,
-      message = $"Ticket {deleted.Number} deleted"
+      message = $"Ticket {deleted!.Number} deleted"
     });
   }
 

@@ -1,5 +1,6 @@
 // backend\Dtos\TicketDtos\PublicTicketDto.cs
 
+using backend.Dtos.TicketServiceDtos;
 namespace backend.Dtos.TicketDtos;
 
 // o χρήστης θα ακολουθάει ένα qr και θα βλέπει τις πληροφορίες το ticket του
@@ -14,5 +15,6 @@ public record TicketTrackingDto(
   string Status,
   DateTime CreatedAt,
   DateTime? ServingStartedAt,
-  DateTime? CompletedAt
+  DateTime? CompletedAt,
+  List<TicketServiceInfoDto>? Services = null
 );

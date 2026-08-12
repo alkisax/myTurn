@@ -4,7 +4,7 @@
 using Backend;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Daos;
+namespace backend;
 
 public class TicketServiceDao
 {

@@ -7,6 +7,7 @@ namespace backend;
 
 public class TicketDao(MyTurnContext context)
 {
+  // create ticket in 3 parts
   // 1. Βρες τον τελευταίο αριθμό της Queue σήμερα
   // 2. Έλεγξε αν ένα PIN χρησιμοποιείται ήδη σήμερα στο Location
   // 3. Αποθήκευσε το Ticket
@@ -31,7 +32,6 @@ public class TicketDao(MyTurnContext context)
     return lastNumber ?? 0;
   }
 
-
   // 2. Ελέγχει αν το συγκεκριμένο PIN έχει ήδη χρησιμοποιηθεί
   // σήμερα στο συγκεκριμένο Location.
   public async Task<bool> PinExistsToday(
@@ -53,14 +53,68 @@ public class TicketDao(MyTurnContext context)
       );
   }
 
-
-  // 3. Αποθηκεύει το νέο Ticket.
-  public async Task<Ticket> Create(Ticket ticket)
+  // 3. Αποθηκεύει το νέο Ticket μαζί με τα Services του σαν μία atomic διαδικασία.
+  // Atomic σημαίνει "όλα ή τίποτα". Θέλουμε: 1. να δημιουργηθεί το Ticket 2. να δημιουργηθούν ΟΛΑ τα TicketService. Αν αποτύχει οποιοδήποτε βήμα, δεν θέλουμε να μείνει στη βάση ούτε Ticket χωρίς services ούτε μισές TicketService εγγραφές.
+  // Επίσης κλειδώνουμε τη write διαδικασία από την αρχή ώστε δύο requests να μην πάρουν τον ίδιο ticket number.
+  public async Task<Ticket> Create(
+    Ticket ticket,
+    List<int> serviceIds
+  )
   {
-    context.Tickets.Add(ticket);
+    // ⚠️ BEGIN IMMEDIATE = ξεκίνα transaction και πάρε write access από τώρα. Έτσι άλλο create request δεν μπορεί ταυτόχρονα να διαβάσει τον ίδιο τελευταίο αριθμό και να δημιουργήσει duplicate Number.
+    await context.Database.ExecuteSqlRawAsync(
+      "BEGIN IMMEDIATE;"
+    );
 
-    await context.SaveChangesAsync();
-    return ticket;
+    try
+    {
+      // 1. Βρίσκουμε τον τελευταίο αριθμό όσο το transaction είναι κλειδωμένο.
+      var today = DateTime.UtcNow.Date;
+      var tomorrow = today.AddDays(1);
+
+      var lastNumber = await context.Tickets
+        .Where(ticketDb =>
+          ticketDb.QueueId == ticket.QueueId &&
+          ticketDb.CreatedAt >= today &&
+          ticketDb.CreatedAt < tomorrow
+        )
+        .MaxAsync(ticketDb => (int?)ticketDb.Number);
+
+
+      // 2. Δίνουμε τον επόμενο αριθμό.
+      ticket.Number = (lastNumber ?? 0) + 1;
+
+
+      // 3. Αποθηκεύουμε πρώτα το Ticket για να πάρουμε το Id του.
+      context.Tickets.Add(ticket);
+      await context.SaveChangesAsync();
+
+      // 4: Δημιουργούμε μία TicketService εγγραφή για κάθε Service που επέλεξε ο χρήστης.
+      foreach (var serviceId in serviceIds)
+      {
+        var ticketService = new TicketService
+        {
+          TicketId = ticket.Id,
+          ServiceId = serviceId
+        };
+
+        context.TicketServices.Add(ticketService);
+      }
+
+      // Αποθηκεύουμε όλες τις TicketService εγγραφές.
+      await context.SaveChangesAsync();
+
+      // COMMIT: Όλα τα παραπάνω πέτυχαν. Κάνουμε τις αλλαγές οριστικές στη βάση.
+      await context.Database.ExecuteSqlRawAsync("COMMIT;");
+      return ticket;
+    }
+    catch
+    {
+      // Αν αποτύχει ΟΤΙΔΗΠΟΤΕ μέσα στο try → ROLLBACK: ακυρώνουμε ΟΛΕΣ τις αλλαγές του transaction.
+      // Ακόμα και αν το Ticket είχε ήδη περάσει από SaveChangesAsync(), δεν θα παραμείνει στη βάση επειδή δεν είχε γίνει COMMIT.
+      await context.Database.ExecuteSqlRawAsync("ROLLBACK;");
+      throw;
+    }
   }
 
   // για να μπορούμε να παρακολουθούμε το ticket απο σελίδα που μας οδηγεί το qr
