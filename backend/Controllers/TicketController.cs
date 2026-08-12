@@ -1,0 +1,675 @@
+// backend\Controllers\TicketController.cs
+
+using Backend;
+using backend.Dtos.TicketDtos;
+using System.Security.Claims;
+
+namespace backend.Controllers;
+
+public class TicketController
+{
+  private readonly TicketDao _dao;
+  private readonly QueueDao _queueDao;
+  private readonly CompanyUserDao _companyUserDao;
+  private readonly StaffSessionDao _staffSessionDao;
+
+  public TicketController(
+    TicketDao dao,
+    QueueDao queueDao,
+    CompanyUserDao companyUserDao,
+    StaffSessionDao staffSessionDao
+  )
+  {
+    _dao = dao;
+    _queueDao = queueDao;
+    _companyUserDao = companyUserDao;
+    _staffSessionDao = staffSessionDao;
+  }
+
+  public async Task<IResult> Create(
+    CreateTicketDto dto,
+    ClaimsPrincipal currentUser // token payload
+  )
+  {
+    // 1. Βρίσκουμε το Queue. έρχεται απο το request body του post στο CreateTicketDto
+    var queue = await _queueDao.GetById(dto.QueueId);
+
+    if (queue is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Queue not found"
+      });
+    }
+
+    // 2. Δεν εκδίδουμε ticket σε inactive Queue.
+    if (!queue.IsActive)
+    {
+      return Results.BadRequest(new
+      {
+        status = false,
+        message = "Queue is inactive"
+      });
+    }
+
+    // 3. Βρίσκουμε τον επόμενο αριθμό.
+    var lastNumber = await _dao.GetLastNumberToday(queue.Id);
+    var nextNumber = lastNumber + 1;
+
+
+    // 4. Δημιουργούμε PIN και ελέγχουμε
+    // ότι δεν υπάρχει ήδη σήμερα στο ίδιο Location.
+    string pin;
+
+    // δίνε pin μέχρι να μην υπάρχει σήμερα
+    do
+    {
+      // .Shared σημαίνει ουσιαστικά: «χρησιμοποίησε τον κοινό, έτοιμο random generator που έχει ήδη το .NET.
+      // pin = Random.Shared.Next(1000, 10000).ToString(); για να έχω και πχ 0001 κάνουμε μορφοποίηση με leading 0 → d4
+      pin = Random.Shared.Next(0, 10000).ToString("D4");
+    }
+    while (await _dao.PinExistsToday(
+      queue.LocationId,
+      pin
+    ));
+
+    // 5. Δημιουργούμε secure tracking token.
+    // GUID → Globally Unique Identifier. μου το δίνει το using system
+    // "N" →  32 χαρακτήρες χωρίς παύλες
+    var trackingToken = Guid.NewGuid().ToString("N");
+
+    // 6. Αν υπάρχει authenticated user,
+    // παίρνουμε το id από το JWT.
+    int? userId = null;
+
+    var userIdString = currentUser.FindFirst("id")?.Value;
+
+    // προσπάθησε να μετατρέψεις το "17" σε 17
+    if (int.TryParse(userIdString, out var parsedUserId))
+    {
+      userId = parsedUserId;
+    }
+
+    // 7. Δημιουργούμε το Ticket.
+    var ticket = new Ticket
+    {
+      CompanyId = queue.CompanyId,
+      LocationId = queue.LocationId,
+      QueueId = queue.Id,
+      UserId = userId,
+      CustomerEmail = dto.Email,
+      Number = nextNumber,
+      Pin = pin,
+      TrackingToken = trackingToken,
+      Status = "WAITING"
+    };
+
+    // 8. Αποθήκευση.
+    var created = await _dao.Create(ticket);
+
+    var data = new
+    {
+      created.Id,
+      created.CompanyId,
+      created.LocationId,
+      created.QueueId,
+      created.Number,
+      created.Pin,
+      created.TrackingToken,
+      created.Status,
+      created.CreatedAt
+    };
+
+    // 9. Response.
+    return Results.Created(
+      $"/tickets/{created.TrackingToken}",
+      new
+      {
+        status = true,
+        data
+      }
+    );
+  }
+
+  // για να μπορούμε να παρακολουθούμε το ticket απο σελίδα που μας οδηγεί το qr
+  public async Task<IResult> GetByTrackingToken(
+    string trackingToken
+  )
+  {
+    var ticket = await _dao.GetByTrackingToken(trackingToken);
+
+    if (ticket is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Ticket not found"
+      });
+    }
+
+    var data = new TicketTrackingDto(
+      ticket.Id,
+      ticket.CompanyId,
+      ticket.LocationId,
+      ticket.QueueId,
+      ticket.Number,
+      ticket.Pin,
+      ticket.Status,
+      ticket.CreatedAt,
+      ticket.ServingStartedAt,
+      ticket.CompletedAt
+    );
+
+    return Results.Ok(new
+    {
+      status = true,
+      data
+    });
+  }
+
+  // για να μπορεί να δεί ο χρήστης τα ticket του παλια και νέα
+  public async Task<IResult> GetMine(
+    ClaimsPrincipal currentUser // token payload
+  )
+  {
+    var userIdString = currentUser.FindFirst("id")?.Value;
+
+    if (!int.TryParse(userIdString, out var userId))
+    {
+      return Results.Unauthorized();
+    }
+
+    var tickets = await _dao.GetByUserId(userId);
+
+    var data = tickets.Select(ticket => new MyTicketDto(
+      ticket.Id,
+      ticket.CompanyId,
+      ticket.LocationId,
+      ticket.QueueId,
+      ticket.Number,
+      ticket.Pin,
+      ticket.TrackingToken,
+      ticket.CustomerEmail,
+      ticket.Status,
+      ticket.CreatedAt,
+      ticket.ServingStartedAt,
+      ticket.CompletedAt
+    ));
+
+    return Results.Ok(new
+    {
+      status = true,
+      data
+    });
+  }
+
+  // για όλο το προσωπικό να βλέπει ποιοι αριθμοί είναι σε ένα queue. Το staff βλέπει το queue στο οποίο είναι assigned, ο admin τα queue του company και ο super admin όλα
+  // Το CompanyUser είναι ο μηχανισμός company-level access για ADMIN/STAFF.
+  // όλα τα tickets του queue αργότερα filter
+
+  // ⚠️ Access helper
+  // boolean συνάρτηση που μου απαντάει στο ερώτημα ποιος έχει προσβαση
+  private async Task<bool> HasQueueAccess(
+    Queue queue,
+    ClaimsPrincipal currentUser
+  )
+  {
+    var role = currentUser.FindFirst(ClaimTypes.Role)?.Value;
+
+    // ο superadmin έχει προσβαση σε όλα
+    if (role == "SUPERADMIN")
+    {
+      return true;
+    }
+
+    // αν δεν είναι superuser → ελέγχω το id του. θέλουμε να δουμε αν είναι admin και owner του company ή staff και assigned στο queue
+    var userIdString = currentUser.FindFirst("id")?.Value;
+
+    if (!int.TryParse(userIdString, out var userId))
+    {
+      return false;
+    }
+
+    // αν είναι admin ψάχνω αν έχει σχέση με τo company στο οποίο ανήκει το queue (είχαμε φτιάξει σχετικό dao στο company)
+    if (role == "ADMIN")
+    {
+      // CompanyUser = ενδιάμεση οντότητα που συνδέει έναν User με μία Company και καθορίζει σε ποιες Companies έχει πρόσβαση.
+      // GetByUserAndCompany(userId, companyId) = ψάχνει αν υπάρχει συγκεκριμένη σχέση User ↔ Company.
+      var relation = await _companyUserDao.GetByUserAndCompany(userId, queue.CompanyId);
+      return relation is not null; // true αν βρέθηκε σχέση CompanyUser, αλλιώς false
+    }
+
+    if (role == "STAFF")
+    {
+      // StaffSession = προσωρινή οντότητα που δείχνει σε ποιο Desk/Queue εργάζεται αυτή τη στιγμή ένας STAFF και αν είναι ACTIVE/BREAK.
+      // GetActiveByUserId(userId) = βρίσκει το ανοιχτό StaffSession του συγκεκριμένου STAFF, δηλαδή session με EndedAt == null.
+      var session = await _staffSessionDao.GetActiveByUserId(userId);
+      // μόνο αν ισχύουν και τα τρία: έχει ενεργό StaffSession, το session είναι για το ίδιο Queue, το session είναι σε status ACTIVE
+      return session is not null && session.QueueId == queue.Id;
+      // && session.Status == "ACTIVE"; //commented → θέλω να βλέπει την σειρά και σε break
+    }
+
+    return false;
+  }
+
+  public async Task<IResult> GetByQueueId(
+  int queueId,
+    ClaimsPrincipal currentUser
+  )
+  {
+    var queue = await _queueDao.GetById(queueId);
+
+    if (queue is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Queue not found"
+      });
+    }
+
+    var hasAccess = await HasQueueAccess(
+      queue,
+      currentUser
+    );
+
+    if (!hasAccess)
+    {
+      return Results.Forbid();
+    }
+
+    var tickets = await _dao.GetByQueueId(queueId);
+
+    var data = tickets.Select(ticket => new MyTicketDto(
+      ticket.Id,
+      ticket.CompanyId,
+      ticket.LocationId,
+      ticket.QueueId,
+      ticket.Number,
+      ticket.Pin,
+      ticket.TrackingToken,
+      ticket.CustomerEmail,
+      ticket.Status,
+      ticket.CreatedAt,
+      ticket.ServingStartedAt,
+      ticket.CompletedAt
+    ));
+
+    return Results.Ok(new
+    {
+      status = true,
+      data
+    });
+  }
+
+  // staff πατάει next
+  // ⚠️ Helper που ελέγχει αν αυτός ο user μπορεί να εξυπηρετησει αυτήν την queue
+  private async Task<StaffSession?> GetServingSession(
+    ClaimsPrincipal currentUser
+  )
+  {
+    var userIdString = currentUser.FindFirst("id")?.Value;
+    if (!int.TryParse(userIdString, out var userId)) return null;
+    var role = currentUser.FindFirst(ClaimTypes.Role)?.Value;
+
+    // μονο Staff ⚠️ αργότερα θα φτιάξουμε ξεχωριστές administrative recovery actions
+    if (role != "STAFF") return null;
+
+    var session = await _staffSessionDao.GetActiveByUserId(userId);
+
+    if (session is null) return null;
+    if (session.Status != "ACTIVE") return null;
+
+    return session;
+  }
+
+  public async Task<IResult> Next(
+    ClaimsPrincipal currentUser
+  )
+  {
+    // 1. Ελέγχουμε ότι ο user είναι STAFF και έχει ACTIVE StaffSession.
+    var session = await GetServingSession(currentUser);
+
+    if (session is null)
+    {
+      return Results.Forbid();
+    }
+
+    // 2. Το DAO κάνει πλέον όλη την atomic διαδικασία:
+    // - βρίσκει το πρώτο WAITING ticket - το κάνει SERVING - βάζει Staff - βάζει Desk - βάζει ServingStartedAt και όλα αυτά μέσα στο transaction.
+    var ticket = await _dao.ClaimNextWaiting(
+      session.QueueId,
+      session.UserId,
+      session.DeskId
+    );
+
+    // Δεν υπάρχει άλλο WAITING ticket.
+    if (ticket is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "No waiting tickets"
+      });
+    }
+
+    // 3. Response.
+    var data = new MyTicketDto(
+      ticket.Id,
+      ticket.CompanyId,
+      ticket.LocationId,
+      ticket.QueueId,
+      ticket.Number,
+      ticket.Pin,
+      ticket.TrackingToken,
+      ticket.CustomerEmail,
+      ticket.Status,
+      ticket.CreatedAt,
+      ticket.ServingStartedAt,
+      ticket.CompletedAt
+    );
+
+    return Results.Ok(new
+    {
+      status = true,
+      data
+    });
+  }
+
+
+  public async Task<IResult> Complete(
+    int ticketId,
+    CompleteTicketDto dto,
+    ClaimsPrincipal currentUser
+  )
+  {
+    // 1. Πρέπει να είναι STAFF με ACTIVE StaffSession.
+    var session = await GetServingSession(currentUser);
+
+    if (session is null) return Results.Forbid();
+
+    // 2. Δεχόμαστε μόνο SUCCESS ή FAILED.
+    var completionResult = dto.CompletionResult.ToUpper();
+
+    if (completionResult != "SUCCESS" && completionResult != "FAILED")
+    {
+      return Results.BadRequest(new
+      {
+        status = false,
+        message = "CompletionResult must be SUCCESS or FAILED"
+      });
+    }
+
+    // 3. Προσπαθούμε να ολοκληρώσουμε το ticket.
+    // Χρησιμοποιούμε userId + deskId από το StaffSession, όχι δεδομένα που έστειλε ο client.
+    var ticket = await _dao.Complete(
+      ticketId,
+      session.UserId,
+      session.DeskId,
+      completionResult
+    );
+
+    if (ticket is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Serving ticket not found"
+      });
+    }
+
+    // 4. Response.
+    var data = new MyTicketDto(
+      ticket.Id,
+      ticket.CompanyId,
+      ticket.LocationId,
+      ticket.QueueId,
+      ticket.Number,
+      ticket.Pin,
+      ticket.TrackingToken,
+      ticket.CustomerEmail,
+      ticket.Status,
+      ticket.CreatedAt,
+      ticket.ServingStartedAt,
+      ticket.CompletedAt
+    );
+
+    return Results.Ok(new
+    {
+      status = true,
+      data
+    });
+  }
+
+  public async Task<IResult> MarkMissed(
+    int ticketId,
+    ClaimsPrincipal currentUser
+  )
+  {
+    // Πρέπει να είναι STAFF με ACTIVE StaffSession.
+    var session = await GetServingSession(currentUser);
+
+    if (session is null) return Results.Forbid();
+
+    var ticket = await _dao.MarkMissed(
+      ticketId,
+      session.UserId,
+      session.DeskId
+    );
+
+    if (ticket is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Serving ticket not found"
+      });
+    }
+
+    return Results.Ok(new
+    {
+      status = true,
+      data = ticket
+    });
+  }
+
+  public async Task<IResult> RecallMissed(
+    int ticketId,
+    ClaimsPrincipal currentUser
+  )
+  {
+    var session = await GetServingSession(currentUser);
+
+    if (session is null) return Results.Forbid();
+
+    var ticket = await _dao.RecallMissed(
+      ticketId,
+      session.QueueId,
+      session.UserId,
+      session.DeskId
+    );
+
+    if (ticket is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Missed ticket not found"
+      });
+    }
+
+    return Results.Ok(new
+    {
+      status = true,
+      data = ticket
+    });
+  }
+
+  // ⚠️ δεν έχουμε δεί ακόμα αν αυτό θα είναι automated
+  public async Task<IResult> ExpireMissed(
+    int ticketId,
+    ClaimsPrincipal currentUser
+  )
+  {
+    // 1. Βρίσκουμε πρώτα το ticket.
+    var ticket = await _dao.GetById(ticketId);
+
+    if (ticket is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Ticket not found"
+      });
+    }
+
+    // 2. Βρίσκουμε την Queue στην οποία ανήκει.
+    var queue = await _queueDao.GetById(ticket.QueueId);
+
+    if (queue is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Queue not found"
+      });
+    }
+
+    // 3. Χρησιμοποιούμε το υπάρχον access check.
+    // SUPERADMIN -> επιτρέπεται
+    // ADMIN -> πρέπει να έχει CompanyUser relation με την Company της Queue.
+    var hasAccess = await HasQueueAccess(
+      queue,
+      currentUser
+    );
+
+    if (!hasAccess) return Results.Forbid();
+
+    // 4. Τώρα μπορούμε με ασφάλεια να κάνουμε: MISSED -> EXPIRED
+    var expiredTicket = await _dao.ExpireMissed(ticketId);
+
+    if (expiredTicket is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Missed ticket not found"
+      });
+    }
+
+    return Results.Ok(new
+    {
+      status = true,
+      data = expiredTicket
+    });
+  }
+
+  public async Task<IResult> Cancel(
+    int ticketId,
+    ClaimsPrincipal currentUser
+  )
+  {
+    var userIdString = currentUser.FindFirst("id")?.Value;
+
+    if (!int.TryParse(userIdString, out var userId)) return Results.Unauthorized();
+
+    var ticket = await _dao.Cancel(
+      ticketId,
+      userId
+    );
+
+    if (ticket is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Waiting ticket not found"
+      });
+    }
+
+    return Results.Ok(new
+    {
+      status = true,
+      data = ticket
+    });
+  }
+
+  // generic get by id
+  public async Task<IResult> GetById(
+    int ticketId,
+    ClaimsPrincipal currentUser
+  )
+  {
+    var ticket = await _dao.GetById(ticketId);
+    if (ticket is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Ticket not found"
+      });
+    }
+
+    var queue = await _queueDao.GetById(ticket.QueueId);
+
+    if (queue is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Queue not found"
+      });
+    }
+
+    var hasAccess = await HasQueueAccess(
+      queue,
+      currentUser
+    );
+
+    if (!hasAccess) return Results.Forbid();
+
+    var data = new MyTicketDto(
+      ticket.Id,
+      ticket.CompanyId,
+      ticket.LocationId,
+      ticket.QueueId,
+      ticket.Number,
+      ticket.Pin,
+      ticket.TrackingToken,
+      ticket.CustomerEmail,
+      ticket.Status,
+      ticket.CreatedAt,
+      ticket.ServingStartedAt,
+      ticket.CompletedAt
+    );
+
+    return Results.Ok(new
+    {
+      status = true,
+      data
+    });
+  }
+
+  public async Task<IResult> Delete(int ticketId)
+  {
+    var deleted = await _dao.Delete(ticketId);
+
+    if (deleted is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Ticket not found"
+      });
+    }
+
+    return Results.Ok(new
+    {
+      status = true,
+      message = $"Ticket {deleted.Number} deleted"
+    });
+  }
+
+
+}

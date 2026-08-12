@@ -32,6 +32,8 @@ builder.Services.AddScoped<StaffSessionDao>();
 builder.Services.AddScoped<StaffSessionController>();
 builder.Services.AddScoped<ServiceDao>();
 builder.Services.AddScoped<ServiceController>();
+builder.Services.AddScoped<TicketDao>();
+builder.Services.AddScoped<TicketController>();
 
 builder.Services.AddJwtAuth(builder.Configuration);
 
@@ -81,6 +83,7 @@ app.MapQueueEndpoints();
 app.MapDeskEndpoints();
 app.MapStaffSessionEndpoints();
 app.MapServiceEndpoints();
+app.MapTicketEndpoints();
 
 app.Urls.Add("http://localhost:3020");
 app.Run();

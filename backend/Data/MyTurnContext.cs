@@ -18,4 +18,7 @@ public class MyTurnContext(DbContextOptions<MyTurnContext> options) : DbContext(
   public DbSet<Desk> Desks => Set<Desk>();
   public DbSet<StaffSession> StaffSessions => Set<StaffSession>();
   public DbSet<Service> Services => Set<Service>();
+  public DbSet<Ticket> Tickets => Set<Ticket>();
 }
+
+// ex: dotnet ef migrations add AddTicket --output-dir Data\Migrations
