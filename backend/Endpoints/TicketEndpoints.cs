@@ -75,6 +75,19 @@ public static class TicketEndpoints
     })
     .RequireAuthorization(); // δεν χρησιμοποιούμε AdminOnly, επειδή αυτό θα απέκλειε τον STAFF
 
+    group.MapGet("/queue/{queueId:int}/history", async (
+      int queueId,
+      TicketController controller,
+      HttpContext context
+    ) =>
+    {
+      return await controller.GetHistoryByQueueId(
+        queueId,
+        context.User
+      );
+    })
+    .RequireAuthorization();
+
     // next
     // Δεν χρειάζεται queueId στο URL. Ο staff δεν λέει: δώσε μου next από queue 3Το backend ξέρει ήδη το queue από το StaffSession.
     group.MapPost("/next", async (

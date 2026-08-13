@@ -68,3 +68,13 @@ git checkout wip
 ```
 
 To continue this session, run codex resume 019fe2a1-03c2-7bd0-9594-48b8a38340dc
+
+
+git add .
+git commit -m "feat: codex changes: added queue filtering history"
+git push origin wip-ai
+
+git switch main
+git merge wip-ai
+git push origin main
+git switch  wip-ai

@@ -402,6 +402,60 @@ public class TicketController
 
   // staff πατάει next
   // ⚠️ Helper που ελέγχει αν αυτός ο user μπορεί να εξυπηρετησει αυτήν την queue
+  public async Task<IResult> GetHistoryByQueueId(
+    int queueId,
+    ClaimsPrincipal currentUser
+  )
+  {
+    var queue = await _queueDao.GetById(queueId);
+
+    if (queue is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Queue not found"
+      });
+    }
+
+    var hasAccess = await HasQueueAccess(queue, currentUser);
+
+    if (!hasAccess)
+    {
+      return Results.Forbid();
+    }
+
+    var tickets = await _dao.GetHistoryByQueueId(queueId);
+    var data = new List<MyTicketDto>();
+
+    foreach (var ticket in tickets)
+    {
+      var services = await GetServicesForTicket(ticket.Id);
+
+      data.Add(new MyTicketDto(
+        ticket.Id,
+        ticket.CompanyId,
+        ticket.LocationId,
+        ticket.QueueId,
+        ticket.Number,
+        ticket.Pin,
+        ticket.TrackingToken,
+        ticket.CustomerEmail,
+        ticket.Status,
+        ticket.CreatedAt,
+        ticket.ServingStartedAt,
+        ticket.CompletedAt,
+        services
+      ));
+    }
+
+    return Results.Ok(new
+    {
+      status = true,
+      data
+    });
+  }
+
   private async Task<StaffSession?> GetServingSession(
     ClaimsPrincipal currentUser
   )

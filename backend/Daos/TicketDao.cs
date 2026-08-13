@@ -143,10 +143,29 @@ public class TicketDao(MyTurnContext context)
   // όλα τα tickets του queue αργότερα filter
   public async Task<List<Ticket>> GetByQueueId(int queueId)
   {
+    var today = DateTime.UtcNow.Date;
+    var tomorrow = today.AddDays(1);
+
+    return await context.Tickets
+      .AsNoTracking()
+      .Where(ticket =>
+        ticket.QueueId == queueId &&
+        ticket.CreatedAt >= today &&
+        ticket.CreatedAt < tomorrow &&
+        (ticket.Status == "WAITING" ||
+         ticket.Status == "SERVING" ||
+         ticket.Status == "MISSED")
+      )
+      .OrderBy(ticket => ticket.Number)
+      .ToListAsync();
+  }
+
+  public async Task<List<Ticket>> GetHistoryByQueueId(int queueId)
+  {
     return await context.Tickets
       .AsNoTracking()
       .Where(ticket => ticket.QueueId == queueId)
-      .OrderBy(ticket => ticket.Number)
+      .OrderByDescending(ticket => ticket.CreatedAt)
       .ToListAsync();
   }
 
