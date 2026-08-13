@@ -45,6 +45,7 @@ builder.Services.AddScoped<TicketServiceController>();
 builder.Services.AddScoped<TicketEstimateService>();
 builder.Services.AddScoped<TicketPdfService>();
 builder.Services.AddScoped<TicketPdfController>();
+builder.Services.AddScoped<EmailService>();
 
 builder.Services.AddJwtAuth(builder.Configuration);
 

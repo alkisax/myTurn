@@ -5,6 +5,7 @@ using backend.Dtos.TicketDtos;
 using System.Security.Claims;
 using backend.Dtos.TicketServiceDtos;
 using backend.Services;
+using backend.auth.Daos;
 
 namespace backend.Controllers;
 
@@ -19,6 +20,12 @@ public class TicketController
   private readonly QueueResetService _queueResetService;
   private readonly MissedTicketExpiryService _missedTicketExpiryService;
   private readonly TicketEstimateService _ticketEstimateService;
+  private readonly EmailService _emailService;
+  private readonly UserDao _userDao;
+  private readonly TicketPdfService _ticketPdfService;
+  private readonly CompanyDao _companyDao;
+  private readonly LocationDao _locationDao;
+  private readonly IConfiguration _configuration;
 
   public TicketController(
     TicketDao dao,
@@ -29,7 +36,13 @@ public class TicketController
     TicketServiceDao ticketServiceDao,
     QueueResetService queueResetService,
     MissedTicketExpiryService missedTicketExpiryService,
-    TicketEstimateService ticketEstimateService
+    TicketEstimateService ticketEstimateService,
+    EmailService emailService,
+    UserDao userDao,
+    TicketPdfService ticketPdfService,
+    CompanyDao companyDao,
+    LocationDao locationDao,
+    IConfiguration configuration
   )
   {
     _dao = dao;
@@ -41,6 +54,12 @@ public class TicketController
     _queueResetService = queueResetService;
     _missedTicketExpiryService = missedTicketExpiryService;
     _ticketEstimateService = ticketEstimateService;
+    _emailService = emailService;
+    _userDao = userDao;
+    _ticketPdfService = ticketPdfService;
+    _companyDao = companyDao;
+    _locationDao = locationDao;
+    _configuration = configuration;
   }
 
   public async Task<IResult> Create(
@@ -176,6 +195,84 @@ public class TicketController
       serviceIds,
       queue
     );
+
+    // ⚠️εδω στέλνουμε το mail με zoho mail
+    // TODO: στέλνετε απο το δικό μου zoho mail και δεν φαίνεται πουθενα έστω το ονομα του Company 
+    // ⚠️ Βρίσκουμε σε ποιο email θα σταλεί το ticket.
+    // Προτεραιότητα έχει το email που έδωσε ο χρήστης στο request.
+    string? email = dto.Email;
+
+    // Αν δεν έδωσε email αλλά είναι logged in,
+    // χρησιμοποιούμε το email του λογαριασμού του.
+    if (string.IsNullOrWhiteSpace(email) && userId is not null)
+    {
+      var user = await _userDao.GetById(userId.Value);
+      email = user?.Email;
+    }
+
+    // Αν έχουμε email, δημιουργούμε PDF και το στέλνουμε.
+    if (!string.IsNullOrWhiteSpace(email))
+    {
+      var company = await _companyDao.GetById(created.CompanyId);
+      var location = await _locationDao.GetById(created.LocationId);
+
+      // Παίρνουμε τα services του ticket.
+      var ticketServices = await _ticketServiceDao.GetByTicketId(created.Id);
+
+      var serviceNames = new List<string>();
+
+      foreach (var ticketService in ticketServices)
+      {
+        var service = await _serviceDao.GetById(ticketService.ServiceId);
+
+        if (service is not null) serviceNames.Add(service.Name);
+      }
+
+      // Υπολογίζουμε το τωρινό ETA.
+      var estimatedWaitingMinutes = await _ticketEstimateService.GetEstimatedWaitingMinutes(created, queue.LastResetAt);
+      // URL για public tracking.
+      var trackingUrl = $"{_configuration["Frontend:TicketTrackingBaseUrl"]?.TrimEnd('/')}/{created.TrackingToken}";
+
+      // Δημιουργούμε το ίδιο PDF που μπορεί να κατεβάσει και ο χρήστης.
+      var pdf = _ticketPdfService.Generate(
+        created,
+        company!.Name,
+        location!.Name,
+        queue.Name,
+        serviceNames,
+        estimatedWaitingMinutes
+      );
+
+      // Περιεχόμενο του email.
+      var body =
+      $"""
+        MyTurn
+
+        Company: {company.Name}
+        Location: {location.Name}
+        Queue: {queue.Name}
+
+        Ticket number: {created.Number}
+        PIN: {created.Pin}
+
+        Services:
+        {string.Join("\n", serviceNames.Select(name => $"- {name}"))}
+
+        Estimated waiting time: {estimatedWaitingMinutes:F1} minutes
+
+        Tracking:
+        {trackingUrl}
+      """;
+
+      // Στέλνουμε email μαζί με το PDF attachment.
+      await _emailService.SendTicketEmail(
+        email,
+        $"MyTurn - Ticket #{created.Number}",
+        body,
+        pdf
+      );
+    }
+    // ⚠️ 👆🏽 εδω τελειώνει η λειτουργία του mail
 
     var data = new
     {
@@ -916,7 +1013,7 @@ public class TicketController
         ticket,
         queue.LastResetAt
       );
-      
+
     var services = await GetServicesForTicket(ticket.Id);
     var data = new MyTicketDto(
       ticket.Id,
