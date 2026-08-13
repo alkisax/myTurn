@@ -16,7 +16,6 @@ public class QueueDao(MyTurnContext context)
       .ToListAsync();
   }
 
-
   // Χρήσιμο όταν θέλουμε συγκεκριμένο queue
   // Το αν ο ADMIN έχει δικαίωμα να το δει
   // ΔΕΝ ελέγχεται εδώ αλλά στον Controller.
@@ -24,7 +23,6 @@ public class QueueDao(MyTurnContext context)
   {
     return await context.Queues.FindAsync(id);
   }
-
 
   // ADMIN:
   // χρησιμοποιείται για να δει ποια queues υπάρχουν
@@ -42,7 +40,6 @@ public class QueueDao(MyTurnContext context)
       .ToListAsync();
   }
 
-
   // Προαιρετικά χρήσιμο:
   // όλα τα queues μιας Company.
   //
@@ -54,7 +51,6 @@ public class QueueDao(MyTurnContext context)
       .Where(queue => queue.CompanyId == companyId)
       .ToListAsync();
   }
-
 
   // ADMIN δημιουργεί Queue.
   //
@@ -68,10 +64,8 @@ public class QueueDao(MyTurnContext context)
   {
     context.Queues.Add(queue);
     await context.SaveChangesAsync();
-
     return queue;
   }
-
 
   public async Task<Queue?> Update(int id, Queue updatedData)
   {
@@ -85,28 +79,17 @@ public class QueueDao(MyTurnContext context)
     queue.Name = updatedData.Name;
     queue.Description = updatedData.Description;
     queue.IsActive = updatedData.IsActive;
-    queue.IsRemoteTicketingAllowed =
-      updatedData.IsRemoteTicketingAllowed;
-
-    queue.DefaultServiceMinutes =
-      updatedData.DefaultServiceMinutes;
-
-    queue.MaxWaitingTickets =
-      updatedData.MaxWaitingTickets;
-
+    queue.IsRemoteTicketingAllowed = updatedData.IsRemoteTicketingAllowed;
+    queue.DefaultServiceMinutes = updatedData.DefaultServiceMinutes;
+    queue.MaxWaitingTickets = updatedData.MaxWaitingTickets;
     queue.OpensAt = updatedData.OpensAt;
     queue.ClosesAt = updatedData.ClosesAt;
-
-    queue.ResetNumberDaily =
-      updatedData.ResetNumberDaily;
-
+    queue.ResetNumberDaily = updatedData.ResetNumberDaily;
     queue.UpdatedAt = DateTime.UtcNow;
 
     await context.SaveChangesAsync();
-
     return queue;
   }
-
 
   public async Task<Queue?> Delete(int id)
   {
@@ -119,7 +102,6 @@ public class QueueDao(MyTurnContext context)
 
     context.Queues.Remove(queue);
     await context.SaveChangesAsync();
-
     return queue;
   }
 }
