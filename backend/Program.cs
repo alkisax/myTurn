@@ -1,5 +1,6 @@
 // backend\Program.cs
 
+using QuestPDF.Infrastructure;
 using backend;
 using backend.auth.Extensions;
 using backend.auth.Services;
@@ -9,6 +10,8 @@ using backend.auth.Endpoints;
 using backend.Controllers;
 using backend.Endpoints;
 using backend.Services;
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +43,8 @@ builder.Services.AddScoped<TicketController>();
 builder.Services.AddScoped<TicketServiceDao>();
 builder.Services.AddScoped<TicketServiceController>();
 builder.Services.AddScoped<TicketEstimateService>();
+builder.Services.AddScoped<TicketPdfService>();
+builder.Services.AddScoped<TicketPdfController>();
 
 builder.Services.AddJwtAuth(builder.Configuration);
 
@@ -91,6 +96,7 @@ app.MapStaffSessionEndpoints();
 app.MapServiceEndpoints();
 app.MapTicketEndpoints();
 app.MapTicketServiceEndpoints();
+app.MapTicketPdfEndpoints();
 
 app.Urls.Add("http://localhost:3020");
 app.Run();
