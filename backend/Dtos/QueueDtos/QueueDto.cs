@@ -15,6 +15,10 @@ public record QueueDto(
   TimeOnly? OpensAt,
   TimeOnly? ClosesAt,
   bool ResetNumberDaily,
+  bool AutoResetEnabled,
+  TimeOnly? ResetAt,
+  DateTime? LastResetAt,
+  DateTime? LastNumberResetAt,
   DateTime CreatedAt,
   DateTime UpdatedAt
 );

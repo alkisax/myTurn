@@ -67,6 +67,10 @@ public class LocationDao(MyTurnContext context)
 
     location.Name = updatedData.Name;
     location.Address = updatedData.Address;
+    location.Country = updatedData.Country;
+    location.Latitude = updatedData.Latitude;
+    location.Longitude = updatedData.Longitude;
+    location.TimeZoneId = updatedData.TimeZoneId;
     location.IsActive = updatedData.IsActive;
     location.UpdatedAt = DateTime.UtcNow;
 

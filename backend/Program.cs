@@ -8,6 +8,7 @@ using backend.auth.Daos;
 using backend.auth.Endpoints;
 using backend.Controllers;
 using backend.Endpoints;
+using backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,7 @@ builder.Services.AddScoped<LocationController>();
 builder.Services.AddScoped<CompanyUserDao>();
 builder.Services.AddScoped<CompanyUserController>();
 builder.Services.AddScoped<QueueDao>();
+builder.Services.AddScoped<QueueResetService>();
 builder.Services.AddScoped<QueueController>();
 builder.Services.AddScoped<DeskDao>();
 builder.Services.AddScoped<DeskController>();

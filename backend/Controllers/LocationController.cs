@@ -62,6 +62,10 @@ public class LocationController
       location.CompanyId,
       location.Name,
       location.Address,
+      location.Country,
+      location.Latitude,
+      location.Longitude,
+      location.TimeZoneId,
       location.IsActive,
       location.CreatedAt,
       location.UpdatedAt
@@ -92,6 +96,10 @@ public class LocationController
       location.CompanyId,
       location.Name,
       location.Address,
+      location.Country,
+      location.Latitude,
+      location.Longitude,
+      location.TimeZoneId,
       location.IsActive,
       location.CreatedAt,
       location.UpdatedAt
@@ -136,6 +144,10 @@ public class LocationController
       location.CompanyId,
       location.Name,
       location.Address,
+      location.Country,
+      location.Latitude,
+      location.Longitude,
+      location.TimeZoneId,
       location.IsActive,
       location.CreatedAt,
       location.UpdatedAt
@@ -171,6 +183,10 @@ public class LocationController
       location.CompanyId,
       location.Name,
       location.Address,
+      location.Country,
+      location.Latitude,
+      location.Longitude,
+      location.TimeZoneId,
       location.IsActive,
       location.CreatedAt,
       location.UpdatedAt
@@ -203,7 +219,11 @@ public class LocationController
     {
       CompanyId = dto.CompanyId,
       Name = dto.Name,
-      Address = dto.Address
+      Address = dto.Address,
+      Country = dto.Country,
+      Latitude = dto.Latitude,
+      Longitude = dto.Longitude,
+      TimeZoneId = dto.TimeZoneId
     };
 
     var created = await _dao.Create(location);
@@ -213,6 +233,10 @@ public class LocationController
       created.CompanyId,
       created.Name,
       created.Address,
+      created.Country,
+      created.Latitude,
+      created.Longitude,
+      created.TimeZoneId,
       created.IsActive,
       created.CreatedAt,
       created.UpdatedAt
@@ -255,6 +279,10 @@ public class LocationController
 
     location.Name = dto.Name ?? location.Name;
     location.Address = dto.Address ?? location.Address;
+    location.Country = dto.Country ?? location.Country;
+    location.Latitude = dto.Latitude ?? location.Latitude;
+    location.Longitude = dto.Longitude ?? location.Longitude;
+    location.TimeZoneId = dto.TimeZoneId ?? location.TimeZoneId;
     location.IsActive = dto.IsActive ?? location.IsActive;
 
     var updated = await _dao.Update(id, location);
@@ -264,6 +292,10 @@ public class LocationController
       updated.CompanyId,
       updated.Name,
       updated.Address,
+      updated.Country,
+      updated.Latitude,
+      updated.Longitude,
+      updated.TimeZoneId,
       updated.IsActive,
       updated.CreatedAt,
       updated.UpdatedAt

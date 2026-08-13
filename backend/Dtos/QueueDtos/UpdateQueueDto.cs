@@ -11,5 +11,7 @@ public record UpdateQueueDto(
   int? MaxWaitingTickets,
   TimeOnly? OpensAt,
   TimeOnly? ClosesAt,
-  bool? ResetNumberDaily
+  bool? ResetNumberDaily,
+  bool? AutoResetEnabled,
+  TimeOnly? ResetAt
 );

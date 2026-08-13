@@ -9,16 +9,19 @@ namespace backend.Controllers;
 public class QueueController
 {
   private readonly QueueDao _dao;
+  private readonly TicketDao _ticketDao;
   private readonly LocationDao _locationDao;
   private readonly CompanyUserDao _companyUserDao;
 
   public QueueController(
     QueueDao dao,
+    TicketDao ticketDao,
     LocationDao locationDao,
     CompanyUserDao companyUserDao
   )
   {
     _dao = dao;
+    _ticketDao = ticketDao;
     _locationDao = locationDao;
     _companyUserDao = companyUserDao;
   }
@@ -232,7 +235,9 @@ public class QueueController
       DefaultServiceMinutes = dto.DefaultServiceMinutes,
       MaxWaitingTickets = dto.MaxWaitingTickets,
       OpensAt = dto.OpensAt,
-      ClosesAt = dto.ClosesAt
+      ClosesAt = dto.ClosesAt,
+      AutoResetEnabled = dto.AutoResetEnabled,
+      ResetAt = dto.ResetAt
     };
 
     var created = await _dao.Create(queue);
@@ -304,6 +309,14 @@ public class QueueController
       dto.ResetNumberDaily
       ?? queue.ResetNumberDaily;
 
+    queue.AutoResetEnabled =
+      dto.AutoResetEnabled
+      ?? queue.AutoResetEnabled;
+
+    queue.ResetAt =
+      dto.ResetAt
+      ?? queue.ResetAt;
+
     var updated = await _dao.Update(id, queue);
 
     return Results.Ok(new
@@ -354,6 +367,41 @@ public class QueueController
 
   // Mapper για να μη γράφουμε συνέχεια
   // new QueueDto(...) σε κάθε method.
+  public async Task<IResult> Reset(
+    int queueId,
+    ClaimsPrincipal currentUser
+  )
+  {
+    var queue = await _dao.GetById(queueId);
+
+    if (queue is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Queue not found"
+      });
+    }
+
+    var hasAccess = await HasCompanyAccess(queue.CompanyId, currentUser);
+
+    if (!hasAccess)
+    {
+      return Results.Forbid();
+    }
+
+    var expiredCount = await _ticketDao.ExpireWaitingAndMissedByQueueId(queueId);
+    await _dao.SaveLastResetAt(queue, DateTime.UtcNow, true);
+
+    return Results.Ok(new
+    {
+      status = true,
+      message = $"Queue {queue.Name} reset",
+      expiredCount
+    });
+  }
+
+
   private static QueueDto MapToDto(Queue queue)
   {
     return new QueueDto(
@@ -369,6 +417,10 @@ public class QueueController
       queue.OpensAt,
       queue.ClosesAt,
       queue.ResetNumberDaily,
+      queue.AutoResetEnabled,
+      queue.ResetAt,
+      queue.LastResetAt,
+      queue.LastNumberResetAt,
       queue.CreatedAt,
       queue.UpdatedAt
     );

@@ -28,6 +28,14 @@ public class Queue
 
   public bool ResetNumberDaily { get; set; } = true;
 
+  public bool AutoResetEnabled { get; set; } = false;
+
+  public TimeOnly? ResetAt { get; set; }
+
+  public DateTime? LastResetAt { get; set; }
+
+  public DateTime? LastNumberResetAt { get; set; }
+
   public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
   public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

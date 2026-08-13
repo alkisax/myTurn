@@ -13,5 +13,13 @@ public record CreateLocationDto(
   [StringLength(100)]
   string Name,
 
-  string? Address
+  string? Address,
+
+  string? Country,
+
+  double? Latitude,
+
+  double? Longitude,
+
+  string? TimeZoneId
 );

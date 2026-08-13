@@ -4,6 +4,7 @@ using Backend;
 using backend.Dtos.TicketDtos;
 using System.Security.Claims;
 using backend.Dtos.TicketServiceDtos;
+using backend.Services;
 
 namespace backend.Controllers;
 
@@ -15,6 +16,7 @@ public class TicketController
   private readonly StaffSessionDao _staffSessionDao;
   private readonly ServiceDao _serviceDao;
   private readonly TicketServiceDao _ticketServiceDao;
+  private readonly QueueResetService _queueResetService;
 
   public TicketController(
     TicketDao dao,
@@ -22,7 +24,8 @@ public class TicketController
     CompanyUserDao companyUserDao,
     StaffSessionDao staffSessionDao,
     ServiceDao serviceDao,
-    TicketServiceDao ticketServiceDao
+    TicketServiceDao ticketServiceDao,
+    QueueResetService queueResetService
   )
   {
     _dao = dao;
@@ -31,6 +34,7 @@ public class TicketController
     _staffSessionDao = staffSessionDao;
     _serviceDao = serviceDao;
     _ticketServiceDao = ticketServiceDao;
+    _queueResetService = queueResetService;
   }
 
   public async Task<IResult> Create(
@@ -48,6 +52,8 @@ public class TicketController
         message = "Queue not found"
       });
     }
+
+    await _queueResetService.EnsureResetIfNeeded(queue);
 
     // 2. Δεν εκδίδουμε ticket σε inactive Queue.
     if (!queue.IsActive)
@@ -160,7 +166,8 @@ public class TicketController
     // - το Ticket - όλα τα TicketService σαν μία ενιαία atomic λειτουργία. Αν αποτύχει κάποιο TicketService, γίνεται rollback και του Ticket.
     var created = await _dao.Create(
       ticket,
-      serviceIds
+      serviceIds,
+      queue
     );
 
     var data = new
@@ -368,7 +375,9 @@ public class TicketController
       return Results.Forbid();
     }
 
-    var tickets = await _dao.GetByQueueId(queueId);
+    await _queueResetService.EnsureResetIfNeeded(queue);
+
+    var tickets = await _dao.GetByQueueId(queueId, queue.LastResetAt);
 
     var data = new List<MyTicketDto>();
 
@@ -483,6 +492,19 @@ public class TicketController
     var session = await GetServingSession(currentUser);
 
     if (session is null) return Results.Forbid();
+
+    var queue = await _queueDao.GetById(session.QueueId);
+
+    if (queue is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Queue not found"
+      });
+    }
+
+    await _queueResetService.EnsureResetIfNeeded(queue);
 
     // 2. Το DAO κάνει πλέον όλη την atomic διαδικασία:
     // - βρίσκει το πρώτο WAITING ticket - το κάνει SERVING - βάζει Staff - βάζει Desk - βάζει ServingStartedAt και όλα αυτά μέσα στο transaction.

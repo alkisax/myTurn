@@ -7,5 +7,13 @@ namespace backend.Dtos.LocationDtos;
 public record UpdateLocationDto(
   string? Name,
   string? Address,
-  bool? IsActive
+  bool? IsActive,
+
+  string? Country,
+
+  double? Latitude,
+
+  double? Longitude,
+
+  string? TimeZoneId
 );

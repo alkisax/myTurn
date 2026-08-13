@@ -7,6 +7,10 @@ public record LocationDto(
   int CompanyId,
   string Name,
   string? Address,
+  string? Country,
+  double? Latitude,
+  double? Longitude,
+  string? TimeZoneId,
   bool IsActive,
   DateTime CreatedAt,
   DateTime UpdatedAt

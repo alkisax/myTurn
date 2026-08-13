@@ -106,6 +106,17 @@ public static class QueueEndpoints
     })
     .RequireAuthorization("AdminOnly");
 
+    // POST /queues/:queueId/reset
+    group.MapPost("/{queueId:int}/reset", async (
+      int queueId,
+      QueueController controller,
+      HttpContext context
+    ) =>
+    {
+      return await controller.Reset(queueId, context.User);
+    })
+    .RequireAuthorization("AdminOnly");
+
     // DELETE /queues/:id
     // ADMIN διαγράφει Queue μόνο δικής του Company.
     group.MapDelete("/{id:int}", async (

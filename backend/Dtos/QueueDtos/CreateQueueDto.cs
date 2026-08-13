@@ -20,5 +20,9 @@ public record CreateQueueDto(
 
   TimeOnly? OpensAt,
 
-  TimeOnly? ClosesAt
+  TimeOnly? ClosesAt,
+
+  bool AutoResetEnabled,
+
+  TimeOnly? ResetAt
 );

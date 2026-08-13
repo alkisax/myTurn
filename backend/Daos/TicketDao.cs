@@ -58,7 +58,8 @@ public class TicketDao(MyTurnContext context)
   // Επίσης κλειδώνουμε τη write διαδικασία από την αρχή ώστε δύο requests να μην πάρουν τον ίδιο ticket number.
   public async Task<Ticket> Create(
     Ticket ticket,
-    List<int> serviceIds
+    List<int> serviceIds,
+    Queue queue
   )
   {
     // ⚠️ BEGIN IMMEDIATE = ξεκίνα transaction και πάρε write access από τώρα. Έτσι άλλο create request δεν μπορεί ταυτόχρονα να διαβάσει τον ίδιο τελευταίο αριθμό και να δημιουργήσει duplicate Number.
@@ -69,14 +70,11 @@ public class TicketDao(MyTurnContext context)
     try
     {
       // 1. Βρίσκουμε τον τελευταίο αριθμό όσο το transaction είναι κλειδωμένο.
-      var today = DateTime.UtcNow.Date;
-      var tomorrow = today.AddDays(1);
-
       var lastNumber = await context.Tickets
         .Where(ticketDb =>
           ticketDb.QueueId == ticket.QueueId &&
-          ticketDb.CreatedAt >= today &&
-          ticketDb.CreatedAt < tomorrow
+          (queue.LastNumberResetAt == null ||
+           ticketDb.CreatedAt >= queue.LastNumberResetAt)
         )
         .MaxAsync(ticketDb => (int?)ticketDb.Number);
 
@@ -141,17 +139,16 @@ public class TicketDao(MyTurnContext context)
 
   // για όλο το προσωπικό να βλέπει ποιοι αριθμοί είναι σε ένα queue. Το staff βλέπει το queue στο οποίο είναι assigned, ο admin τα queue του company και ο super admin όλα
   // όλα τα tickets του queue αργότερα filter
-  public async Task<List<Ticket>> GetByQueueId(int queueId)
+  public async Task<List<Ticket>> GetByQueueId(
+    int queueId,
+    DateTime? lastResetAt
+  )
   {
-    var today = DateTime.UtcNow.Date;
-    var tomorrow = today.AddDays(1);
-
     return await context.Tickets
       .AsNoTracking()
       .Where(ticket =>
         ticket.QueueId == queueId &&
-        ticket.CreatedAt >= today &&
-        ticket.CreatedAt < tomorrow &&
+        (lastResetAt == null || ticket.CreatedAt >= lastResetAt) &&
         (ticket.Status == "WAITING" ||
          ticket.Status == "SERVING" ||
          ticket.Status == "MISSED")
@@ -403,6 +400,23 @@ public class TicketDao(MyTurnContext context)
 
     await context.SaveChangesAsync();
     return ticket;
+  }
+
+  // WAITING/MISSED -> EXPIRED for a manual Queue reset.
+  public async Task<int> ExpireWaitingAndMissedByQueueId(int queueId)
+  {
+    var now = DateTime.UtcNow;
+
+    return await context.Tickets
+      .Where(ticket =>
+        ticket.QueueId == queueId &&
+        (ticket.Status == "WAITING" || ticket.Status == "MISSED")
+      )
+      .ExecuteUpdateAsync(setters => setters
+        .SetProperty(ticket => ticket.Status, "EXPIRED")
+        .SetProperty(ticket => ticket.ExpiredAt, now)
+        .SetProperty(ticket => ticket.UpdatedAt, now)
+      );
   }
 
   // WAITING -> CANCELLED

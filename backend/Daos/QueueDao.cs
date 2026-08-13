@@ -85,6 +85,8 @@ public class QueueDao(MyTurnContext context)
     queue.OpensAt = updatedData.OpensAt;
     queue.ClosesAt = updatedData.ClosesAt;
     queue.ResetNumberDaily = updatedData.ResetNumberDaily;
+    queue.AutoResetEnabled = updatedData.AutoResetEnabled;
+    queue.ResetAt = updatedData.ResetAt;
     queue.UpdatedAt = DateTime.UtcNow;
 
     await context.SaveChangesAsync();
@@ -103,5 +105,22 @@ public class QueueDao(MyTurnContext context)
     context.Queues.Remove(queue);
     await context.SaveChangesAsync();
     return queue;
+  }
+
+  public async Task SaveLastResetAt(
+    Queue queue,
+    DateTime lastResetAt,
+    bool updateLastNumberResetAt = false
+  )
+  {
+    queue.LastResetAt = lastResetAt;
+
+    if (updateLastNumberResetAt)
+    {
+      queue.LastNumberResetAt = lastResetAt;
+    }
+
+    queue.UpdatedAt = lastResetAt;
+    await context.SaveChangesAsync();
   }
 }
