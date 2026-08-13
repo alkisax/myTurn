@@ -8,7 +8,6 @@ using backend.auth.Daos;
 using backend.auth.Endpoints;
 using backend.Controllers;
 using backend.Endpoints;
-using backend.Daos;
 
 var builder = WebApplication.CreateBuilder(args);
 

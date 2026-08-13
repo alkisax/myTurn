@@ -1,6 +1,5 @@
 // backend/Controllers/TicketServiceController.cs
 
-using backend.Daos;
 using backend.Dtos.TicketServiceDtos;
 
 namespace backend.Controllers;
