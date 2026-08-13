@@ -5,5 +5,6 @@ public record CompanyDto
 (
     int Id,
     string Name,
+    int MissedTicketExpiryMinutes,
     DateTime CreatedAt
 );

@@ -44,7 +44,7 @@ public static class CompanyEndpoints
     // ADMIN/SUPERADMIN → μόνο αν έχει πρόσβαση στη συγκεκριμένη company
     group.MapPut("/{id:int}", (
       int id,
-      CreateCompanyDto dto,
+      UpdateCompanyDto dto,
       CompanyController controller,
       HttpContext context
     ) =>

@@ -67,7 +67,8 @@ public class CompanyController
 
       var company = new Company
       {
-        Name = dto.Name
+        Name = dto.Name,
+        MissedTicketExpiryMinutes = dto.MissedTicketExpiryMinutes
       };
 
       var created = await _dao.Create(company);
@@ -85,6 +86,7 @@ public class CompanyController
       var response = new CompanyDto(
         created.Id,
         created.Name,
+        created.MissedTicketExpiryMinutes,
         created.CreatedAt
       );
 
@@ -116,6 +118,7 @@ public class CompanyController
       var response = companies.Select(company => new CompanyDto(
         company.Id,
         company.Name,
+        company.MissedTicketExpiryMinutes,
         company.CreatedAt
       )).ToList();
 
@@ -154,6 +157,7 @@ public class CompanyController
       var response = companies.Select(company => new CompanyDto(
         company.Id,
         company.Name,
+        company.MissedTicketExpiryMinutes,
         company.CreatedAt
       )).ToList();
 
@@ -203,6 +207,7 @@ public class CompanyController
       var response = new CompanyDto(
         company.Id,
         company.Name,
+        company.MissedTicketExpiryMinutes,
         company.CreatedAt
       );
 
@@ -226,7 +231,7 @@ public class CompanyController
 
   public async Task<IResult> Update(
     int id,
-    CreateCompanyDto dto,
+    UpdateCompanyDto dto,
     ClaimsPrincipal currentUser
   )
   {
@@ -241,7 +246,8 @@ public class CompanyController
 
       var updatedData = new Company
       {
-        Name = dto.Name
+        Name = dto.Name,
+        MissedTicketExpiryMinutes = dto.MissedTicketExpiryMinutes
       };
 
       var updated = await _dao.Update(id, updatedData);
@@ -258,6 +264,7 @@ public class CompanyController
       var response = new CompanyDto(
         updated.Id,
         updated.Name,
+        updated.MissedTicketExpiryMinutes,
         updated.CreatedAt
       );
 
@@ -307,6 +314,7 @@ public class CompanyController
       var response = new CompanyDto(
         deleted.Id,
         deleted.Name,
+        deleted.MissedTicketExpiryMinutes,
         deleted.CreatedAt
       );
 

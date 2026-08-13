@@ -402,6 +402,26 @@ public class TicketDao(MyTurnContext context)
     return ticket;
   }
 
+  public async Task<int> ExpireMissedByQueueId(
+    int queueId,
+    DateTime cutoffUtc
+  )
+  {
+    var now = DateTime.UtcNow;
+
+    return await context.Tickets
+      .Where(ticket =>
+        ticket.QueueId == queueId &&
+        ticket.Status == "MISSED" &&
+        ticket.MissedAt <= cutoffUtc
+      )
+      .ExecuteUpdateAsync(setters => setters
+        .SetProperty(ticket => ticket.Status, "EXPIRED")
+        .SetProperty(ticket => ticket.ExpiredAt, now)
+        .SetProperty(ticket => ticket.UpdatedAt, now)
+      );
+  }
+
   // WAITING/MISSED -> EXPIRED for a manual Queue reset.
   public async Task<int> ExpireWaitingAndMissedByQueueId(int queueId)
   {

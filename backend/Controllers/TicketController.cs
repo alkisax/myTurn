@@ -17,6 +17,7 @@ public class TicketController
   private readonly ServiceDao _serviceDao;
   private readonly TicketServiceDao _ticketServiceDao;
   private readonly QueueResetService _queueResetService;
+  private readonly MissedTicketExpiryService _missedTicketExpiryService;
 
   public TicketController(
     TicketDao dao,
@@ -25,7 +26,8 @@ public class TicketController
     StaffSessionDao staffSessionDao,
     ServiceDao serviceDao,
     TicketServiceDao ticketServiceDao,
-    QueueResetService queueResetService
+    QueueResetService queueResetService,
+    MissedTicketExpiryService missedTicketExpiryService
   )
   {
     _dao = dao;
@@ -35,6 +37,7 @@ public class TicketController
     _serviceDao = serviceDao;
     _ticketServiceDao = ticketServiceDao;
     _queueResetService = queueResetService;
+    _missedTicketExpiryService = missedTicketExpiryService;
   }
 
   public async Task<IResult> Create(
@@ -53,6 +56,7 @@ public class TicketController
       });
     }
 
+    await _missedTicketExpiryService.EnsureExpiredMissedTickets(queue.Id);
     await _queueResetService.EnsureResetIfNeeded(queue);
 
     // 2. Δεν εκδίδουμε ticket σε inactive Queue.
@@ -376,6 +380,7 @@ public class TicketController
     }
 
     await _queueResetService.EnsureResetIfNeeded(queue);
+    await _missedTicketExpiryService.EnsureExpiredMissedTickets(queueId);
 
     var tickets = await _dao.GetByQueueId(queueId, queue.LastResetAt);
 
@@ -504,6 +509,7 @@ public class TicketController
       });
     }
 
+    await _missedTicketExpiryService.EnsureExpiredMissedTickets(queue.Id);
     await _queueResetService.EnsureResetIfNeeded(queue);
 
     // 2. Το DAO κάνει πλέον όλη την atomic διαδικασία:

@@ -35,6 +35,7 @@ builder.Services.AddScoped<StaffSessionController>();
 builder.Services.AddScoped<ServiceDao>();
 builder.Services.AddScoped<ServiceController>();
 builder.Services.AddScoped<TicketDao>();
+builder.Services.AddScoped<MissedTicketExpiryService>();
 builder.Services.AddScoped<TicketController>();
 builder.Services.AddScoped<TicketServiceDao>();
 builder.Services.AddScoped<TicketServiceController>();

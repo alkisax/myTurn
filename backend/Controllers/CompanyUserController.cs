@@ -115,6 +115,7 @@ public class CompanyUserController
     var data = companies.Select(company => new CompanyDto(
       company.Id,
       company.Name,
+      company.MissedTicketExpiryMinutes,
       company.CreatedAt
     ));
 
