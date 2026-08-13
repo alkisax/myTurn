@@ -8,6 +8,7 @@ public record ServiceDto(
   string? Description,
   bool IsActive,
   bool IsGeneric,
+  int? EstimatedServiceMinutes,
   DateTime CreatedAt,
   DateTime UpdatedAt
 );

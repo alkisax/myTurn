@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend;
 
+public record ClaimNextWaitingResult(Ticket? Ticket, bool AlreadyServing);
+
 public class TicketDao(MyTurnContext context)
 {
   // create ticket in 3 parts
@@ -186,7 +188,7 @@ public class TicketDao(MyTurnContext context)
   // 2. βρες το επόμενο WAITING ticket 3. κάν' το SERVING 4. αποθήκευσε Staff + Desk
   // 5. commit
   // Έτσι το SELECT + UPDATE αντιμετωπίζονται σαν μία ενιαία διαδικασία.
-  public async Task<Ticket?> ClaimNextWaiting(
+  public async Task<ClaimNextWaitingResult> ClaimNextWaiting(
     int queueId,
     int userId,
     int deskId
@@ -202,6 +204,18 @@ public class TicketDao(MyTurnContext context)
 
     try
     {
+      var alreadyServing = await context.Tickets.AnyAsync(ticket =>
+        ticket.Status == "SERVING" &&
+        ticket.ServedByUserId == userId &&
+        ticket.ServedAtDeskId == deskId
+      );
+
+      if (alreadyServing)
+      {
+        await context.Database.ExecuteSqlRawAsync("COMMIT;");
+        return new ClaimNextWaitingResult(null, true);
+      }
+
       // Ψάχνουμε το επόμενο ticket της συγκεκριμένης Queue.
       var ticket = await context.Tickets
 
@@ -221,7 +235,7 @@ public class TicketDao(MyTurnContext context)
         // Παρόλο που δεν αλλάξαμε κάτι, πρέπει να κλείσουμε το transaction που ανοίξαμε.
         // COMMIT = ολοκλήρωσε επιτυχώς το transaction.
         await context.Database.ExecuteSqlRawAsync("COMMIT;");
-        return null;
+        return new ClaimNextWaitingResult(null, false);
       }
 
       // Από εδώ και πέρα έχουμε βρει το ticket που "κέρδισε" αυτός ο STAFF.
@@ -249,7 +263,7 @@ public class TicketDao(MyTurnContext context)
       await context.Database.ExecuteSqlRawAsync("COMMIT;");
 
       // Επιστρέφουμε το ticket πλέον ενημερωμένο: Status = SERVING κλπ.
-      return ticket;
+      return new ClaimNextWaitingResult(ticket, false);
     }
     catch
     {
@@ -477,6 +491,46 @@ public class TicketDao(MyTurnContext context)
     await context.SaveChangesAsync();
 
     return ticket;
+  }
+
+  // Παίρνουμε τα τελευταία έως 15 completed tickets της queue, μέσα στην τρέχουσα operational period για να υπολογίσουμε το estimated time
+  public async Task<List<Ticket>> GetRecentCompletedByQueueId(
+    int queueId,
+    DateTime? lastResetAt,
+    int limit = 15
+  )
+  {
+    return await context.Tickets
+      .AsNoTracking()
+      .Where(ticket =>
+        ticket.QueueId == queueId &&
+        ticket.Status == "COMPLETED" &&
+        ticket.ServingStartedAt != null &&
+        ticket.CompletedAt != null &&
+        (lastResetAt == null || ticket.CreatedAt >= lastResetAt)
+      )
+      .OrderByDescending(ticket => ticket.CompletedAt)
+      .Take(limit)
+      .ToListAsync();
+  }
+
+  // ελέγχει πόσα νουμερα είναι waiting απο το ενεργό ως αυτό που έχουμε
+  public async Task<List<Ticket>> GetWaitingAhead(
+  int queueId,
+  int ticketNumber,
+  DateTime? lastResetAt
+)
+  {
+    return await context.Tickets
+      .AsNoTracking()
+      .Where(ticket =>
+        ticket.QueueId == queueId &&
+        ticket.Status == "WAITING" &&
+        ticket.Number < ticketNumber &&
+        (lastResetAt == null || ticket.CreatedAt >= lastResetAt)
+      )
+      .OrderBy(ticket => ticket.Number)
+      .ToListAsync();
   }
 
 }

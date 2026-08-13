@@ -81,4 +81,34 @@ public class TicketServiceDao
       .Where(ts => ts.ServiceId == serviceId)
       .ToListAsync();
   }
+
+  // Αυτό κάνει ακριβώς: → βρίσκω όλα τα TicketService → βρίσκω κάθε Service → service estimate ή company default → sum
+  //Company default = 5, Service A = null, Service B = 8, total = 5 + 8 = 13
+  public async Task<int> GetConfiguredDurationMinutes(
+    int ticketId,
+    int companyDefaultMinutes
+  )
+  {
+    var ticketServices = await _db.TicketServices
+      .Where(ts => ts.TicketId == ticketId)
+      .ToListAsync();
+
+    var totalMinutes = 0;
+
+    foreach (var ticketService in ticketServices)
+    {
+      var service = await _db.Services.FindAsync(
+        ticketService.ServiceId
+      );
+
+      if (service is null)
+      {
+        continue;
+      }
+
+      totalMinutes += service.EstimatedServiceMinutes ?? companyDefaultMinutes;
+    }
+
+    return totalMinutes;
+  }
 }

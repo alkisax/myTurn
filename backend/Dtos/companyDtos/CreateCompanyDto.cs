@@ -8,6 +8,9 @@ public record class CreateCompanyDto
   [StringLength(100)]
   string Name,
 
+  [Range(1, int.MaxValue)] // η μέγιστη τιμή που μπορεί να πάρει το int
+  int MissedTicketExpiryMinutes = 10,
+
   [Range(1, int.MaxValue)]
-  int MissedTicketExpiryMinutes = 10
+  int DefaultEstimatedServiceMinutes = 5
 );

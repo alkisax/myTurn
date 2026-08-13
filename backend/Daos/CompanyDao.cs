@@ -88,6 +88,7 @@ public class CompanyDao(MyTurnContext context)
 
       company.Name = updatedData.Name;
       company.MissedTicketExpiryMinutes = updatedData.MissedTicketExpiryMinutes;
+      company.DefaultEstimatedServiceMinutes = updatedData.DefaultEstimatedServiceMinutes;
       company.UpdatedAt = DateTime.UtcNow;
 
       await context.SaveChangesAsync();

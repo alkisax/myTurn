@@ -18,6 +18,7 @@ public class TicketController
   private readonly TicketServiceDao _ticketServiceDao;
   private readonly QueueResetService _queueResetService;
   private readonly MissedTicketExpiryService _missedTicketExpiryService;
+  private readonly TicketEstimateService _ticketEstimateService;
 
   public TicketController(
     TicketDao dao,
@@ -27,7 +28,8 @@ public class TicketController
     ServiceDao serviceDao,
     TicketServiceDao ticketServiceDao,
     QueueResetService queueResetService,
-    MissedTicketExpiryService missedTicketExpiryService
+    MissedTicketExpiryService missedTicketExpiryService,
+    TicketEstimateService ticketEstimateService
   )
   {
     _dao = dao;
@@ -38,6 +40,7 @@ public class TicketController
     _ticketServiceDao = ticketServiceDao;
     _queueResetService = queueResetService;
     _missedTicketExpiryService = missedTicketExpiryService;
+    _ticketEstimateService = ticketEstimateService;
   }
 
   public async Task<IResult> Create(
@@ -240,7 +243,26 @@ public class TicketController
       });
     }
 
+    // χρειαζόμαστε την Queue για το LastResetAt
+    var queue = await _queueDao.GetById(ticket.QueueId);
+
+    if (queue is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Queue not found"
+      });
+    }
+
     var services = await GetServicesForTicket(ticket.Id);
+
+    // υπολογίζουμε estimated waiting time
+    var estimatedWaitingMinutes =
+      await _ticketEstimateService.GetEstimatedWaitingMinutes(
+        ticket,
+        queue.LastResetAt
+      );
 
     var data = new TicketTrackingDto(
       ticket.Id,
@@ -253,7 +275,8 @@ public class TicketController
       ticket.CreatedAt,
       ticket.ServingStartedAt,
       ticket.CompletedAt,
-      services
+      services,
+      estimatedWaitingMinutes
     );
 
     return Results.Ok(new
@@ -514,11 +537,22 @@ public class TicketController
 
     // 2. Το DAO κάνει πλέον όλη την atomic διαδικασία:
     // - βρίσκει το πρώτο WAITING ticket - το κάνει SERVING - βάζει Staff - βάζει Desk - βάζει ServingStartedAt και όλα αυτά μέσα στο transaction.
-    var ticket = await _dao.ClaimNextWaiting(
+    var claimResult = await _dao.ClaimNextWaiting(
       session.QueueId,
       session.UserId,
       session.DeskId
     );
+
+    if (claimResult.AlreadyServing)
+    {
+      return Results.Conflict(new
+      {
+        status = false,
+        message = "Staff or desk already has a serving ticket"
+      });
+    }
+
+    var ticket = claimResult.Ticket;
 
     // Δεν υπάρχει άλλο WAITING ticket.
     if (ticket is null)
@@ -877,6 +911,12 @@ public class TicketController
 
     if (!hasAccess) return Results.Forbid();
 
+    var estimatedWaitingMinutes =
+      await _ticketEstimateService.GetEstimatedWaitingMinutes(
+        ticket,
+        queue.LastResetAt
+      );
+      
     var services = await GetServicesForTicket(ticket.Id);
     var data = new MyTicketDto(
       ticket.Id,
@@ -898,6 +938,7 @@ public class TicketController
     {
       status = true,
       data
+      // configuredDuration
     });
   }
 

@@ -39,6 +39,7 @@ builder.Services.AddScoped<MissedTicketExpiryService>();
 builder.Services.AddScoped<TicketController>();
 builder.Services.AddScoped<TicketServiceDao>();
 builder.Services.AddScoped<TicketServiceController>();
+builder.Services.AddScoped<TicketEstimateService>();
 
 builder.Services.AddJwtAuth(builder.Configuration);
 

@@ -45,6 +45,7 @@ public class ServiceDao(MyTurnContext context)
     service.Description = updatedData.Description;
     service.IsActive = updatedData.IsActive;
     service.IsGeneric = updatedData.IsGeneric;
+    service.EstimatedServiceMinutes = updatedData.EstimatedServiceMinutes;
     service.UpdatedAt = DateTime.UtcNow;
     await context.SaveChangesAsync();
     return service;

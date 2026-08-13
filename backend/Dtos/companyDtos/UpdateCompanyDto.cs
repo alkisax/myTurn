@@ -9,5 +9,8 @@ public record class UpdateCompanyDto
   string Name,
 
   [Range(1, int.MaxValue)]
-  int MissedTicketExpiryMinutes
+  int MissedTicketExpiryMinutes,
+
+  [Range(1, int.MaxValue)]
+  int DefaultEstimatedServiceMinutes
 );

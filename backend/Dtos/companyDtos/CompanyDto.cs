@@ -6,5 +6,6 @@ public record CompanyDto
     int Id,
     string Name,
     int MissedTicketExpiryMinutes,
+    int DefaultEstimatedServiceMinutes,
     DateTime CreatedAt
 );

@@ -153,7 +153,8 @@ public class ServiceController
       LocationId = location.Id,
       Name = dto.Name,
       Description = dto.Description,
-      IsGeneric = dto.IsGeneric
+      IsGeneric = dto.IsGeneric,
+      EstimatedServiceMinutes = dto.EstimatedServiceMinutes
     };
     var created = await _dao.Create(service);
     return Results.Created($"/services/{created.Id}", new
@@ -189,6 +190,7 @@ public class ServiceController
     service.Description = dto.Description ?? service.Description;
     service.IsActive = dto.IsActive ?? service.IsActive;
     service.IsGeneric = dto.IsGeneric ?? service.IsGeneric;
+    service.EstimatedServiceMinutes = dto.EstimatedServiceMinutes ?? service.EstimatedServiceMinutes;
     var updated = await _dao.Update(id, service);
     return Results.Ok(new
     {
@@ -235,6 +237,7 @@ public class ServiceController
       service.Description,
       service.IsActive,
       service.IsGeneric,
+      service.EstimatedServiceMinutes,
       service.CreatedAt,
       service.UpdatedAt
     );

@@ -8,5 +8,7 @@ public record CreateServiceDto(
   [StringLength(100)]
   string Name,
   string? Description,
-  bool IsGeneric = false
+  bool IsGeneric = false,
+  [Range(1, int.MaxValue)]
+  int? EstimatedServiceMinutes = null
 );

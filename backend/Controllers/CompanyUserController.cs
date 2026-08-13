@@ -116,6 +116,7 @@ public class CompanyUserController
       company.Id,
       company.Name,
       company.MissedTicketExpiryMinutes,
+      company.DefaultEstimatedServiceMinutes,
       company.CreatedAt
     ));
 

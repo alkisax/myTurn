@@ -68,7 +68,8 @@ public class CompanyController
       var company = new Company
       {
         Name = dto.Name,
-        MissedTicketExpiryMinutes = dto.MissedTicketExpiryMinutes
+        MissedTicketExpiryMinutes = dto.MissedTicketExpiryMinutes,
+        DefaultEstimatedServiceMinutes = dto.DefaultEstimatedServiceMinutes
       };
 
       var created = await _dao.Create(company);
@@ -87,6 +88,7 @@ public class CompanyController
         created.Id,
         created.Name,
         created.MissedTicketExpiryMinutes,
+        created.DefaultEstimatedServiceMinutes,
         created.CreatedAt
       );
 
@@ -119,6 +121,7 @@ public class CompanyController
         company.Id,
         company.Name,
         company.MissedTicketExpiryMinutes,
+        company.DefaultEstimatedServiceMinutes,
         company.CreatedAt
       )).ToList();
 
@@ -158,6 +161,7 @@ public class CompanyController
         company.Id,
         company.Name,
         company.MissedTicketExpiryMinutes,
+        company.DefaultEstimatedServiceMinutes,
         company.CreatedAt
       )).ToList();
 
@@ -208,6 +212,7 @@ public class CompanyController
         company.Id,
         company.Name,
         company.MissedTicketExpiryMinutes,
+        company.DefaultEstimatedServiceMinutes,
         company.CreatedAt
       );
 
@@ -247,7 +252,8 @@ public class CompanyController
       var updatedData = new Company
       {
         Name = dto.Name,
-        MissedTicketExpiryMinutes = dto.MissedTicketExpiryMinutes
+        MissedTicketExpiryMinutes = dto.MissedTicketExpiryMinutes,
+        DefaultEstimatedServiceMinutes = dto.DefaultEstimatedServiceMinutes
       };
 
       var updated = await _dao.Update(id, updatedData);
@@ -265,6 +271,7 @@ public class CompanyController
         updated.Id,
         updated.Name,
         updated.MissedTicketExpiryMinutes,
+        updated.DefaultEstimatedServiceMinutes,
         updated.CreatedAt
       );
 
@@ -315,6 +322,7 @@ public class CompanyController
         deleted.Id,
         deleted.Name,
         deleted.MissedTicketExpiryMinutes,
+        deleted.DefaultEstimatedServiceMinutes,
         deleted.CreatedAt
       );
 

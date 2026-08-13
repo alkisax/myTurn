@@ -1,0 +1,1 @@
+sqlite3 MyTurn.db ".headers on" ".mode box" "SELECT * FROM Users;" "SELECT * FROM CompanyUsers;" "SELECT * FROM Locations;" "SELECT * FROM Queues;" "SELECT * FROM Desks;" "SELECT * FROM StaffSessions;" "SELECT * FROM Tickets;" > db_snapshot.txt

@@ -110,4 +110,15 @@ public class StaffSessionDao(MyTurnContext context)
 
     return session;
   }
+
+  // μετρά πόσα desks εξυπηρετούν τώρα πραγματικά στην Queue. Για estimate ticket time
+  public async Task<int> GetActiveCountByQueueId(int queueId)
+  {
+    return await context.StaffSessions
+      .CountAsync(session =>
+        session.QueueId == queueId &&
+        session.EndedAt == null &&
+        session.Status == "ACTIVE"
+      );
+  }
 }

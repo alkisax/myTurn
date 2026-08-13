@@ -16,5 +16,6 @@ public record TicketTrackingDto(
   DateTime CreatedAt,
   DateTime? ServingStartedAt,
   DateTime? CompletedAt,
-  List<TicketServiceInfoDto>? Services = null
+  List<TicketServiceInfoDto>? Services = null,
+  double EstimatedWaitingMinutes = 0
 );
