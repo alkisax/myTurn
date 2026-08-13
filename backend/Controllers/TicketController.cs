@@ -265,12 +265,25 @@ public class TicketController
       """;
 
       // Στέλνουμε email μαζί με το PDF attachment.
-      await _emailService.SendTicketEmail(
-        email,
-        $"MyTurn - Ticket #{created.Number}",
-        body,
-        pdf
-      );
+      try
+      {
+        await _emailService.SendTicketEmail(
+          email,
+          $"MyTurn - Ticket #{created.Number}",
+          body,
+          pdf
+        );
+      }
+      catch (Exception ex)
+      {
+        // Το ticket έχει ήδη δημιουργηθεί.
+        // Αποτυχία email δεν πρέπει να αποτυγχάνει το POST /tickets.
+        Console.WriteLine(
+          $"Failed to send ticket email for ticket {created.Id}: {ex.Message}"
+        );
+
+        // TODO: αργότερα proper logging / retry mechanism.
+      }
     }
     // ⚠️ 👆🏽 εδω τελειώνει η λειτουργία του mail
 
