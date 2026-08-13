@@ -163,3 +163,4 @@ context7-api-key.md
 testSuperAdmin.http
 testLocation.http
 testAdminCompanyLocationStaff.http
+appsettings.Development.json
