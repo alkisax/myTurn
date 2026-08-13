@@ -565,10 +565,27 @@ public class TicketController
       });
     }
 
+    var services = await GetServicesForTicket(ticket.Id);
+    var data = new MyTicketDto(
+      ticket.Id,
+      ticket.CompanyId,
+      ticket.LocationId,
+      ticket.QueueId,
+      ticket.Number,
+      ticket.Pin,
+      ticket.TrackingToken,
+      ticket.CustomerEmail,
+      ticket.Status,
+      ticket.CreatedAt,
+      ticket.ServingStartedAt,
+      ticket.CompletedAt,
+      services
+    );
+
     return Results.Ok(new
     {
       status = true,
-      data = ticket
+      data
     });
   }
 
@@ -597,10 +614,27 @@ public class TicketController
       });
     }
 
+    var services = await GetServicesForTicket(ticket.Id);
+    var data = new MyTicketDto(
+      ticket.Id,
+      ticket.CompanyId,
+      ticket.LocationId,
+      ticket.QueueId,
+      ticket.Number,
+      ticket.Pin,
+      ticket.TrackingToken,
+      ticket.CustomerEmail,
+      ticket.Status,
+      ticket.CreatedAt,
+      ticket.ServingStartedAt,
+      ticket.CompletedAt,
+      services
+    );
+
     return Results.Ok(new
     {
       status = true,
-      data = ticket
+      data
     });
   }
 
@@ -656,10 +690,27 @@ public class TicketController
       });
     }
 
+    var services = await GetServicesForTicket(expiredTicket.Id);
+    var data = new MyTicketDto(
+      expiredTicket.Id,
+      expiredTicket.CompanyId,
+      expiredTicket.LocationId,
+      expiredTicket.QueueId,
+      expiredTicket.Number,
+      expiredTicket.Pin,
+      expiredTicket.TrackingToken,
+      expiredTicket.CustomerEmail,
+      expiredTicket.Status,
+      expiredTicket.CreatedAt,
+      expiredTicket.ServingStartedAt,
+      expiredTicket.CompletedAt,
+      services
+    );
+
     return Results.Ok(new
     {
       status = true,
-      data = expiredTicket
+      data
     });
   }
 
@@ -686,10 +737,27 @@ public class TicketController
       });
     }
 
+    var services = await GetServicesForTicket(ticket.Id);
+    var data = new MyTicketDto(
+      ticket.Id,
+      ticket.CompanyId,
+      ticket.LocationId,
+      ticket.QueueId,
+      ticket.Number,
+      ticket.Pin,
+      ticket.TrackingToken,
+      ticket.CustomerEmail,
+      ticket.Status,
+      ticket.CreatedAt,
+      ticket.ServingStartedAt,
+      ticket.CompletedAt,
+      services
+    );
+
     return Results.Ok(new
     {
       status = true,
-      data = ticket
+      data
     });
   }
 
