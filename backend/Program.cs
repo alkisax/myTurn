@@ -48,6 +48,9 @@ builder.Services.AddScoped<TicketEstimateService>();
 builder.Services.AddScoped<TicketPdfService>();
 builder.Services.AddScoped<TicketPdfController>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<AnalyticsDao>();
+builder.Services.AddScoped<AnalyticsService>();
+builder.Services.AddScoped<AnalyticsController>();
 
 builder.Services.AddJwtAuth(builder.Configuration);
 
@@ -103,6 +106,7 @@ app.MapServiceEndpoints();
 app.MapTicketEndpoints();
 app.MapTicketServiceEndpoints();
 app.MapTicketPdfEndpoints();
+app.MapAnalyticsEndpoints();
 
 app.Urls.Add("http://localhost:3020");
 app.Run();
