@@ -10,6 +10,7 @@ using backend.auth.Endpoints;
 using backend.Controllers;
 using backend.Endpoints;
 using backend.Services;
+using backend.Hubs;
 
 QuestPDF.Settings.License = LicenseType.Community;
 
@@ -17,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // για να βάζω [required] etc
 builder.Services.AddValidation();
+builder.Services.AddSignalR();
 builder.Services.AddScoped<LogController>();
 builder.Services.AddScoped<CompanyDao>();
 builder.Services.AddScoped<CompanyController>();
@@ -59,7 +61,8 @@ builder.Services.AddCors( options =>
         "http://localhost:5173"
       )
       .AllowAnyHeader()
-      .AllowAnyMethod();
+      .AllowAnyMethod()
+      .AllowCredentials();
   });
 });
 
@@ -72,6 +75,8 @@ app.UseCors("AllowedFrontend");
 app.MigrateDb();
 // για να κάνουμε server τα static pages που έχω στο wwwroot
 app.UseStaticFiles();
+
+app.MapHub<QueueHub>("/queue-hub");
 
 app.MapGet("/", () => "Hello World!");
 app.MapGet("/health", () => "ok");

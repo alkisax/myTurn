@@ -1,1 +1,29 @@
-sqlite3 MyTurn.db ".headers on" ".mode box" "SELECT * FROM Users;" "SELECT * FROM CompanyUsers;" "SELECT * FROM Locations;" "SELECT * FROM Queues;" "SELECT * FROM Desks;" "SELECT * FROM StaffSessions;" "SELECT * FROM Tickets;" > db_snapshot.txt
+sqlite3 .\backend\MyTurn.db ".headers on" ".mode box" "SELECT * FROM Users;" "SELECT * FROM CompanyUsers;" "SELECT * FROM Companies;" "SELECT * FROM Locations;" "SELECT * FROM Queues;" "SELECT * FROM Desks;" "SELECT * FROM StaffSessions;" "SELECT * FROM Services;" "SELECT * FROM Tickets;" "SELECT * FROM TicketServices;" > db_snapshot.txt
+
+## clear db (not superuser)
+```
+sqlite3 .\backend\MyTurn.db
+```
+```bash
+PRAGMA foreign_keys = OFF;
+
+BEGIN TRANSACTION;
+
+DELETE FROM TicketServices;
+DELETE FROM Tickets;
+DELETE FROM StaffSessions;
+DELETE FROM Desks;
+DELETE FROM Services;
+DELETE FROM Queues;
+DELETE FROM Locations;
+DELETE FROM CompanyUsers;
+DELETE FROM Companies;
+
+DELETE FROM Users
+WHERE Role != 'SUPERADMIN';
+
+COMMIT;
+
+PRAGMA foreign_keys = ON;
+```
+`.quit`

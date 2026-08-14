@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MyTurn SignalR Test</title>
+</head>
+
+<body>
+  <h2>MyTurn SignalR test</h2>
+
+  <input id="queueId" type="number" value="1" />
+
+  <button id="connectBtn">
+    Connect
+  </button>
+
+  <button id="joinBtn">
+    Join queue
+  </button>
+
+  <h3 id="nowServing">
+    Now serving: -
+  </h3>
+
+  <pre id="log"></pre>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+
+  <script>
+    const logEl = document.getElementById('log')
+    const nowServingEl = document.getElementById('nowServing')
+
+    const log = (message) => {
+      console.log(message)
+      logEl.textContent += message + '\n'
+    }
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl('/queue-hub')
+      .withAutomaticReconnect()
+      .build()
+
+    connection.on('NowServingChanged', (data) => {
+      nowServingEl.textContent =
+        `Now serving: ${data.number} - Desk ${data.deskId}`
+
+      log('NowServingChanged:')
+      log(JSON.stringify(data, null, 2))
+    })
+
+    document.getElementById('connectBtn').onclick = async () => {
+      await connection.start()
+      log('Connected')
+    }
+
+    document.getElementById('joinBtn').onclick = async () => {
+      const queueId = Number(
+        document.getElementById('queueId').value
+      )
+
+      await connection.invoke(
+        'JoinQueue',
+        queueId
+      )
+
+      log(`Joined queue-${queueId}`)
+    }
+  </script>
+</body>
+</html>

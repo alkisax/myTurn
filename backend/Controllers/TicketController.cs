@@ -1,8 +1,10 @@
 // backend\Controllers\TicketController.cs
 
 using Backend;
-using backend.Dtos.TicketDtos;
+using Microsoft.AspNetCore.SignalR;
+using backend.Hubs;
 using System.Security.Claims;
+using backend.Dtos.TicketDtos;
 using backend.Dtos.TicketServiceDtos;
 using backend.Services;
 using backend.auth.Daos;
@@ -26,6 +28,7 @@ public class TicketController
   private readonly CompanyDao _companyDao;
   private readonly LocationDao _locationDao;
   private readonly IConfiguration _configuration;
+  private readonly IHubContext<QueueHub> _hubContext;
 
   public TicketController(
     TicketDao dao,
@@ -42,7 +45,8 @@ public class TicketController
     TicketPdfService ticketPdfService,
     CompanyDao companyDao,
     LocationDao locationDao,
-    IConfiguration configuration
+    IConfiguration configuration,
+    IHubContext<QueueHub> hubContext
   )
   {
     _dao = dao;
@@ -60,6 +64,7 @@ public class TicketController
     _companyDao = companyDao;
     _locationDao = locationDao;
     _configuration = configuration;
+    _hubContext = hubContext;
   }
 
   public async Task<IResult> Create(
@@ -195,6 +200,18 @@ public class TicketController
       serviceIds,
       queue
     );
+
+    // 🔌 SignalR
+    // Το Ticket έχει πλέον αποθηκευτεί επιτυχώς στη βάση. Ενημερώνουμε μόνο τους clients που παρακολουθούν αυτή την Queue.
+    // await _hubContext.Clients
+    //   .Group($"queue-{created.QueueId}")
+    //   .SendAsync("TicketCreated", new
+    //   {
+    //     created.Id,
+    //     created.Number,
+    //     created.Status,
+    //     created.QueueId
+    //   });
 
     // ⚠️εδω στέλνουμε το mail με zoho mail
     // TODO: στέλνετε απο το δικό μου zoho mail και δεν φαίνεται πουθενα έστω το ονομα του Company 
@@ -673,6 +690,17 @@ public class TicketController
         message = "No waiting tickets"
       });
     }
+
+    // 🔌 SignalR
+    // Ο STAFF πήρε νέο ticket για εξυπηρέτηση. Ενημερώνουμε αμέσως την realtime οθόνη της Queue.
+    await _hubContext.Clients
+      .Group($"queue-{ticket.QueueId}")
+      .SendAsync("NowServingChanged", new
+      {
+        ticket.Number,
+        DeskId = session.DeskId,
+        ticket.QueueId
+      });
 
     // 3. Response.
     var services = await GetServicesForTicket(ticket.Id);
