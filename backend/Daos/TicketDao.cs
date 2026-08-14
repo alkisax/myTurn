@@ -1,6 +1,7 @@
 // backend\Daos\TicketDao.cs
 
 using Backend;
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend;
@@ -65,8 +66,10 @@ public class TicketDao(MyTurnContext context)
   )
   {
     // ⚠️ BEGIN IMMEDIATE = ξεκίνα transaction και πάρε write access από τώρα. Έτσι άλλο create request δεν μπορεί ταυτόχρονα να διαβάσει τον ίδιο τελευταίο αριθμό και να δημιουργήσει duplicate Number.
-    await context.Database.ExecuteSqlRawAsync(
-      "BEGIN IMMEDIATE;"
+    // Serializable στον SQLite provider ξεκινά write transaction (BEGIN IMMEDIATE).
+    // Το EF γνωρίζει το transaction και δεν ανοίγει δεύτερο στο SaveChangesAsync.
+    await using var transaction = await context.Database.BeginTransactionAsync(
+      IsolationLevel.Serializable
     );
 
     try
@@ -105,14 +108,14 @@ public class TicketDao(MyTurnContext context)
       await context.SaveChangesAsync();
 
       // COMMIT: Όλα τα παραπάνω πέτυχαν. Κάνουμε τις αλλαγές οριστικές στη βάση.
-      await context.Database.ExecuteSqlRawAsync("COMMIT;");
+      await transaction.CommitAsync();
       return ticket;
     }
     catch
     {
       // Αν αποτύχει ΟΤΙΔΗΠΟΤΕ μέσα στο try → ROLLBACK: ακυρώνουμε ΟΛΕΣ τις αλλαγές του transaction.
       // Ακόμα και αν το Ticket είχε ήδη περάσει από SaveChangesAsync(), δεν θα παραμείνει στη βάση επειδή δεν είχε γίνει COMMIT.
-      await context.Database.ExecuteSqlRawAsync("ROLLBACK;");
+      await transaction.RollbackAsync();
       throw;
     }
   }
