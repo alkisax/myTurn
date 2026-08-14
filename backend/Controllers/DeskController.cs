@@ -1,6 +1,7 @@
 // backend\Controllers\DeskController.cs
 using Backend;
 using backend.Dtos.DeskDtos;
+using backend.Services;
 using System.Security.Claims;
 
 namespace backend.Controllers;
@@ -11,18 +12,21 @@ public class DeskController
   private readonly LocationDao _locationDao;
   private readonly QueueDao _queueDao;
   private readonly CompanyUserDao _companyUserDao;
+  private readonly AdministrativeRecoveryService _recoveryService;
 
   public DeskController(
     DeskDao dao,
     LocationDao locationDao,
     QueueDao queueDao,
-    CompanyUserDao companyUserDao
+    CompanyUserDao companyUserDao,
+    AdministrativeRecoveryService recoveryService
   )
   {
     _dao = dao;
     _locationDao = locationDao;
     _queueDao = queueDao;
     _companyUserDao = companyUserDao;
+    _recoveryService = recoveryService;
   }
 
 
@@ -355,6 +359,15 @@ public class DeskController
     if (!hasAccess)
     {
       return Results.Forbid();
+    }
+
+    if (await _recoveryService.HasOpenDeskSession(id))
+    {
+      return Results.Conflict(new
+      {
+        status = false,
+        message = "Desk has an open staff session. Force-end the session before deleting the desk."
+      });
     }
 
     var deleted = await _dao.Delete(id);

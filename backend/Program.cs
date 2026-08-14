@@ -44,6 +44,9 @@ builder.Services.AddScoped<MissedTicketExpiryService>();
 builder.Services.AddScoped<TicketController>();
 builder.Services.AddScoped<TicketServiceDao>();
 builder.Services.AddScoped<TicketServiceController>();
+builder.Services.AddScoped<AdministrativeRecoveryDao>();
+builder.Services.AddScoped<AdministrativeRecoveryService>();
+builder.Services.AddScoped<AdministrativeRecoveryController>();
 builder.Services.AddScoped<TicketEstimateService>();
 builder.Services.AddScoped<TicketPdfService>();
 builder.Services.AddScoped<TicketPdfController>();
@@ -105,6 +108,7 @@ app.MapStaffSessionEndpoints();
 app.MapServiceEndpoints();
 app.MapTicketEndpoints();
 app.MapTicketServiceEndpoints();
+app.MapAdministrativeRecoveryEndpoints();
 app.MapTicketPdfEndpoints();
 app.MapAnalyticsEndpoints();
 

@@ -5,6 +5,7 @@ using backend.Dtos.CompanyUserDtos;
 using backend.auth.Daos;
 using backend.auth.Dtos;
 using backend.auth.Models;
+using backend.Services;
 using System.Security.Claims;
 
 namespace backend.Controllers;
@@ -14,16 +15,19 @@ public class CompanyUserController
   private readonly CompanyUserDao _dao;
   private readonly UserDao _userDao;
   private readonly CompanyDao _companyDao;
+  private readonly AdministrativeRecoveryService _recoveryService;
 
   public CompanyUserController(
     CompanyUserDao dao,
     UserDao userDao,
-    CompanyDao companyDao
+    CompanyDao companyDao,
+    AdministrativeRecoveryService recoveryService
   )
   {
     _dao = dao;
     _userDao = userDao;
     _companyDao = companyDao;
+    _recoveryService = recoveryService;
   }
 
   // Ελέγχει αν ο logged-in ADMIN έχει πρόσβαση στη συγκεκριμένη Company.
@@ -359,6 +363,21 @@ public class CompanyUserController
       {
         status = false,
         message = "Only STAFF users can be removed with this endpoint"
+      });
+    }
+
+    var membership = await _dao.GetByUserAndCompany(userId, companyId);
+    if (membership is null)
+    {
+      return Results.NotFound(new { status = false, message = "Staff user does not belong to this company" });
+    }
+
+    if (await _recoveryService.HasOpenStaffSession(userId, companyId))
+    {
+      return Results.Conflict(new
+      {
+        status = false,
+        message = "Staff user has an open session. Force-end the session before removing the user from the company."
       });
     }
 
