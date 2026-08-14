@@ -181,7 +181,16 @@ public class StaffSessionController
       DeskId = desk.Id
     };
 
-    var created = await _dao.Create(session);
+    var created = await _dao.CreateIfAvailable(session);
+
+    if (created is null)
+    {
+      return Results.Conflict(new
+      {
+        status = false,
+        message = "Staff or desk already has an active session"
+      });
+    }
 
     return Results.Created(
       $"/staff-sessions/{created.Id}",

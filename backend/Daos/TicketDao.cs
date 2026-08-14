@@ -206,8 +206,8 @@ public class TicketDao(MyTurnContext context)
     {
       var alreadyServing = await context.Tickets.AnyAsync(ticket =>
         ticket.Status == "SERVING" &&
-        ticket.ServedByUserId == userId &&
-        ticket.ServedAtDeskId == deskId
+        (ticket.ServedByUserId == userId ||
+         ticket.ServedAtDeskId == deskId)
       );
 
       if (alreadyServing)

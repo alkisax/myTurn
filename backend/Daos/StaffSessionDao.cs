@@ -87,6 +87,40 @@ public class StaffSessionDao(MyTurnContext context)
     return session;
   }
 
+  public async Task<StaffSession?> CreateIfAvailable(StaffSession session)
+  {
+    await context.Database.ExecuteSqlRawAsync("BEGIN IMMEDIATE;");
+
+    try
+    {
+      var staffAlreadyActive = await context.StaffSessions.AnyAsync(existing =>
+        existing.UserId == session.UserId &&
+        existing.EndedAt == null
+      );
+
+      var deskAlreadyOccupied = await context.StaffSessions.AnyAsync(existing =>
+        existing.DeskId == session.DeskId &&
+        existing.EndedAt == null
+      );
+
+      if (staffAlreadyActive || deskAlreadyOccupied)
+      {
+        await context.Database.ExecuteSqlRawAsync("COMMIT;");
+        return null;
+      }
+
+      context.StaffSessions.Add(session);
+      await context.SaveChangesAsync();
+      await context.Database.ExecuteSqlRawAsync("COMMIT;");
+      return session;
+    }
+    catch
+    {
+      await context.Database.ExecuteSqlRawAsync("ROLLBACK;");
+      throw;
+    }
+  }
+
 
   public async Task<StaffSession?> Update(
     int id,
