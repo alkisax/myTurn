@@ -171,7 +171,8 @@ const Step4CompanyActions = ({
         </h2>
 
         <p>
-          Add staff members who will work at desks and serve tickets.
+          Staff are employees who serve customers. They will later start a
+          work session at a desk, and staff accounts are created by the admin.
         </p>
 
         <Button
@@ -216,7 +217,9 @@ const Step4CompanyActions = ({
         </h2>
 
         <p>
-          Add locations where this company operates.
+          A location can be a branch, office, shop, or public service point.
+          Queues, services, and desks are configured inside a location, and a
+          company can have more than one location.
         </p>
 
         <Button

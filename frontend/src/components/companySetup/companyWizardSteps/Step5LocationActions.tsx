@@ -274,6 +274,11 @@ const Step5LocationActions = ({
             Queues
           </h2>
 
+          <p>
+            A queue is a waiting line, such as “General Service” or
+            “Appointments”. Tickets are issued into a queue.
+          </p>
+
           <Button
             variant="contained"
             onClick={() =>
@@ -314,6 +319,12 @@ const Step5LocationActions = ({
             Services
           </h2>
 
+          <p>
+            Services describe what a customer wants to do, such as “Passport
+            Renewal” or “Information”. A ticket may include one or more
+            services, and the service duration can help estimate waiting time.
+          </p>
+
           <Button
             variant="contained"
             onClick={() =>
@@ -353,6 +364,12 @@ const Step5LocationActions = ({
           <h2 className="text-xl font-bold">
             Desks
           </h2>
+
+          <p>
+            A desk is a physical or logical service position where a staff
+            member serves customers. Every desk must be connected to one
+            queue, so create a queue before adding a desk.
+          </p>
 
           <Button
             variant="contained"

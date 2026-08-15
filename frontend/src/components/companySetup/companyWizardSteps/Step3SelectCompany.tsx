@@ -33,7 +33,10 @@ const Step3SelectCompany = ({
         Step 3 — Select a company
       </h1>
 
-      <p>Select the company you want to set up.</p>
+      <p className="max-w-lg text-center">
+        You can manage more than one company in MyTurn. Select the company
+        you want to configure, or create another company to set up.
+      </p>
 
       <div className="flex w-full max-w-md flex-col gap-2">
         {companies.map((company) => (

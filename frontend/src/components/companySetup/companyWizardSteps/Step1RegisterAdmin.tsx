@@ -8,6 +8,17 @@ const Step1RegisterAdmin = () => {
         Step 1 — Create your admin account
       </h1>
 
+      <p className="max-w-lg text-center">
+        MyTurn helps you organize your company as Company → Locations →
+        Queues → Desks. Staff belong to the company and serve customers at
+        desks, while services describe what customers can request.
+      </p>
+
+      <p className="max-w-lg text-center">
+        Customers receive tickets for a queue and may optionally choose
+        services. This wizard will guide you through the setup step by step.
+      </p>
+
       <RegisterAdminPageBackend url={backendUrl} />
     </div>
   );

@@ -19,9 +19,15 @@ const Step2CreateFirstCompany = ({
       </h1>
 
       <p className="max-w-lg text-center">
-        Every queue in MyTurn belongs to a company and a location.
-        Let&apos;s create your first company so you can start setting up
-        your locations, queues and desks.
+        A company is the main organization you manage in MyTurn. Your
+        locations, staff, queues, desks, and services will be set up under
+        this company.
+      </p>
+
+      <p className="max-w-lg text-center">
+        You&apos;ll also choose how long an unclaimed ticket stays available
+        and the usual time needed to serve a customer. These settings help
+        MyTurn estimate waiting times.
       </p>
 
       <Button
