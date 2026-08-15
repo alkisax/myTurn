@@ -10,6 +10,7 @@ import Step1RegisterAdmin from "../components/companySetup/companyWizardSteps/St
 import Step2CreateFirstCompany from "../components/companySetup/companyWizardSteps/Step2CreateFirstCompany";
 import Step3SelectCompany from "../components/companySetup/companyWizardSteps/Step3SelectCompany";
 import Step4CompanyActions from "../components/companySetup/companyWizardSteps/Step4CompanyActions";
+import Step5LocationActions from "../components/companySetup/companyWizardSteps/Step5LocationActions";
 
 interface Company {
   id: number;
@@ -19,21 +20,39 @@ interface Company {
   createdAt: string;
 }
 
+interface Location {
+  id: number;
+  companyId: number;
+  name: string;
+  address?: string | null;
+  country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  timeZoneId?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const CompanyWizard = () => {
   const { user, isLoading } = useContext(UserAuthContext);
 
   const [companies, setCompanies] = useState<Company[]>([]);
   const [companyLoading, setCompanyLoading] = useState(true);
+
   const [showCompanyForm, setShowCompanyForm] = useState(false);
+
   const [selectedCompanyId, setSelectedCompanyId] =
     useState<number | null>(null);
+
+  const [selectedLocation, setSelectedLocation] =
+    useState<Location | null>(null);
 
   const isAdmin = Boolean(
     user?.roles.includes("ADMIN") ||
     user?.roles.includes("SUPERADMIN")
   );
 
-  // Initial load
   useEffect(() => {
     if (!isAdmin) return;
 
@@ -54,7 +73,10 @@ const CompanyWizard = () => {
       })
       .catch((error) => {
         if (!ignore) {
-          console.error("Failed to fetch companies:", error);
+          console.error(
+            "Failed to fetch companies:",
+            error
+          );
         }
       })
       .finally(() => {
@@ -68,7 +90,6 @@ const CompanyWizard = () => {
     };
   }, [isAdmin]);
 
-  // Manual refresh μετά από Create Company.
   const fetchCompanies = async () => {
     if (!isAdmin) return;
 
@@ -88,13 +109,19 @@ const CompanyWizard = () => {
 
       setCompanies(response.data.data);
     } catch (error) {
-      console.error("Failed to fetch companies:", error);
+      console.error(
+        "Failed to fetch companies:",
+        error
+      );
     } finally {
       setCompanyLoading(false);
     }
   };
 
-  if (isLoading || (isAdmin && companyLoading)) {
+  if (
+    isLoading ||
+    (isAdmin && companyLoading)
+  ) {
     return <div>Loading...</div>;
   }
 
@@ -138,16 +165,29 @@ const CompanyWizard = () => {
     );
   }
 
-  // STEP 4
   if (selectedCompanyId !== null) {
     const selectedCompany = companies.find(
-      (company) => company.id === selectedCompanyId
+      (company) =>
+        company.id === selectedCompanyId
     );
 
     if (selectedCompany) {
+      // STEP 5
+      if (selectedLocation) {
+        return (
+          <Step5LocationActions
+            company={selectedCompany}
+            location={selectedLocation}
+            onBack={() => setSelectedLocation(null)}
+          />
+        );
+      }
+
+      // STEP 4
       return (
         <Step4CompanyActions
           company={selectedCompany}
+          onSelectLocation={setSelectedLocation}
         />
       );
     }
