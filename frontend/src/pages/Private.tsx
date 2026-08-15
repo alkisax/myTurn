@@ -1,6 +1,10 @@
 const Private = () => {
   return (
-    <div>Private</div>
+    <>
+      <div>Private</div>
+      <div></div>
+    </>
+
   )
 }
 

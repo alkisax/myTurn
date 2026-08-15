@@ -2,11 +2,7 @@
 import { createContext, useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import type {
-  UserAuthContextType,
-  UserProviderProps,
-  BackendJwtPayload,
-} from "../types/types";
+import type { UserAuthContextType, UserProviderProps, BackendJwtPayload, } from "../types/types";
 import type { IUser } from "../types/types";
 import { backendUrl } from "../../constants/constants";
 

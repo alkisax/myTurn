@@ -8,6 +8,11 @@ import RegisterPageBackend from "./authLogin/loginBackend/RegisterPageBackend";
 import Info from "./pages/Info";
 import Home from "./pages/Home"
 import Private from "./pages/Private";
+import SuperAdminPrivateRoute from "./authLogin/service/SuperAdminPrivateRoute";
+import SuperAdmin from "./pages/SuperAdmin";
+import AdminPrivateRoute from "./authLogin/service/AdminPrivateRoute";
+import Admin from "./pages/Admin";
+import CompanyWizard from "./pages/CompanyWizard";
 
 
 function App() {
@@ -23,6 +28,16 @@ function App() {
         <Route element={<PrivateRoute />}>
           <Route path="/private" element={<Private />} />
         </Route>
+
+        <Route element={<SuperAdminPrivateRoute />}>
+          <Route path="/super-admin" element={<SuperAdmin />} />
+        </Route>
+
+        <Route element={<AdminPrivateRoute />}>
+          <Route path="/admin" element={<Admin />} />
+        </Route>
+
+        <Route path="/company-wizard" element={<CompanyWizard />} />
       </Route>
     </Routes>
   );

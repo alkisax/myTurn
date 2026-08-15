@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Box, Tab, Tabs, Typography, Paper } from "@mui/material";
 import LoginBackend from "./loginBackend/LoginBackend";
+import CompanyWizardCard from "../components/companySetup/CompanyWizardCard";
 
 interface Params {
   url: string;
@@ -20,12 +21,18 @@ const Login = ({ url }: Params) => {
         sx={{
           minHeight: "100vh",
           display: "flex",
+          flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
           backgroundColor: "#f5f5f5",
           p: 2,
+          gap: 3,
         }}
       >
+        {/* ADD COMPANY */}
+        <CompanyWizardCard />
+
+        {/* LOGIN */}
         <Paper
           elevation={6}
           sx={{
