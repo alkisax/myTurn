@@ -13,6 +13,8 @@ import SuperAdmin from "./pages/SuperAdmin";
 import AdminPrivateRoute from "./authLogin/service/AdminPrivateRoute";
 import Admin from "./pages/Admin";
 import CompanyWizard from "./pages/CompanyWizard";
+import StaffPrivateRoute from "./authLogin/service/StaffPrivateRoute";
+import Staff from "./pages/Staff";
 
 
 function App() {
@@ -35,6 +37,14 @@ function App() {
 
         <Route element={<AdminPrivateRoute />}>
           <Route path="/admin" element={<Admin />} />
+        </Route>
+
+        <Route element={<StaffPrivateRoute />}>
+          <Route path="/staff" element={<Staff />} />
+        </Route>
+
+        <Route element={<PrivateRoute />}>
+          <Route path="/private" element={<Private />} />
         </Route>
 
         <Route path="/company-wizard" element={<CompanyWizard />} />

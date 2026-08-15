@@ -1,4 +1,4 @@
-sqlite3 .\backend\MyTurn.db ".headers on" ".mode box" "SELECT * FROM Users;" "SELECT * FROM CompanyUsers;" "SELECT * FROM Companies;" "SELECT * FROM Locations;" "SELECT * FROM Queues;" "SELECT * FROM Desks;" "SELECT * FROM StaffSessions;" "SELECT * FROM Services;" "SELECT * FROM Tickets;" "SELECT * FROM TicketServices;" > db_snapshot.txt
+sqlite3 .\backend\MyTurn.db ".headers on" ".mode column" "SELECT * FROM Users;" "SELECT * FROM CompanyUsers;" "SELECT * FROM Companies;" "SELECT * FROM Locations;" "SELECT * FROM Queues;" "SELECT * FROM Desks;" "SELECT * FROM StaffSessions;" "SELECT * FROM Services;" "SELECT * FROM Tickets;" "SELECT * FROM TicketServices;" > db_snapshot.txt
 
 ## clear db (not superuser)
 ```
@@ -21,6 +21,21 @@ DELETE FROM Companies;
 
 DELETE FROM Users
 WHERE Role != 'SUPERADMIN';
+
+-- Reset AUTOINCREMENT counters
+DELETE FROM sqlite_sequence
+WHERE name IN (
+  'TicketServices',
+  'Tickets',
+  'StaffSessions',
+  'Desks',
+  'Services',
+  'Queues',
+  'Locations',
+  'CompanyUsers',
+  'Companies',
+  'Users'
+);
 
 COMMIT;
 
