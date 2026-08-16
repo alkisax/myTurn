@@ -70,27 +70,31 @@ export const useStaff = (): StaffContextValue => {
           return;
         }
 
-        setSession(recovered);
-        setSelectedCompanyId(recovered.companyId);
-
-        return axios
-          .get(
+        return Promise.all([
+          axios.get(
             `${backendUrl}/staff/companies/${recovered.companyId}/desks`,
             authConfig()
-          )
-          .then((deskResponse) => {
-            if (ignore) {
-              return;
-            }
+          ),
+          axios.get(
+            `${backendUrl}/staff-sessions/mine/serving-ticket`,
+            authConfig()
+          ),
+        ]).then(([deskResponse, servingTicketResponse]) => {
+          if (ignore) {
+            return;
+          }
 
-            const recoveredDesks: StaffDesk[] = deskResponse.data.data;
-            setDesks(recoveredDesks);
-            setSelectedDesk(
-              recoveredDesks.find(
-                (desk) => desk.id === recovered.deskId
-              ) ?? null
-            );
-          });
+          const recoveredDesks: StaffDesk[] = deskResponse.data.data;
+          setSession(recovered);
+          setSelectedCompanyId(recovered.companyId);
+          setDesks(recoveredDesks);
+          setSelectedDesk(
+            recoveredDesks.find(
+              (desk) => desk.id === recovered.deskId
+            ) ?? null
+          );
+          setCurrentTicket(servingTicketResponse.data.data);
+        });
       })
       .catch((error: unknown) => {
         if (!ignore) {

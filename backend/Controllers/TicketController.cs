@@ -399,6 +399,30 @@ public class TicketController
     return services;
   }
 
+  private async Task SendNowServingChanged(Ticket ticket, int deskId)
+  {
+    await _hubContext.Clients
+      .Group($"queue-{ticket.QueueId}")
+      .SendAsync("NowServingChanged", new
+      {
+        ticket.Number,
+        DeskId = deskId,
+        ticket.QueueId
+      });
+  }
+
+  private async Task SendNowServingEnded(Ticket ticket, int deskId)
+  {
+    await _hubContext.Clients
+      .Group($"queue-{ticket.QueueId}")
+      .SendAsync("NowServingEnded", new
+      {
+        ticket.Number,
+        DeskId = deskId,
+        ticket.QueueId
+      });
+  }
+
   // για να μπορούμε να παρακολουθούμε το ticket απο σελίδα που μας οδηγεί το qr
   public async Task<IResult> GetByTrackingToken(
     string trackingToken
@@ -497,6 +521,42 @@ public class TicketController
       status = true,
       data
     });
+  }
+
+  public async Task<MyTicketDto?> GetServingForStaffSession(
+    int userId,
+    int deskId,
+    int queueId
+  )
+  {
+    var ticket = await _dao.GetServingByStaffAndDesk(
+      userId,
+      deskId,
+      queueId
+    );
+
+    if (ticket is null)
+    {
+      return null;
+    }
+
+    var services = await GetServicesForTicket(ticket.Id);
+
+    return new MyTicketDto(
+      ticket.Id,
+      ticket.CompanyId,
+      ticket.LocationId,
+      ticket.QueueId,
+      ticket.Number,
+      ticket.Pin,
+      ticket.TrackingToken,
+      ticket.CustomerEmail,
+      ticket.Status,
+      ticket.CreatedAt,
+      ticket.ServingStartedAt,
+      ticket.CompletedAt,
+      services
+    );
   }
 
   // για όλο το προσωπικό να βλέπει ποιοι αριθμοί είναι σε ένα queue. Το staff βλέπει το queue στο οποίο είναι assigned, ο admin τα queue του company και ο super admin όλα
@@ -738,14 +798,7 @@ public class TicketController
 
     // 🔌 SignalR
     // Ο STAFF πήρε νέο ticket για εξυπηρέτηση. Ενημερώνουμε αμέσως την realtime οθόνη της Queue.
-    await _hubContext.Clients
-      .Group($"queue-{ticket.QueueId}")
-      .SendAsync("NowServingChanged", new
-      {
-        ticket.Number,
-        DeskId = session.DeskId,
-        ticket.QueueId
-      });
+    await SendNowServingChanged(ticket, session.DeskId);
 
     // 3. Response.
     var services = await GetServicesForTicket(ticket.Id);
@@ -814,6 +867,8 @@ public class TicketController
       });
     }
 
+    await SendNowServingEnded(ticket, session.DeskId);
+
     // 4. Response.
     var services = await GetServicesForTicket(ticket.Id);
     var data = new MyTicketDto(
@@ -864,6 +919,8 @@ public class TicketController
       });
     }
 
+    await SendNowServingEnded(ticket, session.DeskId);
+
     var services = await GetServicesForTicket(ticket.Id);
     var data = new MyTicketDto(
       ticket.Id,
@@ -912,6 +969,8 @@ public class TicketController
         message = "Missed ticket not found"
       });
     }
+
+    await SendNowServingChanged(ticket, session.DeskId);
 
     var services = await GetServicesForTicket(ticket.Id);
     var data = new MyTicketDto(

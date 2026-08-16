@@ -6,7 +6,9 @@ public class PublicController(
   CompanyDao companyDao,
   LocationDao locationDao,
   QueueDao queueDao,
-  ServiceDao serviceDao
+  ServiceDao serviceDao,
+  TicketDao ticketDao,
+  DeskDao deskDao
 )
 {
   public async Task<IResult> GetCompany(string companySlug)
@@ -65,6 +67,50 @@ public class PublicController(
       data = services.Where(service => service.IsActive).Select(service => new PublicServiceDto(
         service.Id, service.Name, service.Description,
         service.EstimatedServiceMinutes, service.IsGeneric))
+    });
+  }
+
+  public async Task<IResult> GetNowServing(
+    string companySlug,
+    string locationSlug
+  )
+  {
+    var location = await ResolveLocation(companySlug, locationSlug);
+
+    if (location is null || !location.IsActive)
+    {
+      return Results.NotFound();
+    }
+
+    var tickets = await ticketDao.GetServingByLocationId(location.Id);
+    var data = new List<PublicNowServingDto>();
+
+    foreach (var ticket in tickets)
+    {
+      var queue = await queueDao.GetById(ticket.QueueId);
+      var desk = ticket.ServedAtDeskId is null
+        ? null
+        : await deskDao.GetById(ticket.ServedAtDeskId.Value);
+
+      if (queue is null || desk is null)
+      {
+        continue;
+      }
+
+      data.Add(new PublicNowServingDto(
+        ticket.QueueId,
+        queue.Name,
+        ticket.Number,
+        desk.Id,
+        desk.Name,
+        ticket.ServingStartedAt
+      ));
+    }
+
+    return Results.Ok(new
+    {
+      status = true,
+      data
     });
   }
 

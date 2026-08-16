@@ -63,6 +63,16 @@ Nested resources are always resolved by `companySlug` plus `locationSlug`; a loc
 - Success: `200 OK` with active `PublicServiceDto[]`. Each item contains `id`, `name`, `description`, `estimatedServiceMinutes`, and `isGeneric`.
 - Errors: `404 Not Found` when the company/location slug pair does not resolve.
 
+### `GET /public/{companySlug}/{locationSlug}/now-serving`
+
+- Authorization: Public / Anonymous.
+- Success: `200 OK` with customer-safe `PublicNowServingDto[]` data.
+- The lookup is scoped by company slug and location slug; unknown or inactive locations return `404 Not Found`.
+- Each entry contains `queueId`, `queueName`, `number`, `deskId`, `deskName`, and `servingStartedAt`.
+- Multiple currently serving desks are returned separately, including multiple desks serving the same queue.
+- Only tickets whose current status is `SERVING` are returned.
+- The endpoint is used by `PublicTablet` and `StaffNumberDisplay` as the initial persisted snapshot after page load or browser refresh. It is not a last-called history endpoint.
+
 There is intentionally no `GET /public/companies`, `GET /public/queues`, or other anonymous global listing route.
 
 ## V1 status and slugs
@@ -560,6 +570,17 @@ The StaffSession flow remains unchanged:
 - Errors: `401`.
 - Ελληνικά: Ο STAFF ελέγχει αν έχει ενεργό session και σε ποιο desk εργάζεται.
 
+### `GET /staff-sessions/mine/serving-ticket`
+
+- Authorization: Authenticated STAFF.
+- Success: `200 OK` with `data` either the current `MyTicketDto` or `null`.
+- If there is no open StaffSession, it returns `data: null`.
+- If there is no owned `SERVING` ticket, it returns `data: null`.
+- Recovery is scoped to the logged-in STAFF user, the active session DeskId, and the active session QueueId.
+- It does not select an arbitrary `SERVING` ticket from the queue.
+- Purpose: restore the STAFF member's current ticket after a browser refresh.
+- Ελληνικά: Επαναφέρει το ticket που εξυπηρετεί ο συγκεκριμένος STAFF στο συγκεκριμένο desk μετά από browser refresh.
+
 ### `POST /staff-sessions/`
 
 - Authorization: Authenticated, but controller requires role STAFF.
@@ -848,13 +869,21 @@ The current `QueueHub` has no `[Authorize]` attribute, so the code does not requ
 
 ### Server event: `NowServingChanged`
 
-After `/tickets/next` successfully claims a ticket, the backend sends this event to the ticket’s queue group:
+When a ticket becomes `SERVING`, including after `/tickets/next` successfully claims a ticket or after a missed ticket is recalled, the backend sends this event to the ticket’s queue group:
 
 ```json
 { "number": 42, "deskId": 2, "queueId": 5 }
 ```
 
-The frontend connects to `/queue-hub`, invokes `JoinQueue(queueId)`, listens for `NowServingChanged`, and updates the queue display in real time. This event is separate from the normal HTTP response returned by `/tickets/next`.
+The frontend connects to `/queue-hub`, invokes `JoinQueue(queueId)`, listens for `NowServingChanged`, and updates the public display visual state in real time. This event is separate from the normal HTTP response returned by `/tickets/next`.
+
+### Server event: `NowServingEnded`
+
+After a successful `SERVING` to `COMPLETED` or `SERVING` to `MISSED` transition, the backend sends the ticket number, desk ID, and queue ID. This indicates that the active `SERVING` state has ended. `PublicTablet` and `StaffNumberDisplay` do not necessarily clear their displayed number in response; they retain the last-called visual value locally. A successful `MISSED` to `SERVING` recall emits `NowServingChanged` again.
+
+### Public display last-called presentation state
+
+`PublicTablet` and `StaffNumberDisplay` retain same-day last-called values in browser `localStorage`. This is frontend-only presentation state and does not change ticket lifecycle or status: `Complete` and `Missed` still end the ticket’s `SERVING` state normally. Stored values expire when the local calendar date changes. A different or new device cannot recover completed or missed last-called values from the backend because `/public/{companySlug}/{locationSlug}/now-serving` returns current `SERVING` tickets only. When a ticket is actively `SERVING`, the current HTTP snapshot takes precedence over the locally retained display value.
 
 ## Authorization Summary
 

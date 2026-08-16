@@ -26,16 +26,75 @@ interface NowServingEvent {
 }
 
 interface QueueDisplayState {
+  queueId: number;
   number: number;
   deskId: number;
+  deskName?: string;
 }
+
+interface PublicNowServing {
+  queueId: number;
+  queueName: string;
+  number: number;
+  deskId: number;
+  deskName: string;
+  servingStartedAt: string | null;
+}
+
+interface StoredNumberDisplayState {
+  date: string;
+  entries: Record<string, QueueDisplayState>;
+}
+
+const numberDisplayStorageKey = "myturn:number-display:last-called";
+
+const getToday = () => {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${today.getFullYear()}-${month}-${day}`;
+};
+
+const readStoredDisplayState = (): Record<string, QueueDisplayState> => {
+  const storedValue = localStorage.getItem(numberDisplayStorageKey);
+
+  if (!storedValue) {
+    return {};
+  }
+
+  try {
+    const storedState = JSON.parse(storedValue) as StoredNumberDisplayState;
+
+    if (storedState.date !== getToday()) {
+      localStorage.removeItem(numberDisplayStorageKey);
+      return {};
+    }
+
+    return storedState.entries;
+  } catch {
+    localStorage.removeItem(numberDisplayStorageKey);
+    return {};
+  }
+};
+
+const saveStoredDisplayState = (
+  entries: Record<string, QueueDisplayState>
+) => {
+  const storedState: StoredNumberDisplayState = {
+    date: getToday(),
+    entries,
+  };
+
+  localStorage.setItem(numberDisplayStorageKey, JSON.stringify(storedState));
+};
 
 const StaffNumberDisplay = () => {
   const navigate = useNavigate();
   const { session, selectedCompany, desks } = useStaffContext();
   const [queues, setQueues] = useState<PublicQueue[]>([]);
   const [queueDisplayState, setQueueDisplayState] = useState<
-    Record<number, QueueDisplayState>
+    Record<number, QueueDisplayState[]>
   >({});
   const [loading, setLoading] = useState(true);
 
@@ -59,14 +118,38 @@ const StaffNumberDisplay = () => {
           return;
         }
 
-        return axios
-          .get(`${publicBase}/${location.slug}/queues`)
-          .then((queueResponse) => {
+        return Promise.all([
+          axios.get(`${publicBase}/${location.slug}/queues`),
+          axios.get(`${publicBase}/${location.slug}/now-serving`),
+        ]).then(([queueResponse, snapshotResponse]) => {
             if (ignore) {
               return;
             }
 
             setQueues(queueResponse.data.data);
+            const snapshot: PublicNowServing[] = snapshotResponse.data.data;
+            const storedEntries = readStoredDisplayState();
+            const initialEntries = { ...storedEntries };
+
+            for (const item of snapshot) {
+              initialEntries[`${item.queueId}:${item.deskId}`] = {
+                queueId: item.queueId,
+                number: item.number,
+                deskId: item.deskId,
+                deskName: item.deskName,
+              };
+            }
+
+            const nextState: Record<number, QueueDisplayState[]> = {};
+
+            for (const item of Object.values(initialEntries)) {
+              const entries = nextState[item.queueId] ?? [];
+              entries.push(item);
+              nextState[item.queueId] = entries;
+            }
+
+            saveStoredDisplayState(initialEntries);
+            setQueueDisplayState(nextState);
           });
       })
       .catch((error: unknown) => {
@@ -106,16 +189,41 @@ const StaffNumberDisplay = () => {
         return;
       }
 
+      const storageKey = `${queueId}:${event.deskId}`;
+      const storedEntries = readStoredDisplayState();
+      const nextEntry = {
+        queueId,
+        number: event.number,
+        deskId: event.deskId,
+      };
+
+      storedEntries[storageKey] = nextEntry;
+      saveStoredDisplayState(storedEntries);
+
       setQueueDisplayState((current) => ({
         ...current,
-        [queueId]: {
-          number: event.number,
-          deskId: event.deskId,
-        },
+        [queueId]: [
+          ...(current[queueId] ?? []).filter(
+            (entry) => entry.deskId !== event.deskId
+          ),
+          nextEntry,
+        ],
       }));
     };
 
     connection.on("NowServingChanged", handleNowServingChanged);
+
+    const handleNowServingEnded = (event: NowServingEvent) => {
+      const queueId = Number(event.queueId);
+
+      if (!displayedQueueIds.has(queueId)) {
+        return;
+      }
+
+      // The display intentionally keeps the last called number visible.
+    };
+
+    connection.on("NowServingEnded", handleNowServingEnded);
 
     const joinQueues = async () => {
       for (const queueId of queueIds) {
@@ -150,6 +258,7 @@ const StaffNumberDisplay = () => {
     return () => {
       disposed = true;
       connection.off("NowServingChanged", handleNowServingChanged);
+      connection.off("NowServingEnded", handleNowServingEnded);
 
       const disconnect = async () => {
         try {
@@ -236,8 +345,7 @@ const StaffNumberDisplay = () => {
         }}
       >
         {queues.map((queue) => {
-          const current = queueDisplayState[queue.id];
-          const desk = current ? desksById.get(current.deskId) : undefined;
+          const currentEntries = queueDisplayState[queue.id] ?? [];
 
           return (
             <Paper
@@ -255,16 +363,22 @@ const StaffNumberDisplay = () => {
             >
               <Typography variant="h4">{queue.name}</Typography>
 
-              {current ? (
-                <>
-                  <Typography variant="h1" sx={{ fontWeight: 700 }}>
-                    #{current.number}
-                  </Typography>
-                  <Typography variant="h6">PLEASE GO TO</Typography>
-                  <Typography variant="h4">
-                    {desk?.name ?? "the service desk"}
-                  </Typography>
-                </>
+              {currentEntries.length > 0 ? (
+                currentEntries.map((current) => {
+                  const desk = desksById.get(current.deskId);
+
+                  return (
+                    <Box key={current.deskId}>
+                      <Typography variant="h1" sx={{ fontWeight: 700 }}>
+                        #{current.number}
+                      </Typography>
+                      <Typography variant="h6">PLEASE GO TO</Typography>
+                      <Typography variant="h4">
+                        {desk?.name ?? current.deskName ?? "the service desk"}
+                      </Typography>
+                    </Box>
+                  );
+                })
               ) : (
                 <Typography variant="h5">
                   Waiting for next call

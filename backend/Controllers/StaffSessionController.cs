@@ -94,6 +94,49 @@ public class StaffSessionController
     });
   }
 
+  public async Task<IResult> GetServingTicket(
+    ClaimsPrincipal currentUser,
+    TicketController ticketController
+  )
+  {
+    var role = currentUser.FindFirst(ClaimTypes.Role)?.Value;
+
+    if (role != "STAFF")
+    {
+      return Results.Forbid();
+    }
+
+    var userId = GetCurrentUserId(currentUser);
+
+    if (userId is null)
+    {
+      return Results.Unauthorized();
+    }
+
+    var session = await _dao.GetActiveByUserId(userId.Value);
+
+    if (session is null)
+    {
+      return Results.Ok(new
+      {
+        status = true,
+        data = (object?)null
+      });
+    }
+
+    var ticket = await ticketController.GetServingForStaffSession(
+      userId.Value,
+      session.DeskId,
+      session.QueueId
+    );
+
+    return Results.Ok(new
+    {
+      status = true,
+      data = ticket
+    });
+  }
+
 
   // STAFF μπαίνει σε Desk.
   public async Task<IResult> Create(

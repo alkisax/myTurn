@@ -162,6 +162,35 @@ public class TicketDao(MyTurnContext context)
       .ToListAsync();
   }
 
+  public async Task<Ticket?> GetServingByStaffAndDesk(
+    int userId,
+    int deskId,
+    int queueId
+  )
+  {
+    return await context.Tickets
+      .AsNoTracking()
+      .FirstOrDefaultAsync(ticket =>
+        ticket.Status == "SERVING" &&
+        ticket.ServedByUserId == userId &&
+        ticket.ServedAtDeskId == deskId &&
+        ticket.QueueId == queueId
+      );
+  }
+
+  public async Task<List<Ticket>> GetServingByLocationId(int locationId)
+  {
+    return await context.Tickets
+      .AsNoTracking()
+      .Where(ticket =>
+        ticket.LocationId == locationId &&
+        ticket.Status == "SERVING"
+      )
+      .OrderBy(ticket => ticket.QueueId)
+      .ThenBy(ticket => ticket.ServedAtDeskId)
+      .ToListAsync();
+  }
+
   public async Task<List<Ticket>> GetHistoryByQueueId(int queueId)
   {
     return await context.Tickets

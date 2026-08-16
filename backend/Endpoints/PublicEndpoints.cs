@@ -18,5 +18,7 @@ public static class PublicEndpoints
       controller.GetQueues(companySlug, locationSlug));
     group.MapGet("/{companySlug}/{locationSlug}/services", (string companySlug, string locationSlug, PublicController controller) =>
       controller.GetServices(companySlug, locationSlug));
+    group.MapGet("/{companySlug}/{locationSlug}/now-serving", (string companySlug, string locationSlug, PublicController controller) =>
+      controller.GetNowServing(companySlug, locationSlug));
   }
 }

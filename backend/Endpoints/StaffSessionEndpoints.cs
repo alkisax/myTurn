@@ -33,6 +33,19 @@ public static class StaffSessionEndpoints
     })
     .RequireAuthorization();
 
+    group.MapGet("/mine/serving-ticket", async (
+      StaffSessionController controller,
+      TicketController ticketController,
+      HttpContext context
+    ) =>
+    {
+      return await controller.GetServingTicket(
+        context.User,
+        ticketController
+      );
+    })
+    .RequireAuthorization();
+
 
     // STAFF μπαίνει σε Desk
     group.MapPost("/", async (
