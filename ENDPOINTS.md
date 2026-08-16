@@ -15,6 +15,7 @@ Base URL: `http://localhost:3020`. JSON examples use the property names accepted
 - [Queues](#queues)
 - [Desks](#desks)
 - [Staff Sessions](#staff-sessions)
+- [Staff Discovery](#staff-discovery)
 - [Services](#services)
 - [Tickets](#tickets)
 - [Ticket Services](#ticket-services)
@@ -509,6 +510,15 @@ Location responses include the backend-generated `slug` in addition to the exist
 - Errors: `401`, `403`, `404`.
 - Ελληνικά: Ο ADMIN διαγράφει desk από την εταιρεία.
 
+## Staff Discovery
+
+### `GET /staff/companies/{companyId}/desks`
+
+- Authorization: authenticated STAFF, ADMIN, or SUPERADMIN. STAFF and ADMIN require a `CompanyUser` relation to the requested company; SUPERADMIN has global access. USER is forbidden.
+- Success: `200 OK` with `StaffDeskDto[]` containing `id`, `name`, `locationId`, `locationName`, `queueId`, `queueName`, and `isActive`.
+- Results include only desks whose company, location, and queue all belong to the requested company.
+- Errors: `401`, `403`.
+
 ## Staff Sessions
 
 ### `GET /staff-sessions/`
@@ -601,12 +611,12 @@ Location responses include the backend-generated `slug` in addition to the exist
 
 ### `POST /tickets/kiosk`
 
-- Authorization: ADMIN or SUPERADMIN (`AdminOnly`).
+- Authorization: STAFF, ADMIN, or SUPERADMIN (`StaffOrAdmin`); USER is forbidden.
 - Input body: the same `CreateTicketDto` as remote issuance: `{ "queueId": 8, "email": "customer@example.com", "serviceIds": [21, 22] }`.
-- Access: the ADMIN must have access to the queue's company; SUPERADMIN bypasses company membership checks.
+- Access: STAFF and ADMIN must have access to the queue's company; SUPERADMIN bypasses company membership checks.
 - Success: `201 Created` with the normal ticket creation response.
 - Kiosk issuance is allowed even when `IsRemoteTicketingAllowed` is `false`.
-- Kiosk-created customer tickets remain anonymous: `UserId` is `null`. The ADMIN JWT is used only to authorize the kiosk and does not own the customer ticket.
+- Kiosk-created customer tickets remain anonymous: `UserId` is `null`. The STAFF/ADMIN JWT is used only to authorize the kiosk and does not own the customer ticket.
 - Ελληνικά: Ο πελάτης εκδίδει ticket και προαιρετικά επιλέγει υπηρεσίες.
 
 ### `GET /tickets/id/{ticketId}`

@@ -29,7 +29,7 @@ public static class TicketEndpoints
       TicketController controller,
       HttpContext context
     ) => await controller.CreateKiosk(dto, context.User))
-    .RequireAuthorization("AdminOnly");
+    .RequireAuthorization("StaffOrAdmin");
 
     // GET /tickets/id/5
     group.MapGet("/id/{ticketId:int}", async (

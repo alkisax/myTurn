@@ -95,6 +95,10 @@ public static class AuthExtensions
         policy.RequireRole("ADMIN", "SUPERADMIN")
       );
 
+      options.AddPolicy("StaffOrAdmin", policy =>
+        policy.RequireRole("STAFF", "ADMIN", "SUPERADMIN")
+      );
+
       // Policy: επιτρέπεται μόνο SUPERADMIN.
       options.AddPolicy("SuperAdminOnly", policy =>
         policy.RequireRole("SUPERADMIN")
