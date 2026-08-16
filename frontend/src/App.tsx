@@ -18,6 +18,7 @@ import Staff from "./pages/Staff";
 import PublicTablet from "./pages/PublicTablet";
 import PublicTabletIssueTicket from "./pages/PublicTabletIssueTicket";
 import PublicTabletTicketResult from "./pages/PublicTabletTicketResult";
+import StaffNumberDisplay from "./pages/StaffNumberDisplay";
 
 
 function App() {
@@ -52,6 +53,10 @@ function App() {
           <Route
             path="/staff/public-tablet/ticket"
             element={<PublicTabletTicketResult />}
+          />
+          <Route
+            path="/staff/number-display"
+            element={<StaffNumberDisplay />}
           />
         </Route>
 

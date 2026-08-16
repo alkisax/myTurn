@@ -4,7 +4,7 @@ sqlite3 .\backend\MyTurn.db ".headers on" ".mode column" "SELECT * FROM Users;" 
 ```
 sqlite3 .\backend\MyTurn.db
 ```
-```bash
+```sql
 PRAGMA foreign_keys = OFF;
 
 BEGIN TRANSACTION;
@@ -42,3 +42,19 @@ COMMIT;
 PRAGMA foreign_keys = ON;
 ```
 `.quit`
+
+για να σβήσω μόνο τα tickets
+```sql
+BEGIN TRANSACTION;
+
+DELETE FROM TicketServices;
+DELETE FROM Tickets;
+
+DELETE FROM sqlite_sequence
+WHERE name IN (
+  'TicketServices',
+  'Tickets'
+);
+
+COMMIT;
+```

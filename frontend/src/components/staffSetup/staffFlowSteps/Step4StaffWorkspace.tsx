@@ -390,6 +390,13 @@ const Step4StaffWorkspace = ({
       >
         Set this screen as a public tablet / kiosk
       </Button>
+
+      <Button
+        variant="outlined"
+        onClick={() => navigate("/staff/number-display")}
+      >
+        Set this screen as number display
+      </Button>
     </Box>
   );
 };
