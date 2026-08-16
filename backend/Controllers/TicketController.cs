@@ -237,15 +237,14 @@ public class TicketController
 
     // 🔌 SignalR
     // Το Ticket έχει πλέον αποθηκευτεί επιτυχώς στη βάση. Ενημερώνουμε μόνο τους clients που παρακολουθούν αυτή την Queue.
-    // await _hubContext.Clients
-    //   .Group($"queue-{created.QueueId}")
-    //   .SendAsync("TicketCreated", new
-    //   {
-    //     created.Id,
-    //     created.Number,
-    //     created.Status,
-    //     created.QueueId
-    //   });
+    await _hubContext.Clients
+      .Group($"queue-{created.QueueId}")
+      .SendAsync("QueueTicketAdded", new
+      {
+        QueueId = created.QueueId,
+        TicketId = created.Id,
+        Number = created.Number
+      });
 
     // ⚠️εδω στέλνουμε το mail με zoho mail
     // TODO: στέλνετε απο το δικό μου zoho mail και δεν φαίνεται πουθενα έστω το ονομα του Company 

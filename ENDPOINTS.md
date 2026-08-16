@@ -881,6 +881,19 @@ The frontend connects to `/queue-hub`, invokes `JoinQueue(queueId)`, listens for
 
 After a successful `SERVING` to `COMPLETED` or `SERVING` to `MISSED` transition, the backend sends the ticket number, desk ID, and queue ID. This indicates that the active `SERVING` state has ended. `PublicTablet` and `StaffNumberDisplay` do not necessarily clear their displayed number in response; they retain the last-called visual value locally. A successful `MISSED` to `SERVING` recall emits `NowServingChanged` again.
 
+### Server event: `QueueTicketAdded`
+
+After a new ticket is successfully persisted with `WAITING` status by either
+`POST /tickets/` or `POST /tickets/kiosk`, the backend sends this event to the
+ticket's queue group (`queue-{queueId}`):
+
+```json
+{ "queueId": 5, "ticketId": 123, "number": 42 }
+```
+
+STAFF clients use this event to refresh `GET /tickets/queue/{queueId}`. It
+contains no private ticket data and does not maintain a separate count.
+
 ### Public display last-called presentation state
 
 `PublicTablet` and `StaffNumberDisplay` retain same-day last-called values in browser `localStorage`. This is frontend-only presentation state and does not change ticket lifecycle or status: `Complete` and `Missed` still end the ticket’s `SERVING` state normally. Stored values expire when the local calendar date changes. A different or new device cannot recover completed or missed last-called values from the backend because `/public/{companySlug}/{locationSlug}/now-serving` returns current `SERVING` tickets only. When a ticket is actively `SERVING`, the current HTTP snapshot takes precedence over the locally retained display value.

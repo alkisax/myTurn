@@ -1,5 +1,6 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { backendUrl } from "../../constants/constants";
 import { UserAuthContext } from "../../authLogin/context/UserAuthContext";
 import type {
@@ -28,6 +29,12 @@ export const useStaff = (): StaffContextValue => {
   const [startingSession, setStartingSession] = useState(false);
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const refreshTickets = useCallback(async () => {
+    if (!session) return;
+    const response = await axios.get(`${backendUrl}/tickets/queue/${session.queueId}`, authConfig());
+    setTickets(response.data.data);
+  }, [session]);
 
   useEffect(() => {
     if (authLoading || !user) {
@@ -114,13 +121,8 @@ export const useStaff = (): StaffContextValue => {
 
     let ignore = false;
 
-    axios
-      .get(`${backendUrl}/tickets/queue/${session.queueId}`, authConfig())
-      .then((response) => {
-        if (!ignore) {
-          setTickets(response.data.data);
-        }
-      })
+    Promise.resolve()
+      .then(() => refreshTickets())
       .catch((error: unknown) => {
         if (!ignore) {
           console.error("Failed to fetch queue tickets:", error);
@@ -130,7 +132,36 @@ export const useStaff = (): StaffContextValue => {
     return () => {
       ignore = true;
     };
-  }, [session]);
+  }, [refreshTickets, session]);
+
+  useEffect(() => {
+    if (!session) return;
+    let ignore = false;
+    const connection = new HubConnectionBuilder()
+      .withUrl(`${backendUrl}/queue-hub`)
+      .withAutomaticReconnect()
+      .configureLogging(LogLevel.Warning)
+      .build();
+    const joinQueue = () => connection.invoke("JoinQueue", session.queueId);
+
+    connection.onreconnected(() => {
+      if (!ignore) joinQueue().catch((error: unknown) => console.error("Failed to rejoin staff queue:", error));
+    });
+    connection.on("QueueTicketAdded", (payload: { queueId: number }) => {
+      if (!ignore && payload.queueId === session.queueId) {
+        refreshTickets().catch((error: unknown) => console.error("Failed to refresh queue tickets:", error));
+      }
+    });
+    connection.start().then(joinQueue).catch((error: unknown) => {
+      if (!ignore) console.error("Failed to connect staff queue updates:", error);
+    });
+
+    return () => {
+      ignore = true;
+      connection.off("QueueTicketAdded");
+      connection.stop().catch((error: unknown) => console.error("Failed to stop staff queue updates:", error));
+    };
+  }, [refreshTickets, session]);
 
   const selectedCompany = useMemo(
     () => companies.find((company) => company.id === selectedCompanyId),
@@ -149,19 +180,6 @@ export const useStaff = (): StaffContextValue => {
     () => tickets.filter((ticket) => ticket.status === "MISSED"),
     [tickets]
   );
-
-  const refreshTickets = async () => {
-    if (!session) {
-      return;
-    }
-
-    const response = await axios.get(
-      `${backendUrl}/tickets/queue/${session.queueId}`,
-      authConfig()
-    );
-
-    setTickets(response.data.data);
-  };
 
   const selectCompany = async (companyId: number) => {
     try {
