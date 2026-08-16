@@ -6,39 +6,25 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-
-interface StaffDesk {
-  id: number;
-  name: string;
-  locationId: number;
-  locationName: string;
-  queueId: number;
-  queueName: string;
-  isActive: boolean;
-}
-
-interface StaffSession {
-  id: number;
-  status: string;
-}
-
-interface TicketService {
-  id: number;
-  name: string;
-}
-
-interface Ticket {
-  id: number;
-  number: number;
-  status: string;
-  services: TicketService[];
-}
+import { useNavigate } from "react-router-dom";
+import type {
+  StaffDesk,
+  StaffSession,
+  Ticket,
+} from "../../../context/StaffContextDefinition";
 
 interface Props {
   desk: StaffDesk;
   session: StaffSession;
 
-  tickets: Ticket[];
+  waitingTickets: Ticket[];
+  servingTickets: Ticket[];
+  missedTickets: Ticket[];
+  waitingCount: number;
+  servingCount: number;
+  missedCount: number;
+  totalTickets: number;
+  nextWaitingTicket: Ticket | undefined;
   currentTicket: Ticket | null;
 
   loading: boolean;
@@ -55,7 +41,14 @@ interface Props {
 const Step4StaffWorkspace = ({
   desk,
   session,
-  tickets,
+  waitingTickets,
+  servingTickets,
+  missedTickets,
+  waitingCount,
+  servingCount,
+  missedCount,
+  totalTickets,
+  nextWaitingTicket,
   currentTicket,
   loading,
   errorMessage,
@@ -66,19 +59,8 @@ const Step4StaffWorkspace = ({
   onToggleBreak,
   onEndShift,
 }: Props) => {
+  const navigate = useNavigate();
   const isBreak = session.status === "BREAK";
-
-  const waitingTickets = tickets.filter(
-    (ticket) => ticket.status === "WAITING"
-  );
-
-  const servingTickets = tickets.filter(
-    (ticket) => ticket.status === "SERVING"
-  );
-
-  const missedTickets = tickets.filter(
-    (ticket) => ticket.status === "MISSED"
-  );
 
   return (
     <Box
@@ -132,7 +114,7 @@ const Step4StaffWorkspace = ({
           </Typography>
 
           <Typography variant="h4">
-            {waitingTickets.length}
+            {waitingCount}
           </Typography>
         </Paper>
 
@@ -142,7 +124,7 @@ const Step4StaffWorkspace = ({
           </Typography>
 
           <Typography variant="h4">
-            {servingTickets.length}
+            {servingCount}
           </Typography>
         </Paper>
 
@@ -152,7 +134,7 @@ const Step4StaffWorkspace = ({
           </Typography>
 
           <Typography variant="h4">
-            {missedTickets.length}
+            {missedCount}
           </Typography>
         </Paper>
 
@@ -162,7 +144,7 @@ const Step4StaffWorkspace = ({
           </Typography>
 
           <Typography variant="h4">
-            {tickets.length}
+            {totalTickets}
           </Typography>
         </Paper>
       </Box>
@@ -231,11 +213,11 @@ const Step4StaffWorkspace = ({
         <Button
           variant="contained"
           size="large"
-          disabled={loading || waitingTickets.length === 0}
+          disabled={loading || !nextWaitingTicket}
           onClick={onNext}
         >
-          {waitingTickets.length > 0
-            ? `Next Customer — #${waitingTickets[0].number}`
+          {nextWaitingTicket
+            ? `Next Customer — #${nextWaitingTicket.number}`
             : "No Waiting Customers"}
         </Button>
       )}
@@ -401,6 +383,13 @@ const Step4StaffWorkspace = ({
           </Button>
         </Box>
       )}
+
+      <Button
+        variant="outlined"
+        onClick={() => navigate("/staff/public-tablet")}
+      >
+        Set this screen as a public tablet / kiosk
+      </Button>
     </Box>
   );
 };

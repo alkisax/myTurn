@@ -5,12 +5,7 @@ import {
   Button,
   Typography,
 } from "@mui/material";
-
-interface Company {
-  id: number;
-  name: string;
-  slug: string;
-}
+import type { Company } from "../../../context/StaffContextDefinition";
 
 interface Props {
   companies: Company[];

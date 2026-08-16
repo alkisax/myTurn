@@ -15,6 +15,9 @@ import Admin from "./pages/Admin";
 import CompanyWizard from "./pages/CompanyWizard";
 import StaffPrivateRoute from "./authLogin/service/StaffPrivateRoute";
 import Staff from "./pages/Staff";
+import PublicTablet from "./pages/PublicTablet";
+import PublicTabletIssueTicket from "./pages/PublicTabletIssueTicket";
+import PublicTabletTicketResult from "./pages/PublicTabletTicketResult";
 
 
 function App() {
@@ -41,6 +44,15 @@ function App() {
 
         <Route element={<StaffPrivateRoute />}>
           <Route path="/staff" element={<Staff />} />
+          <Route path="/staff/public-tablet" element={<PublicTablet />} />
+          <Route
+            path="/staff/public-tablet/issue"
+            element={<PublicTabletIssueTicket />}
+          />
+          <Route
+            path="/staff/public-tablet/ticket"
+            element={<PublicTabletTicketResult />}
+          />
         </Route>
 
         <Route element={<PrivateRoute />}>

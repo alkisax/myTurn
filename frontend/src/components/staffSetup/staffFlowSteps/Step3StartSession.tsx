@@ -6,22 +6,10 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-
-interface Company {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface StaffDesk {
-  id: number;
-  name: string;
-  locationId: number;
-  locationName: string;
-  queueId: number;
-  queueName: string;
-  isActive: boolean;
-}
+import type {
+  Company,
+  StaffDesk,
+} from "../../../context/StaffContextDefinition";
 
 interface Props {
   company: Company;
