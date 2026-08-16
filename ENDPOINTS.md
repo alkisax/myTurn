@@ -514,12 +514,37 @@ Location responses include the backend-generated `slug` in addition to the exist
 
 ### `GET /staff/companies/{companyId}/desks`
 
-- Authorization: authenticated STAFF, ADMIN, or SUPERADMIN. STAFF and ADMIN require a `CompanyUser` relation to the requested company; SUPERADMIN has global access. USER is forbidden.
-- Success: `200 OK` with `StaffDeskDto[]` containing `id`, `name`, `locationId`, `locationName`, `queueId`, `queueName`, and `isActive`.
-- Results include only desks whose company, location, and queue all belong to the requested company.
+- Authorization: STAFF, ADMIN, or SUPERADMIN. USER is forbidden.
+- Access: STAFF and ADMIN require a `CompanyUser` relation to the requested Company. SUPERADMIN has global access. Cross-company access returns `403 Forbidden`.
+- Purpose: STAFF frontend discovery, allowing a staff user to choose a desk without using admin-only desk, location, or queue endpoints.
+- Success: `200 OK` with `StaffDeskDto[]`:
+
+```json
+{
+  "id": 12,
+  "name": "Desk A",
+  "locationId": 4,
+  "locationName": "Main Branch",
+  "queueId": 8,
+  "queueName": "Customer Service",
+  "isActive": true
+}
+```
+
+- DTO fields: `id`, `name`, `locationId`, `locationName`, `queueId`, `queueName`, and `isActive`.
+- Results include only resources belonging to the authorized Company.
 - Errors: `401`, `403`.
 
 ## Staff Sessions
+
+The StaffSession flow remains unchanged:
+
+- `POST /staff-sessions/` with `{ "deskId": 12 }`
+- `GET /staff-sessions/mine`
+- `PUT /staff-sessions/{id}/status`
+- `POST /staff-sessions/{id}/end`
+
+`POST /tickets/next` continues to derive the queue, desk, and user from the authenticated user's ACTIVE `StaffSession`; it does not accept those values from the request.
 
 ### `GET /staff-sessions/`
 
@@ -613,10 +638,10 @@ Location responses include the backend-generated `slug` in addition to the exist
 
 - Authorization: STAFF, ADMIN, or SUPERADMIN (`StaffOrAdmin`); USER is forbidden.
 - Input body: the same `CreateTicketDto` as remote issuance: `{ "queueId": 8, "email": "customer@example.com", "serviceIds": [21, 22] }`.
-- Access: STAFF and ADMIN must have access to the queue's company; SUPERADMIN bypasses company membership checks.
+- Access: company access is still validated. STAFF and ADMIN must have a `CompanyUser` relation to the queue's Company; STAFF cannot issue for another Company. SUPERADMIN bypasses company membership checks.
 - Success: `201 Created` with the normal ticket creation response.
 - Kiosk issuance is allowed even when `IsRemoteTicketingAllowed` is `false`.
-- Kiosk-created customer tickets remain anonymous: `UserId` is `null`. The STAFF/ADMIN JWT is used only to authorize the kiosk and does not own the customer ticket.
+- Kiosk-created customer tickets remain anonymous: `UserId` is `null`. The authenticated STAFF/ADMIN identity is used only for authorization and is not attached to the created Ticket.
 - Ελληνικά: Ο πελάτης εκδίδει ticket και προαιρετικά επιλέγει υπηρεσίες.
 
 ### `GET /tickets/id/{ticketId}`
@@ -836,7 +861,7 @@ The frontend connects to `/queue-hub`, invokes `JoinQueue(queueId)`, listens for
 - Public / Anonymous: `/`, `/health`, `/api/ping`, `POST /front-logs/`, registration endpoints, login, the `/public/{companySlug}` customer-read routes, `POST /tickets/` remote issuance, `GET /tickets/{trackingToken}`, and ticket PDF tracking.
 - Authenticated: token refresh, `/company-users/mine`, `/staff-sessions/mine`, and most ticket/session operational routes after controller role/resource checks.
 - USER: may register, create tickets, view own tickets, and cancel own eligible tickets; controller checks apply where implemented.
-- STAFF: uses active Staff Sessions and the ticket operational endpoints (`queue`, `next`, `complete`, `missed`, `recall`); administrative CRUD routes are not available through `AdminOnly` policies.
+- STAFF: may use the STAFF discovery endpoint, kiosk issuance through `StaffOrAdmin`, active Staff Sessions, and the ticket operational endpoints (`queue`, `next`, `complete`, `missed`, `recall`); administrative CRUD routes are not available through `AdminOnly` policies.
 - ADMIN: `AdminOnly` endpoints, normally limited by CompanyUser membership to accessible companies/resources. Ticket Services additionally enforce company access in `TicketServiceController`.
 - SUPERADMIN: `SuperAdminOnly` endpoints and the SUPERADMIN bypasses company membership checks in controllers that implement company authorization.
-- Additional checks: policies are defined by `AddJwtAuth` and include `AdminOnly`, `SuperAdminOnly`, and `SelfOrAdmin`; exact claim construction is in `backend/auth/Extensions/AuthExtensions.cs`.
+- `StaffOrAdmin`: allows STAFF, ADMIN, and SUPERADMIN. It protects `GET /staff/companies/{companyId}/desks` and `POST /tickets/kiosk`; USER is forbidden. Additional policies are defined by `AddJwtAuth` and include `AdminOnly`, `SuperAdminOnly`, and `SelfOrAdmin`; exact claim construction is in `backend/auth/Extensions/AuthExtensions.cs`.

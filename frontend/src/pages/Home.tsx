@@ -1,6 +1,7 @@
 // frontend/src/pages/Home.tsx
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
@@ -18,6 +19,7 @@ type HomeView =
 
 const Home = () => {
   const [view, setView] = useState<HomeView>(null);
+  const navigate = useNavigate();
 
   return (
     <Box
@@ -68,8 +70,34 @@ const Home = () => {
               </Typography>
 
               <Typography color="text.secondary">
-                Find an organization, choose a service
-                and get your queue ticket.
+                Get a queue ticket and follow your turn.
+              </Typography>
+            </CardContent>
+          </CardActionArea>
+        </Card>
+
+        {/* STAFF */}
+        <Card
+          sx={{
+            width: 320,
+            minHeight: 200,
+          }}
+        >
+          <CardActionArea
+            sx={{ height: "100%" }}
+            onClick={() => navigate("/staff")}
+          >
+            <CardContent>
+              <Typography
+                variant="h5"
+                gutterBottom
+              >
+                Enter as Staff
+              </Typography>
+
+              <Typography color="text.secondary">
+                Choose your workplace and desk,
+                then start serving customers.
               </Typography>
             </CardContent>
           </CardActionArea>
@@ -103,7 +131,6 @@ const Home = () => {
         </Card>
       </Box>
 
-      {/* CUSTOMER VIEW */}
       {view === "customer" && (
         <Box
           sx={{
@@ -117,13 +144,12 @@ const Home = () => {
           </Typography>
 
           <Typography color="text.secondary">
-            Company and location discovery will
-            appear here.
+            Use the link provided by the organization
+            to get your ticket.
           </Typography>
         </Box>
       )}
 
-      {/* ORGANIZATION VIEW */}
       {view === "organization" && (
         <CompanyWizardCard />
       )}
