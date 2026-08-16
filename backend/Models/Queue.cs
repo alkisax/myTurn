@@ -39,4 +39,6 @@ public class Queue
   public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
   public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+  public ICollection<Service> Services { get; set; } = new List<Service>();
 }

@@ -1,13 +1,17 @@
 import { useEffect, useState, type ReactNode } from "react";
+import axios from "axios";
 import { Box, Button, Paper, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useStaffContext } from "../context/useStaffContext";
+import { backendUrl } from "../constants/constants";
 
 interface TicketResult {
   ticket: {
     number: number;
     pin: string;
     status: string;
+    trackingToken: string;
+    estimatedWaitingMinutes?: number;
   };
   queueName: string;
   serviceNames: string[];
@@ -23,10 +27,42 @@ const PublicTabletTicketResult = () => {
 
   useEffect(() => {
     const storedResult = sessionStorage.getItem(ticketStorageKey);
+    let ignore = false;
 
-    Promise.resolve(storedResult).then((storedValue) => {
+    Promise.resolve(storedResult).then(async (storedValue) => {
       if (storedValue) {
-        setResult(JSON.parse(storedValue) as TicketResult);
+        const storedTicket = JSON.parse(storedValue) as TicketResult;
+
+        if (!ignore) {
+          setResult(storedTicket);
+        }
+
+        if (storedTicket.ticket.trackingToken) {
+          try {
+            const response = await axios.get(
+              `${backendUrl}/tickets/${storedTicket.ticket.trackingToken}`
+            );
+
+            if (!ignore) {
+              setResult((currentResult) =>
+                currentResult
+                  ? {
+                      ...currentResult,
+                      ticket: {
+                        ...currentResult.ticket,
+                        estimatedWaitingMinutes:
+                          response.data.data.estimatedWaitingMinutes,
+                      },
+                    }
+                  : currentResult
+              );
+            }
+          } catch (error: unknown) {
+            if (!ignore) {
+              console.error("Failed to fetch ticket estimate:", error);
+            }
+          }
+        }
       }
     });
 
@@ -39,6 +75,7 @@ const PublicTabletTicketResult = () => {
     }, 60000);
 
     return () => {
+      ignore = true;
       window.clearInterval(intervalId);
       window.clearTimeout(timeoutId);
     };
@@ -72,6 +109,16 @@ const PublicTabletTicketResult = () => {
           Queue
         </Typography>
         <Typography>{result.queueName}</Typography>
+        {typeof result.ticket.estimatedWaitingMinutes === "number" && (
+          <>
+            <Typography variant="h6" sx={{ mt: 3 }}>
+              Estimated Waiting Time
+            </Typography>
+            <Typography>
+              {result.ticket.estimatedWaitingMinutes.toFixed(1)} minutes
+            </Typography>
+          </>
+        )}
         <Typography variant="h6" sx={{ mt: 3 }}>
           Services
         </Typography>

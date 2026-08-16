@@ -104,7 +104,8 @@ public class CompanyIsolationTests
     await CheckBackendIsRunning();
     IsolationScenario scenario = await CreateScenario();
     int locationId = await CreateLocation(scenario.AdminBToken, scenario.CompanyBId);
-    int serviceId = await CreateService(scenario.AdminBToken, locationId);
+    int queueId = await CreateQueue(scenario.AdminBToken, locationId);
+    int serviceId = await CreateService(scenario.AdminBToken, locationId, queueId);
 
     HttpResponseMessage response = await SendWithToken(
       HttpMethod.Get,
@@ -247,11 +248,12 @@ public class CompanyIsolationTests
     return id;
   }
 
-  private static async Task<int> CreateService(string token, int locationId)
+  private static async Task<int> CreateService(string token, int locationId, int queueId)
   {
     var body = new
     {
       locationId,
+      queueId,
       name = $"test_isolation_service_{Guid.NewGuid():N}",
       description = "test service",
       isGeneric = false,

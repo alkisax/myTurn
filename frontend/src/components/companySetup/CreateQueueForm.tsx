@@ -23,6 +23,7 @@ const CreateQueueForm = ({
 }: Props) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [defaultServiceMinutes, setDefaultServiceMinutes] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -42,7 +43,10 @@ const CreateQueueForm = ({
           locationId,
           name,
           description: description || null,
-          defaultServiceMinutes: null,
+          defaultServiceMinutes:
+            defaultServiceMinutes === ""
+              ? null
+              : Number(defaultServiceMinutes),
           maxWaitingTickets: null,
           opensAt: null,
           closesAt: null,
@@ -98,6 +102,15 @@ const CreateQueueForm = ({
           label="Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          fullWidth
+        />
+
+        <TextField
+          label="Default Service Minutes"
+          type="number"
+          value={defaultServiceMinutes}
+          onChange={(e) => setDefaultServiceMinutes(e.target.value)}
+          inputProps={{ min: 1 }}
           fullWidth
         />
 

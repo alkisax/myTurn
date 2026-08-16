@@ -337,6 +337,7 @@ const Step5LocationActions = ({
           {showServiceForm && (
             <CreateServiceForm
               locationId={location.id}
+              queues={queues}
               onCreated={() => {
                 setShowServiceForm(false);
                 void fetchServices();

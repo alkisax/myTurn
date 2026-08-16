@@ -4,6 +4,9 @@ namespace backend.Dtos.ServiceDtos;
 public record CreateServiceDto(
   [Required]
   int LocationId,
+
+  [Required]
+  int QueueId,
   [Required]
   [StringLength(100)]
   string Name,

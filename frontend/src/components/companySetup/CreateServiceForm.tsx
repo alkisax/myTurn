@@ -8,20 +8,24 @@ import {
   Paper,
   TextField,
   Typography,
+  MenuItem,
 } from "@mui/material";
 
 import { backendUrl } from "../../constants/constants";
 
 interface Props {
   locationId: number;
+  queues: { id: number; name: string }[];
   onCreated?: () => void;
 }
 
 const CreateServiceForm = ({
   locationId,
+  queues,
   onCreated,
 }: Props) => {
   const [name, setName] = useState("");
+  const [queueId, setQueueId] = useState<number | "">("");
   const [description, setDescription] = useState("");
   const [estimatedServiceMinutes, setEstimatedServiceMinutes] =
     useState("");
@@ -42,6 +46,7 @@ const CreateServiceForm = ({
         `${backendUrl}/services`,
         {
           locationId,
+          queueId,
           name,
           description: description || null,
           isGeneric: false,
@@ -103,6 +108,21 @@ const CreateServiceForm = ({
         />
 
         <TextField
+          select
+          label="Queue"
+          value={queueId}
+          onChange={(e) => setQueueId(Number(e.target.value))}
+          required
+          fullWidth
+        >
+          {queues.map((queue) => (
+            <MenuItem key={queue.id} value={queue.id}>
+              {queue.name}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <TextField
           label="Estimated Service Minutes"
           type="number"
           value={estimatedServiceMinutes}
@@ -121,7 +141,7 @@ const CreateServiceForm = ({
         <Button
           type="submit"
           variant="contained"
-          disabled={loading || !name.trim()}
+          disabled={loading || !name.trim() || queueId === ""}
         >
           {loading ? "Creating..." : "Create Service"}
         </Button>

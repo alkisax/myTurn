@@ -40,7 +40,7 @@ public class CompanySetupTests
   public async Task AdminCanCreateQueueInsideLocation()
   {
     await CheckBackendIsRunning();
-    SetupData setup = await CreateCompanyLocationAndLogin();
+    SetupData setup = await CreateCompanyLocationQueueAndLogin();
 
     HttpResponseMessage response = await CreateQueue(setup.Token, setup.LocationId);
 
@@ -64,7 +64,7 @@ public class CompanySetupTests
     await CheckBackendIsRunning();
     SetupData setup = await CreateCompanyLocationAndLogin();
 
-    HttpResponseMessage response = await CreateService(setup.Token, setup.LocationId);
+    HttpResponseMessage response = await CreateService(setup.Token, setup.LocationId, setup.QueueId);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
   }
@@ -92,7 +92,7 @@ public class CompanySetupTests
   {
     SetupData setup = await CreateCompanyLocationQueueAndLogin();
     setup.DeskId = await ReadId(await CreateDesk(setup.Token, setup.LocationId, setup.QueueId));
-    setup.ServiceId = await ReadId(await CreateService(setup.Token, setup.LocationId));
+    setup.ServiceId = await ReadId(await CreateService(setup.Token, setup.LocationId, setup.QueueId));
     return setup;
   }
 
@@ -157,9 +157,9 @@ public class CompanySetupTests
     return await SendWithToken(HttpMethod.Post, "/desks/", token, body);
   }
 
-  private static async Task<HttpResponseMessage> CreateService(string token, int locationId)
+  private static async Task<HttpResponseMessage> CreateService(string token, int locationId, int queueId)
   {
-    var body = new { locationId, name = $"test_setup_service_{Guid.NewGuid():N}", description = "test service", isGeneric = false, estimatedServiceMinutes = 5 };
+    var body = new { locationId, queueId, name = $"test_setup_service_{Guid.NewGuid():N}", description = "test service", isGeneric = false, estimatedServiceMinutes = 5 };
     return await SendWithToken(HttpMethod.Post, "/services/", token, body);
   }
 

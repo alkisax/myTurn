@@ -7,6 +7,7 @@ namespace backend.Services;
 public class TicketEstimateService(
   TicketServiceDao ticketServiceDao,
   CompanyDao companyDao,
+  QueueDao queueDao,
   TicketDao ticketDao,
   StaffSessionDao staffSessionDao
 )
@@ -17,9 +18,14 @@ public class TicketEstimateService(
 
     if (company is null) return 0;
 
+    var queue = await queueDao.GetById(ticket.QueueId);
+    var fallbackMinutes = queue?.DefaultServiceMinutes
+      ?? company.DefaultEstimatedServiceMinutes;
+
     return await ticketServiceDao.GetConfiguredDurationMinutes(
       ticket.Id,
-      company.DefaultEstimatedServiceMinutes
+      company.DefaultEstimatedServiceMinutes,
+      fallbackMinutes
     );
   }
 

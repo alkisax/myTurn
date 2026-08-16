@@ -63,6 +63,12 @@ Nested resources are always resolved by `companySlug` plus `locationSlug`; a loc
 - Success: `200 OK` with active `PublicServiceDto[]`. Each item contains `id`, `name`, `description`, `estimatedServiceMinutes`, and `isGeneric`.
 - Errors: `404 Not Found` when the company/location slug pair does not resolve.
 
+### `GET /public/{companySlug}/{locationSlug}/queues/{queueId}/services`
+
+- Authorization: Public / Anonymous.
+- Success: `200 OK` with active services belonging to the specified queue.
+- Errors: `404 Not Found` when the company/location/queue scope does not match.
+
 ### `GET /public/{companySlug}/{locationSlug}/now-serving`
 
 - Authorization: Public / Anonymous.
@@ -456,6 +462,7 @@ Location responses include the backend-generated `slug` in addition to the exist
 
 - Success: `201 Created` with `QueueDto`.
 - Errors: `400`, `401`, `403`, `404`.
+- `defaultServiceMinutes` is optional and can be configured from the admin queue setup UI.
 - Ελληνικά: Ο ADMIN δημιουργεί ουρά σε συγκεκριμένη τοποθεσία.
 
 ### `PUT /queues/{id}`
@@ -625,17 +632,19 @@ The StaffSession flow remains unchanged:
 ### `POST /services/`
 
 - Authorization: ADMIN/SUPERADMIN plus location/company access.
-- Input body (`CreateServiceDto`): `{ "locationId": 4, "name": "Passport Renewal", "description": "Renewal service", "isGeneric": false, "estimatedServiceMinutes": 8 }`.
+- Input body (`CreateServiceDto`): `{ "locationId": 4, "queueId": 8, "name": "Passport Renewal", "description": "Renewal service", "isGeneric": false, "estimatedServiceMinutes": 8 }`.
 - Success: `201 Created` with `ServiceDto`.
 - Errors: `400`, `401`, `403`, `404`.
+- Each service belongs to exactly one queue through required `Service.QueueId`; the queue must belong to the same company and location.
 - Ελληνικά: Ο ADMIN δημιουργεί υπηρεσία που μπορεί να επιλεγεί σε ticket.
 
 ### `PUT /services/{id}`
 
 - Authorization: ADMIN/SUPERADMIN plus service company access.
-- Input body (`UpdateServiceDto`): `{ "name": "Renewal", "description": "Updated", "isActive": true, "isGeneric": false, "estimatedServiceMinutes": 8 }`.
+- Input body (`UpdateServiceDto`): `{ "queueId": 8, "name": "Renewal", "description": "Updated", "isActive": true, "isGeneric": false, "estimatedServiceMinutes": 8 }`.
 - Success: `200 OK` with updated `ServiceDto`.
 - Errors: `400`, `401`, `403`, `404`.
+- `queueId` may be supplied to move the service, subject to the same company/location validation.
 - Ελληνικά: Χρησιμοποιείται για ενημέρωση ή απενεργοποίηση υπηρεσίας.
 
 ### `DELETE /services/{id}`
@@ -654,6 +663,7 @@ The StaffSession flow remains unchanged:
 - Success: `201 Created` with a `MyTicketDto`-shaped ticket response.
 - Errors: `400` for inactive queue, disabled remote ticketing, invalid services, limits, or validation; `404` for missing queue/location/service as returned by the controller.
 - `Queue.IsRemoteTicketingAllowed` must be `true`; when it is `false`, remote creation is rejected. The normal ticket creation lifecycle remains unchanged.
+- `serviceIds` may be null or empty; submitted services must belong to the selected queue.
 
 ### `POST /tickets/kiosk`
 
@@ -663,6 +673,7 @@ The StaffSession flow remains unchanged:
 - Success: `201 Created` with the normal ticket creation response.
 - Kiosk issuance is allowed even when `IsRemoteTicketingAllowed` is `false`.
 - Kiosk-created customer tickets remain anonymous: `UserId` is `null`. The authenticated STAFF/ADMIN identity is used only for authorization and is not attached to the created Ticket.
+- `serviceIds` may be null or empty; submitted services must belong to the selected queue.
 - Ελληνικά: Ο πελάτης εκδίδει ticket και προαιρετικά επιλέγει υπηρεσίες.
 
 ### `GET /tickets/id/{ticketId}`
@@ -688,6 +699,13 @@ The StaffSession flow remains unchanged:
 - Errors: `404 Not Found` when the token does not identify a ticket.
 - V1 public tracking intentionally includes the ticket `pin`; this also applies to the public PDF route below.
 - Ελληνικά: Ο πελάτης παρακολουθεί δημόσια την πορεία του ticket μέσω QR ή tracking link.
+
+### Ticket estimated waiting time
+
+- Tickets with selected services use the existing sum of their service durations.
+- Tickets without selected services use `Queue.DefaultServiceMinutes`.
+- If `Queue.DefaultServiceMinutes` is null, they use `Company.DefaultEstimatedServiceMinutes`.
+- Tickets without selected services remain valid; no generic/default `TicketService` is created automatically.
 
 ### `GET /tickets/queue/{queueId}`
 
@@ -782,7 +800,7 @@ Ticket Service operations are company-scoped through `TicketServiceController`; 
 
 - Input: integer path parameters; no body.
 - Success: `200 OK` with the created `TicketServiceDto`.
-- Errors: `400` when service location differs from ticket location or service is inactive; `401`, `403`; `404` for missing ticket/service.
+- Errors: `400` when service queue, company, or location differs from the ticket, or service is inactive; `401`, `403`; `404` for missing ticket/service.
 - Ελληνικά: Ο ADMIN προσθέτει υπηρεσία σε ticket για διοικητική διόρθωση ή διαχείριση.
 
 ### `DELETE /ticket-services/{ticketId}/{serviceId}`

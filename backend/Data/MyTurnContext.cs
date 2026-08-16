@@ -32,6 +32,15 @@ public class MyTurnContext(DbContextOptions<MyTurnContext> options) : DbContext(
       .HasIndex(ts => new { ts.TicketId, ts.ServiceId })
       .IsUnique();
 
+    modelBuilder.Entity<Service>()
+      .HasOne(service => service.Queue)
+      .WithMany(queue => queue.Services)
+      .HasForeignKey(service => service.QueueId)
+      .IsRequired();
+
+    modelBuilder.Entity<Service>()
+      .HasIndex(service => service.QueueId);
+
     modelBuilder.Entity<Company>()
       .Property(company => company.MissedTicketExpiryMinutes)
       .HasDefaultValue(10);

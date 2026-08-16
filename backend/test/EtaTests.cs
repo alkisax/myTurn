@@ -39,8 +39,8 @@ public class EtaTests
   public async Task LongerServiceDurationAffectsFollowingTicketEta()
   {
     await CheckBackendIsRunning(); EtaSetup setup = await CreateSetup();
-    int longServiceId = await CreateService(setup.AdminToken, setup.LocationId, "test_eta_long_service", 20);
-    int shortServiceId = await CreateService(setup.AdminToken, setup.LocationId, "test_eta_short_service", 2);
+    int longServiceId = await CreateService(setup.AdminToken, setup.LocationId, setup.QueueId, "test_eta_long_service", 20);
+    int shortServiceId = await CreateService(setup.AdminToken, setup.LocationId, setup.QueueId, "test_eta_short_service", 2);
     TicketData longTicket = await CreateTicket(setup.QueueId, new[] { longServiceId });
     TicketData followingTicket = await CreateTicket(setup.QueueId, new[] { shortServiceId });
     double longEta = await ReadEta(longTicket.TrackingToken); double followingEta = await ReadEta(followingTicket.TrackingToken);
@@ -54,12 +54,30 @@ public class EtaTests
     Assert.Equal(HttpStatusCode.Created, (await Send(HttpMethod.Post, "/staff-sessions/", staffToken, new { deskId = setup.DeskId })).StatusCode); setup.StaffToken = staffToken; return setup;
   }
 
-  private static async Task<EtaSetup> CreateSetup()
+  [Fact]
+  public async Task TicketWithoutServicesUsesQueueDefaultMinutes()
+  {
+    await CheckBackendIsRunning(); EtaSetup setup = await CreateSetup(12);
+    await CreateTicket(setup.QueueId, null);
+    TicketData following = await CreateTicket(setup.QueueId, null);
+    Assert.True(await ReadEta(following.TrackingToken) >= 12);
+  }
+
+  [Fact]
+  public async Task TicketWithoutServicesUsesCompanyDefaultWhenQueueDefaultIsNull()
+  {
+    await CheckBackendIsRunning(); EtaSetup setup = await CreateSetup(null, 7);
+    await CreateTicket(setup.QueueId, null);
+    TicketData following = await CreateTicket(setup.QueueId, null);
+    Assert.True(await ReadEta(following.TrackingToken) >= 7);
+  }
+
+  private static async Task<EtaSetup> CreateSetup(int? queueDefaultMinutes = null, int companyDefaultMinutes = 5)
   {
     string unique = Guid.NewGuid().ToString("N").Substring(0, 8); string username = $"test_eta_admin_{unique}"; string password = "EtaAdmin1!"; await RegisterAdmin(username, password); string token = await Login(username, password);
-    int company = await ReadId(await Send(HttpMethod.Post, "/companies/", token, new { name = $"test_eta_company_{unique}", missedTicketExpiryMinutes = 10, defaultEstimatedServiceMinutes = 5 }));
+    int company = await ReadId(await Send(HttpMethod.Post, "/companies/", token, new { name = $"test_eta_company_{unique}", missedTicketExpiryMinutes = 10, defaultEstimatedServiceMinutes = companyDefaultMinutes }));
     int location = await ReadId(await Send(HttpMethod.Post, "/locations/", token, new { companyId = company, name = $"test_eta_location_{unique}", address = "test", country = "GR" }));
-    int queue = await ReadId(await Send(HttpMethod.Post, "/queues/", token, new { locationId = location, name = $"test_eta_queue_{unique}", description = "test", autoResetEnabled = false, resetAt = (string?)null }));
+    int queue = await ReadId(await Send(HttpMethod.Post, "/queues/", token, new { locationId = location, name = $"test_eta_queue_{unique}", description = "test", defaultServiceMinutes = queueDefaultMinutes, autoResetEnabled = false, resetAt = (string?)null }));
     int desk = await ReadId(await Send(HttpMethod.Post, "/desks/", token, new { locationId = location, queueId = queue, name = $"test_eta_desk_{unique}" }));
     return new EtaSetup { AdminToken = token, CompanyId = company, LocationId = location, QueueId = queue, DeskId = desk };
   }
@@ -67,7 +85,7 @@ public class EtaTests
   private static async Task RegisterAdmin(string username, string password) { Assert.Equal(HttpStatusCode.Created, (await Client.PostAsJsonAsync("/auth/register-admin", new { username, name = username, email = $"{username}@example.com", password })).StatusCode); }
   private static async Task Register(string adminToken, int companyId, string username, string password) { Assert.Equal(HttpStatusCode.Created, (await Send(HttpMethod.Post, $"/company-users/company/{companyId}/staff", adminToken, new { username, name = username, email = $"{username}@example.com", password })).StatusCode); }
   private static async Task<string> Login(string username, string password) { HttpResponseMessage response = await Client.PostAsJsonAsync("/auth/login", new { username, password }); string text = await response.Content.ReadAsStringAsync(); using JsonDocument json = JsonDocument.Parse(text); Assert.Equal(HttpStatusCode.OK, response.StatusCode); return json.RootElement.GetProperty("data").GetProperty("token").GetString()!; }
-  private static async Task<int> CreateService(string token, int locationId, string name, int minutes) { return await ReadId(await Send(HttpMethod.Post, "/services/", token, new { locationId, name = $"{name}_{Guid.NewGuid():N}", description = "test", isGeneric = false, estimatedServiceMinutes = minutes })); }
+  private static async Task<int> CreateService(string token, int locationId, int queueId, string name, int minutes) { return await ReadId(await Send(HttpMethod.Post, "/services/", token, new { locationId, queueId, name = $"{name}_{Guid.NewGuid():N}", description = "test", isGeneric = false, estimatedServiceMinutes = minutes })); }
   private static async Task<TicketData> CreateTicket(int queueId, int[]? serviceIds) { HttpResponseMessage response = await Client.PostAsJsonAsync("/tickets/", new { queueId, email = (string?)null, serviceIds }); string text = await response.Content.ReadAsStringAsync(); using JsonDocument json = JsonDocument.Parse(text); Assert.Equal(HttpStatusCode.Created, response.StatusCode); JsonElement data = json.RootElement.GetProperty("data"); return new TicketData { TrackingToken = data.GetProperty("trackingToken").GetString()! }; }
   private static async Task<double> ReadEta(string trackingToken) { HttpResponseMessage response = await Client.GetAsync($"/tickets/{trackingToken}"); string text = await response.Content.ReadAsStringAsync(); using JsonDocument json = JsonDocument.Parse(text); Assert.Equal(HttpStatusCode.OK, response.StatusCode); return json.RootElement.GetProperty("data").GetProperty("estimatedWaitingMinutes").GetDouble(); }
   private static async Task<int> ReadId(HttpResponseMessage response) { string text = await response.Content.ReadAsStringAsync(); using JsonDocument json = JsonDocument.Parse(text); Assert.True((int)response.StatusCode >= 200 && (int)response.StatusCode < 300); return json.RootElement.GetProperty("data").GetProperty("id").GetInt32(); }

@@ -8,15 +8,18 @@ public class ServiceController
   private readonly ServiceDao _dao;
   private readonly LocationDao _locationDao;
   private readonly CompanyUserDao _companyUserDao;
+  private readonly QueueDao _queueDao;
   public ServiceController(
     ServiceDao dao,
     LocationDao locationDao,
-    CompanyUserDao companyUserDao
+    CompanyUserDao companyUserDao,
+    QueueDao queueDao
   )
   {
     _dao = dao;
     _locationDao = locationDao;
     _companyUserDao = companyUserDao;
+    _queueDao = queueDao;
   }
   private async Task<bool> HasCompanyAccess(
     int companyId,
@@ -147,10 +150,20 @@ public class ServiceController
     {
       return Results.Forbid();
     }
+    var queue = await _queueDao.GetById(dto.QueueId);
+    if (queue is null)
+    {
+      return Results.NotFound(new { status = false, message = "Queue not found" });
+    }
+    if (queue.CompanyId != location.CompanyId || queue.LocationId != location.Id)
+    {
+      return Results.BadRequest(new { status = false, message = "Queue does not belong to the location" });
+    }
     var service = new Service
     {
       CompanyId = location.CompanyId,
       LocationId = location.Id,
+      QueueId = queue.Id,
       Name = dto.Name,
       Description = dto.Description,
       IsGeneric = dto.IsGeneric,
@@ -185,6 +198,19 @@ public class ServiceController
     if (!hasAccess)
     {
       return Results.Forbid();
+    }
+    if (dto.QueueId is not null)
+    {
+      var queue = await _queueDao.GetById(dto.QueueId.Value);
+      if (queue is null)
+      {
+        return Results.NotFound(new { status = false, message = "Queue not found" });
+      }
+      if (queue.CompanyId != service.CompanyId || queue.LocationId != service.LocationId)
+      {
+        return Results.BadRequest(new { status = false, message = "Queue does not belong to the service location" });
+      }
+      service.QueueId = queue.Id;
     }
     service.Name = dto.Name ?? service.Name;
     service.Description = dto.Description ?? service.Description;
@@ -233,6 +259,7 @@ public class ServiceController
       service.Id,
       service.CompanyId,
       service.LocationId,
+      service.QueueId,
       service.Name,
       service.Description,
       service.IsActive,

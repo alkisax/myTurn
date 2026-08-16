@@ -82,6 +82,15 @@ public class TicketServiceController
       });
     }
 
+    if (service.QueueId != ticket.QueueId || service.CompanyId != ticket.CompanyId)
+    {
+      return Results.BadRequest(new
+      {
+        status = false,
+        message = "Service does not belong to the ticket queue"
+      });
+    }
+
     if (!service.IsActive)
     {
       return Results.BadRequest(new

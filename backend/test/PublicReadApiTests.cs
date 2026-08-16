@@ -24,6 +24,9 @@ public class PublicReadApiTests
     var services = await Client.GetFromJsonAsync<JsonElement>($"/public/{first.CompanySlug}/{first.LocationSlug}/services");
     Assert.Contains(queues.GetProperty("data").EnumerateArray(), item => item.GetProperty("id").GetInt32() == first.QueueId);
     Assert.Contains(services.GetProperty("data").EnumerateArray(), item => item.GetProperty("id").GetInt32() == first.ServiceId);
+    var queueServices = await Client.GetFromJsonAsync<JsonElement>($"/public/{first.CompanySlug}/{first.LocationSlug}/queues/{first.QueueId}/services");
+    Assert.Contains(queueServices.GetProperty("data").EnumerateArray(), item => item.GetProperty("id").GetInt32() == first.ServiceId);
+    Assert.DoesNotContain(queueServices.GetProperty("data").EnumerateArray(), item => item.GetProperty("id").GetInt32() == first.OtherServiceId);
 
     Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/public/{first.CompanySlug}/{second.LocationSlug}")).StatusCode);
   }
@@ -59,9 +62,13 @@ public class PublicReadApiTests
 
     var queue = await Send(HttpMethod.Post, "/queues/", token, new { locationId, name = $"Public Queue {unique}", description = "queue", autoResetEnabled = false });
     var queueId = JsonDocument.Parse(await queue.Content.ReadAsStringAsync()).RootElement.GetProperty("data").GetProperty("id").GetInt32();
-    var service = await Send(HttpMethod.Post, "/services/", token, new { locationId, name = $"Public Service {unique}", description = "service", estimatedServiceMinutes = 5 });
+    var service = await Send(HttpMethod.Post, "/services/", token, new { locationId, queueId, name = $"Public Service {unique}", description = "service", estimatedServiceMinutes = 5 });
     var serviceId = JsonDocument.Parse(await service.Content.ReadAsStringAsync()).RootElement.GetProperty("data").GetProperty("id").GetInt32();
-    return new(companySlug, locationSlug, queueId, serviceId);
+    var otherQueue = await Send(HttpMethod.Post, "/queues/", token, new { locationId, name = $"Other Public Queue {unique}", description = "queue", autoResetEnabled = false });
+    var otherQueueId = JsonDocument.Parse(await otherQueue.Content.ReadAsStringAsync()).RootElement.GetProperty("data").GetProperty("id").GetInt32();
+    var otherService = await Send(HttpMethod.Post, "/services/", token, new { locationId, queueId = otherQueueId, name = $"Other Public Service {unique}", description = "service", estimatedServiceMinutes = 5 });
+    var otherServiceId = JsonDocument.Parse(await otherService.Content.ReadAsStringAsync()).RootElement.GetProperty("data").GetProperty("id").GetInt32();
+    return new(companySlug, locationSlug, queueId, serviceId, otherServiceId);
   }
 
   private static async Task<HttpResponseMessage> Send(HttpMethod method, string path, string token, object body)
@@ -71,5 +78,5 @@ public class PublicReadApiTests
     return await Client.SendAsync(request);
   }
 
-  private record Setup(string CompanySlug, string LocationSlug, int QueueId, int ServiceId);
+  private record Setup(string CompanySlug, string LocationSlug, int QueueId, int ServiceId, int OtherServiceId);
 }

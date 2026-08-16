@@ -66,14 +66,12 @@ const PublicTabletIssueTicket = () => {
 
         return Promise.all([
           axios.get(`${publicBase}/${activeLocation.slug}/queues`),
-          axios.get(`${publicBase}/${activeLocation.slug}/services`),
-        ]).then(([queueResponse, serviceResponse]) => {
+        ]).then(([queueResponse]) => {
           if (ignore) {
             return;
           }
 
           setQueues(queueResponse.data.data);
-          setServices(serviceResponse.data.data);
         });
       })
       .catch((error: unknown) => {
@@ -87,6 +85,36 @@ const PublicTabletIssueTicket = () => {
       ignore = true;
     };
   }, [selectedCompany, selectedDesk, session]);
+
+  useEffect(() => {
+    Promise.resolve().then(() => setSelectedServiceIds([]));
+
+    if (!selectedQueueId || !location || !selectedCompany) {
+      Promise.resolve().then(() => setServices([]));
+      return;
+    }
+
+    let ignore = false;
+    axios
+      .get(
+        `${backendUrl}/public/${selectedCompany.slug}/${location.slug}/queues/${selectedQueueId}/services`
+      )
+      .then((response) => {
+        if (!ignore) {
+          setServices(response.data.data);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!ignore) {
+          console.error("Failed to load queue services:", error);
+          setServices([]);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [location, selectedCompany, selectedQueueId]);
 
   const toggleService = (serviceId: number) => {
     setSelectedServiceIds((current) =>
@@ -119,6 +147,9 @@ const PublicTabletIssueTicket = () => {
           },
         }
       );
+
+      // console.log("Kiosk ticket response:", response.data);
+      // console.log("Ticket data:", response.data.data);
 
       const queue = queues.find((item) => item.id === selectedQueueId);
       const selectedServices = services.filter((service) =>

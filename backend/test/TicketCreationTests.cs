@@ -78,17 +78,74 @@ public class TicketCreationTests
     Assert.Equal(HttpStatusCode.BadRequest, ticketResponse.StatusCode);
   }
 
+  [Fact]
+  public async Task NormalAndKioskCreationRejectServiceFromAnotherQueue()
+  {
+    await CheckBackendIsRunning();
+    TicketSetup setup = await CreateTicketSetup();
+    int otherQueueId = await CreateQueue(setup.AdminToken, setup.LocationId, "other_queue");
+    int otherQueueServiceId = await CreateService(setup.AdminToken, setup.LocationId, otherQueueId, "other_queue_service");
+
+    HttpResponseMessage normalResponse = await Client.PostAsJsonAsync(
+      "/tickets/",
+      new { queueId = setup.QueueId, email = (string?)null, serviceIds = new[] { otherQueueServiceId } });
+    HttpResponseMessage kioskResponse = await SendWithToken(
+      HttpMethod.Post,
+      "/tickets/kiosk",
+      setup.AdminToken,
+      new { queueId = setup.QueueId, email = (string?)null, serviceIds = new[] { otherQueueServiceId } });
+
+    Assert.Equal(HttpStatusCode.BadRequest, normalResponse.StatusCode);
+    Assert.Equal(HttpStatusCode.BadRequest, kioskResponse.StatusCode);
+  }
+
+  [Fact]
+  public async Task TicketCreationRejectsServiceFromAnotherLocation()
+  {
+    await CheckBackendIsRunning();
+    TicketSetup setup = await CreateTicketSetup();
+    int otherLocationId = await CreateLocation(setup.AdminToken, setup.CompanyId, "other_location");
+    int otherQueueId = await CreateQueue(setup.AdminToken, otherLocationId, "other_location_queue");
+    int otherServiceId = await CreateService(setup.AdminToken, otherLocationId, otherQueueId, "other_location_service");
+
+    HttpResponseMessage response = await Client.PostAsJsonAsync(
+      "/tickets/",
+      new { queueId = setup.QueueId, email = (string?)null, serviceIds = new[] { otherServiceId } });
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task TicketCreationRejectsServiceFromAnotherCompany()
+  {
+    await CheckBackendIsRunning();
+    TicketSetup setup = await CreateTicketSetup();
+    string username = $"test_other_company_{Guid.NewGuid():N}";
+    await Register(username, "OtherCompanyPass1!", "/auth/register-admin");
+    string otherAdminToken = await Login(username, "OtherCompanyPass1!");
+    int otherCompanyId = await ReadId(await SendWithToken(HttpMethod.Post, "/companies/", otherAdminToken, new { name = $"other_company_{Guid.NewGuid():N}" }));
+    int otherLocationId = await ReadId(await SendWithToken(HttpMethod.Post, "/locations/", otherAdminToken, new { companyId = otherCompanyId, name = "other_location", address = "test", country = "GR" }));
+    int otherQueueId = await CreateQueue(otherAdminToken, otherLocationId, "other_company_queue");
+    int otherServiceId = await CreateService(otherAdminToken, otherLocationId, otherQueueId, "other_company_service");
+
+    HttpResponseMessage response = await Client.PostAsJsonAsync(
+      "/tickets/",
+      new { queueId = setup.QueueId, email = (string?)null, serviceIds = new[] { otherServiceId } });
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
   private static async Task<TicketSetup> CreateTicketSetup()
   {
     TicketSetup setup = await CreateBasicSetup();
-    setup.ServiceId = await CreateService(setup.AdminToken, setup.LocationId, "test_ticket_service");
+    setup.ServiceId = await CreateService(setup.AdminToken, setup.LocationId, setup.QueueId, "test_ticket_service");
     return setup;
   }
 
   private static async Task<TicketSetup> CreateTicketSetupWithTwoServices()
   {
     TicketSetup setup = await CreateTicketSetup();
-    setup.SecondServiceId = await CreateService(setup.AdminToken, setup.LocationId, "test_ticket_second_service");
+    setup.SecondServiceId = await CreateService(setup.AdminToken, setup.LocationId, setup.QueueId, "test_ticket_second_service");
     return setup;
   }
 
@@ -102,12 +159,30 @@ public class TicketCreationTests
     int companyId = await ReadId(await SendWithToken(HttpMethod.Post, "/companies/", token, new { name = $"test_ticket_company_{unique}", missedTicketExpiryMinutes = 10, defaultEstimatedServiceMinutes = 5 }));
     int locationId = await ReadId(await SendWithToken(HttpMethod.Post, "/locations/", token, new { companyId, name = $"test_ticket_location_{unique}", address = "test", country = "GR" }));
     int queueId = await ReadId(await SendWithToken(HttpMethod.Post, "/queues/", token, new { locationId, name = $"test_ticket_queue_{unique}", description = "test", autoResetEnabled = false, resetAt = (string?)null }));
-    return new TicketSetup { AdminToken = token, LocationId = locationId, QueueId = queueId };
+    return new TicketSetup { AdminToken = token, CompanyId = companyId, LocationId = locationId, QueueId = queueId };
   }
 
-  private static async Task<int> CreateService(string token, int locationId, string label)
+  private static async Task<int> CreateQueue(string token, int locationId, string label)
   {
-    HttpResponseMessage response = await SendWithToken(HttpMethod.Post, "/services/", token, new { locationId, name = $"{label}_{Guid.NewGuid():N}", description = "test", isGeneric = false, estimatedServiceMinutes = 5 });
+    return await ReadId(await SendWithToken(
+      HttpMethod.Post,
+      "/queues/",
+      token,
+      new { locationId, name = $"{label}_{Guid.NewGuid():N}", autoResetEnabled = false }));
+  }
+
+  private static async Task<int> CreateLocation(string token, int companyId, string label)
+  {
+    return await ReadId(await SendWithToken(
+      HttpMethod.Post,
+      "/locations/",
+      token,
+      new { companyId, name = $"{label}_{Guid.NewGuid():N}", address = "test", country = "GR" }));
+  }
+
+  private static async Task<int> CreateService(string token, int locationId, int queueId, string label)
+  {
+    HttpResponseMessage response = await SendWithToken(HttpMethod.Post, "/services/", token, new { locationId, queueId, name = $"{label}_{Guid.NewGuid():N}", description = "test", isGeneric = false, estimatedServiceMinutes = 5 });
     return await ReadId(response);
   }
 
@@ -166,6 +241,6 @@ public class TicketCreationTests
     catch (HttpRequestException) { throw new XunitException("Το backend δεν τρέχει στο http://localhost:3020. Ξεκινήστε το πρώτα με: dotnet run --project backend/backend.csproj"); }
   }
 
-  private class TicketSetup { public required string AdminToken { get; set; } public int LocationId { get; set; } public int QueueId { get; set; } public int ServiceId { get; set; } public int SecondServiceId { get; set; } }
+  private class TicketSetup { public required string AdminToken { get; set; } public int CompanyId { get; set; } public int LocationId { get; set; } public int QueueId { get; set; } public int ServiceId { get; set; } public int SecondServiceId { get; set; } }
   private class TicketData { public int Id { get; set; } public int QueueId { get; set; } public int Number { get; set; } public required string Pin { get; set; } public required string TrackingToken { get; set; } public required string Status { get; set; } public required List<int> ServiceIds { get; set; } }
 }

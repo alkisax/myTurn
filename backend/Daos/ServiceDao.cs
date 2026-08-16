@@ -21,6 +21,13 @@ public class ServiceDao(MyTurnContext context)
       .Where(service => service.LocationId == locationId)
       .ToListAsync();
   }
+  public async Task<List<Service>> GetActiveByQueueId(int queueId)
+  {
+    return await context.Services
+      .AsNoTracking()
+      .Where(service => service.QueueId == queueId && service.IsActive)
+      .ToListAsync();
+  }
   public async Task<List<Service>> GetByCompanyId(int companyId)
   {
     return await context.Services

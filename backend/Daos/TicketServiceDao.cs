@@ -86,12 +86,18 @@ public class TicketServiceDao
   //Company default = 5, Service A = null, Service B = 8, total = 5 + 8 = 13
   public async Task<int> GetConfiguredDurationMinutes(
     int ticketId,
-    int companyDefaultMinutes
+    int companyDefaultMinutes,
+    int fallbackMinutes
   )
   {
     var ticketServices = await _db.TicketServices
       .Where(ts => ts.TicketId == ticketId)
       .ToListAsync();
+
+    if (ticketServices.Count == 0)
+    {
+      return fallbackMinutes;
+    }
 
     var totalMinutes = 0;
 

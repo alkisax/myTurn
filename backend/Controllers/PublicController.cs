@@ -70,6 +70,31 @@ public class PublicController(
     });
   }
 
+  public async Task<IResult> GetServicesByQueue(
+    string companySlug,
+    string locationSlug,
+    int queueId
+  )
+  {
+    var location = await ResolveLocation(companySlug, locationSlug);
+    var queue = await queueDao.GetById(queueId);
+
+    if (location is null || queue is null ||
+        queue.CompanyId != location.CompanyId || queue.LocationId != location.Id)
+    {
+      return Results.NotFound();
+    }
+
+    var services = await serviceDao.GetActiveByQueueId(queueId);
+    return Results.Ok(new
+    {
+      status = true,
+      data = services.Select(service => new PublicServiceDto(
+        service.Id, service.Name, service.Description,
+        service.EstimatedServiceMinutes, service.IsGeneric))
+    });
+  }
+
   public async Task<IResult> GetNowServing(
     string companySlug,
     string locationSlug

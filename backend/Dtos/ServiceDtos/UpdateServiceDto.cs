@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace backend.Dtos.ServiceDtos;
 
 public record UpdateServiceDto(
+  int? QueueId,
   string? Name,
   string? Description,
   bool? IsActive,

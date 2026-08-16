@@ -163,6 +163,15 @@ public class TicketController
         });
       }
 
+      if (service.QueueId != queue.Id || service.CompanyId != queue.CompanyId)
+      {
+        return Results.BadRequest(new
+        {
+          status = false,
+          message = $"Service {serviceId} does not belong to this queue"
+        });
+      }
+
       // δεν επιτρέπουμε inactive service
       if (!service.IsActive)
       {

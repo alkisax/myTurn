@@ -4,6 +4,7 @@ public record ServiceDto(
   int Id,
   int CompanyId,
   int LocationId,
+  int QueueId,
   string Name,
   string? Description,
   bool IsActive,
