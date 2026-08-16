@@ -306,7 +306,8 @@ const StaffNumberDisplay = () => {
         display: "flex",
         flexDirection: "column",
         gap: 2,
-        backgroundColor: "background.default",
+        backgroundColor: "#090a0c",
+        color: "#d98282",
       }}
     >
       <Box
@@ -317,11 +318,14 @@ const StaffNumberDisplay = () => {
           gap: 2,
         }}
       >
-        <Typography variant="h3">MyTurn</Typography>
+        <Typography variant="h3" sx={{ color: "#e56f6f" }}>
+          MyTurn
+        </Typography>
         <Button
           size="small"
           variant="text"
           onClick={() => navigate("/staff")}
+          sx={{ color: "#d98282" }}
         >
           Exit Number Display
         </Button>
@@ -359,9 +363,15 @@ const StaffNumberDisplay = () => {
                 justifyContent: "center",
                 textAlign: "center",
                 gap: 2,
+                backgroundColor: "#17191d",
+                color: "#d98282",
+                border: "1px solid #3a2024",
+                boxShadow: "0 8px 28px rgba(0, 0, 0, 0.35)",
               }}
             >
-              <Typography variant="h4">{queue.name}</Typography>
+              <Typography variant="h4" sx={{ color: "#e58a8a" }}>
+                {queue.name}
+              </Typography>
 
               {currentEntries.length > 0 ? (
                 currentEntries.map((current) => {
@@ -369,18 +379,23 @@ const StaffNumberDisplay = () => {
 
                   return (
                     <Box key={current.deskId}>
-                      <Typography variant="h1" sx={{ fontWeight: 700 }}>
+                      <Typography
+                        variant="h1"
+                        sx={{ fontWeight: 700, color: "#f06f6f" }}
+                      >
                         #{current.number}
                       </Typography>
-                      <Typography variant="h6">PLEASE GO TO</Typography>
-                      <Typography variant="h4">
+                      <Typography variant="h6" sx={{ color: "#c96f6f" }}>
+                        PLEASE GO TO
+                      </Typography>
+                      <Typography variant="h4" sx={{ color: "#e58a8a" }}>
                         {desk?.name ?? current.deskName ?? "the service desk"}
                       </Typography>
                     </Box>
                   );
                 })
               ) : (
-                <Typography variant="h5">
+                <Typography variant="h5" sx={{ color: "#b86666" }}>
                   Waiting for next call
                 </Typography>
               )}
@@ -409,10 +424,22 @@ const DisplayMessage = ({
       justifyContent: "center",
       gap: 3,
       textAlign: "center",
+      backgroundColor: "#090a0c",
+      color: "#d98282",
     }}
   >
-    <Typography variant="h4">{children}</Typography>
-    <Button variant="contained" onClick={onBack}>
+    <Typography variant="h4" sx={{ color: "#e58a8a" }}>
+      {children}
+    </Typography>
+    <Button
+      variant="contained"
+      onClick={onBack}
+      sx={{
+        backgroundColor: "#8f3f45",
+        color: "#ffe7e7",
+        "&:hover": { backgroundColor: "#aa4b52" },
+      }}
+    >
       Back to Staff Workspace
     </Button>
   </Box>

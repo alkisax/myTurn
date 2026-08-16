@@ -143,23 +143,38 @@ export const useStaff = (): StaffContextValue => {
       .configureLogging(LogLevel.Warning)
       .build();
     const joinQueue = () => connection.invoke("JoinQueue", session.queueId);
+    const refreshQueueOnEvent = (payload: { queueId: number }) => {
+      if (!ignore && payload.queueId === session.queueId) {
+        refreshTickets().catch((error: unknown) =>
+          console.error("Failed to refresh queue tickets:", error)
+        );
+      }
+    };
 
     connection.onreconnected(() => {
-      if (!ignore) joinQueue().catch((error: unknown) => console.error("Failed to rejoin staff queue:", error));
-    });
-    connection.on("QueueTicketAdded", (payload: { queueId: number }) => {
-      if (!ignore && payload.queueId === session.queueId) {
-        refreshTickets().catch((error: unknown) => console.error("Failed to refresh queue tickets:", error));
+      if (!ignore) {
+        joinQueue().catch((error: unknown) =>
+          console.error("Failed to rejoin staff queue:", error)
+        );
       }
     });
+    connection.on("QueueTicketAdded", refreshQueueOnEvent);
+    connection.on("NowServingChanged", refreshQueueOnEvent);
+    connection.on("NowServingEnded", refreshQueueOnEvent);
     connection.start().then(joinQueue).catch((error: unknown) => {
-      if (!ignore) console.error("Failed to connect staff queue updates:", error);
+      if (!ignore) {
+        console.error("Failed to connect staff queue updates:", error);
+      }
     });
 
     return () => {
       ignore = true;
-      connection.off("QueueTicketAdded");
-      connection.stop().catch((error: unknown) => console.error("Failed to stop staff queue updates:", error));
+      connection.off("QueueTicketAdded", refreshQueueOnEvent);
+      connection.off("NowServingChanged", refreshQueueOnEvent);
+      connection.off("NowServingEnded", refreshQueueOnEvent);
+      connection.stop().catch((error: unknown) =>
+        console.error("Failed to stop staff queue updates:", error)
+      );
     };
   }, [refreshTickets, session]);
 
