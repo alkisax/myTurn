@@ -87,6 +87,7 @@ public class CompanyController
       var response = new CompanyDto(
         created.Id,
         created.Name,
+        created.Slug,
         created.MissedTicketExpiryMinutes,
         created.DefaultEstimatedServiceMinutes,
         created.CreatedAt
@@ -120,6 +121,7 @@ public class CompanyController
       var response = companies.Select(company => new CompanyDto(
         company.Id,
         company.Name,
+        company.Slug,
         company.MissedTicketExpiryMinutes,
         company.DefaultEstimatedServiceMinutes,
         company.CreatedAt
@@ -160,6 +162,7 @@ public class CompanyController
       var response = companies.Select(company => new CompanyDto(
         company.Id,
         company.Name,
+        company.Slug,
         company.MissedTicketExpiryMinutes,
         company.DefaultEstimatedServiceMinutes,
         company.CreatedAt
@@ -211,6 +214,7 @@ public class CompanyController
       var response = new CompanyDto(
         company.Id,
         company.Name,
+        company.Slug,
         company.MissedTicketExpiryMinutes,
         company.DefaultEstimatedServiceMinutes,
         company.CreatedAt
@@ -270,6 +274,7 @@ public class CompanyController
       var response = new CompanyDto(
         updated.Id,
         updated.Name,
+        updated.Slug,
         updated.MissedTicketExpiryMinutes,
         updated.DefaultEstimatedServiceMinutes,
         updated.CreatedAt
@@ -321,6 +326,7 @@ public class CompanyController
       var response = new CompanyDto(
         deleted.Id,
         deleted.Name,
+        deleted.Slug,
         deleted.MissedTicketExpiryMinutes,
         deleted.DefaultEstimatedServiceMinutes,
         deleted.CreatedAt

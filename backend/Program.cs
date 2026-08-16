@@ -54,6 +54,7 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<AnalyticsDao>();
 builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddScoped<AnalyticsController>();
+builder.Services.AddScoped<PublicController>();
 
 builder.Services.AddJwtAuth(builder.Configuration);
 
@@ -98,6 +99,7 @@ app.UseAuthorization();
 
 app.MapUsersEndpoints();
 app.MapAuthEndpoints();
+app.MapPublicEndpoints();
 
 app.MapCompanyEndpoints();
 app.MapLocationEndpoints();

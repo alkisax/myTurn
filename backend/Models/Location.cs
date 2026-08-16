@@ -9,6 +9,8 @@ public class Location
   public int CompanyId { get; set; }
 
   public required string Name { get; set; }
+  
+  public string Slug { get; set; } = string.Empty;
 
   public string? Address { get; set; }
 

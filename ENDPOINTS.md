@@ -5,6 +5,8 @@ Base URL: `http://localhost:3020`. JSON examples use the property names accepted
 ## Table of contents
 
 - [Health and frontend logs](#health-and-frontend-logs)
+- [Public customer API](#public-customer-api)
+- [V1 status and slugs](#v1-status-and-slugs)
 - [Authentication](#authentication)
 - [Users](#users)
 - [Companies](#companies)
@@ -23,6 +25,55 @@ Base URL: `http://localhost:3020`. JSON examples use the property names accepted
 - [Authorization Summary](#authorization-summary)
 
 Response wrappers commonly contain `status` and `data`; error wrappers commonly contain `status` and `message`. Exact examples below are representative of the current controllers.
+
+## Public customer API
+
+These routes require no authentication. They intentionally do not provide a global public company, location, queue, or service directory. A customer must already know the company slug and, for nested resources, the location slug.
+
+Nested resources are always resolved by `companySlug` plus `locationSlug`; a location from another company cannot resolve under the wrong company. Public lists return only active locations, queues, and services.
+
+### `GET /public/{companySlug}`
+
+- Authorization: Public / Anonymous.
+- Success: `200 OK` with `{ "status": true, "data": { "name": "My Turn Market", "slug": "my-turn-market" } }`.
+- Errors: `404 Not Found` when the company slug does not exist.
+
+### `GET /public/{companySlug}/locations`
+
+- Authorization: Public / Anonymous.
+- Success: `200 OK` with active `PublicLocationDto[]`. Each item contains `id`, `name`, `slug`, `address`, `country`, and `isActive`.
+- Errors: `404 Not Found` when the company slug does not exist.
+
+### `GET /public/{companySlug}/{locationSlug}`
+
+- Authorization: Public / Anonymous.
+- Success: `200 OK` with an active `PublicLocationDto`.
+- Errors: `404 Not Found` when either slug is unknown, the location belongs to another company, or the location is inactive.
+
+### `GET /public/{companySlug}/{locationSlug}/queues`
+
+- Authorization: Public / Anonymous.
+- Success: `200 OK` with active `PublicQueueDto[]`. Each item contains `id`, `name`, `description`, `isActive`, `isRemoteTicketingAllowed`, `opensAt`, and `closesAt`.
+- Errors: `404 Not Found` when the company/location slug pair does not resolve.
+
+### `GET /public/{companySlug}/{locationSlug}/services`
+
+- Authorization: Public / Anonymous.
+- Success: `200 OK` with active `PublicServiceDto[]`. Each item contains `id`, `name`, `description`, `estimatedServiceMinutes`, and `isGeneric`.
+- Errors: `404 Not Found` when the company/location slug pair does not resolve.
+
+There is intentionally no `GET /public/companies`, `GET /public/queues`, or other anonymous global listing route.
+
+## V1 status and slugs
+
+Backend V1 is complete. The integration suite is currently `84/84` passing and runs against the dedicated Test SQLite database rather than the development database.
+
+Companies and locations have backend-generated `slug` values. Slugs are generated from `Name`, transliterating Greek names to deterministic ASCII/Greeklish, lowercasing, removing punctuation and duplicate separators, and joining words with `-`. Renaming a company or location regenerates its slug.
+
+- Company slugs are globally unique.
+- Location slugs are unique within their Company.
+- Duplicate slugs receive deterministic suffixes such as `my-market`, `my-market-2`, and `my-market-3`.
+- Slug input is not required in create or update request DTOs.
 
 ## Health and frontend logs
 
@@ -164,12 +215,12 @@ Response wrappers commonly contain `status` and `data`; error wrappers commonly 
 
 ## Companies
 
-Company bodies use `name`, `missedTicketExpiryMinutes`, and `defaultEstimatedServiceMinutes`.
+Company bodies use `name`, `missedTicketExpiryMinutes`, and `defaultEstimatedServiceMinutes`. Responses also include the backend-generated `slug`.
 
 ### `GET /companies/`
 
 - Authorization: SUPERADMIN only. No body.
-- Success: `200 OK`, `{ "status": true, "data": [{ "id": 1, "name": "Acme", "missedTicketExpiryMinutes": 10, "defaultEstimatedServiceMinutes": 5, "createdAt": "2026-01-01T00:00:00Z" }] }`.
+- Success: `200 OK`, with company responses containing `id`, `name`, `slug`, `missedTicketExpiryMinutes`, `defaultEstimatedServiceMinutes`, and `createdAt`.
 - Errors: `401`, `403`.
 - Ελληνικά: Ο SUPERADMIN βλέπει όλες τις εταιρείες.
 
@@ -294,6 +345,8 @@ Company bodies use `name`, `missedTicketExpiryMinutes`, and `defaultEstimatedSer
 - Ελληνικά: Ο SUPERADMIN διαγράφει απευθείας μια CompanyUser σχέση.
 
 ## Locations
+
+Location responses include the backend-generated `slug` in addition to the existing location fields. Create and update requests do not accept a slug.
 
 ### `GET /locations/`
 
@@ -543,7 +596,17 @@ Company bodies use `name`, `missedTicketExpiryMinutes`, and `defaultEstimatedSer
 - Authorization: Public / Anonymous (also accepts authenticated users).
 - Input body (`CreateTicketDto`): `{ "queueId": 8, "email": "customer@example.com", "serviceIds": [21, 22] }`. `serviceIds` may be null.
 - Success: `201 Created` with a `MyTicketDto`-shaped ticket response.
-- Errors: `400` for inactive/closed queue, invalid services, limits, or validation; `404` for missing queue/location/service as returned by the controller.
+- Errors: `400` for inactive queue, disabled remote ticketing, invalid services, limits, or validation; `404` for missing queue/location/service as returned by the controller.
+- `Queue.IsRemoteTicketingAllowed` must be `true`; when it is `false`, remote creation is rejected. The normal ticket creation lifecycle remains unchanged.
+
+### `POST /tickets/kiosk`
+
+- Authorization: ADMIN or SUPERADMIN (`AdminOnly`).
+- Input body: the same `CreateTicketDto` as remote issuance: `{ "queueId": 8, "email": "customer@example.com", "serviceIds": [21, 22] }`.
+- Access: the ADMIN must have access to the queue's company; SUPERADMIN bypasses company membership checks.
+- Success: `201 Created` with the normal ticket creation response.
+- Kiosk issuance is allowed even when `IsRemoteTicketingAllowed` is `false`.
+- Kiosk-created customer tickets remain anonymous: `UserId` is `null`. The ADMIN JWT is used only to authorize the kiosk and does not own the customer ticket.
 - Ελληνικά: Ο πελάτης εκδίδει ticket και προαιρετικά επιλέγει υπηρεσίες.
 
 ### `GET /tickets/id/{ticketId}`
@@ -567,6 +630,7 @@ Company bodies use `name`, `missedTicketExpiryMinutes`, and `defaultEstimatedSer
 - Input: path `trackingToken` string; no body.
 - Success: `200 OK` with `TicketTrackingDto` including public status/services and estimated waiting minutes.
 - Errors: `404 Not Found` when the token does not identify a ticket.
+- V1 public tracking intentionally includes the ticket `pin`; this also applies to the public PDF route below.
 - Ελληνικά: Ο πελάτης παρακολουθεί δημόσια την πορεία του ticket μέσω QR ή tracking link.
 
 ### `GET /tickets/queue/{queueId}`
@@ -641,6 +705,8 @@ Company bodies use `name`, `missedTicketExpiryMinutes`, and `defaultEstimatedSer
 ## Ticket Services
 
 All routes in this section use `RequireAuthorization("AdminOnly")`; STAFF and USER are rejected before controller execution. ADMIN also needs company access; SUPERADMIN bypasses membership checks.
+
+Ticket Service operations are company-scoped through `TicketServiceController`; tickets and services must belong to the same accessible company/location context.
 
 ### `GET /ticket-services/ticket/{ticketId}`
 
@@ -720,6 +786,7 @@ Common errors for all: `401 Unauthorized`, `403 Forbidden` for role or company d
 - Input: path `trackingToken` string; no body.
 - Success: PDF file response, content type `application/pdf` (not JSON).
 - Errors: `404 Not Found` when the tracking token is not found; generation errors are Needs verification.
+- V1 public PDF intentionally includes the ticket `PIN`.
 - Ελληνικά: Ο πελάτης κατεβάζει ή ανοίγει το PDF του ticket από public tracking link.
 
 ## SignalR
@@ -756,7 +823,7 @@ The frontend connects to `/queue-hub`, invokes `JoinQueue(queueId)`, listens for
 
 ## Authorization Summary
 
-- Public / Anonymous: `/`, `/health`, `/api/ping`, `POST /front-logs/`, registration endpoints, login, `GET /tickets/{trackingToken}`, and ticket PDF tracking.
+- Public / Anonymous: `/`, `/health`, `/api/ping`, `POST /front-logs/`, registration endpoints, login, the `/public/{companySlug}` customer-read routes, `POST /tickets/` remote issuance, `GET /tickets/{trackingToken}`, and ticket PDF tracking.
 - Authenticated: token refresh, `/company-users/mine`, `/staff-sessions/mine`, and most ticket/session operational routes after controller role/resource checks.
 - USER: may register, create tickets, view own tickets, and cancel own eligible tickets; controller checks apply where implemented.
 - STAFF: uses active Staff Sessions and the ticket operational endpoints (`queue`, `next`, `complete`, `missed`, `recall`); administrative CRUD routes are not available through `AdminOnly` policies.

@@ -6,6 +6,7 @@ public record LocationDto(
   int Id,
   int CompanyId,
   string Name,
+  string Slug,
   string? Address,
   string? Country,
   double? Latitude,

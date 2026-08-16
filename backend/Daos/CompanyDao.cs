@@ -2,6 +2,7 @@
 
 using Backend;
 using Microsoft.EntityFrameworkCore;
+using backend.Services;
 
 namespace backend;
 
@@ -61,10 +62,19 @@ public class CompanyDao(MyTurnContext context)
     }
   }
 
+  public async Task<Company?> GetBySlug(string slug)
+  {
+    return await context.Companies
+      .AsNoTracking()
+      .SingleOrDefaultAsync(company => company.Slug == slug);
+  }
+
   public async Task<Company> Create(Company company)
   {
     try
     {
+      var baseSlug = SlugService.FromName(company.Name);
+      company.Slug = await GetAvailableSlug(baseSlug);
       context.Companies.Add(company);
       await context.SaveChangesAsync();
       return company;
@@ -86,7 +96,12 @@ public class CompanyDao(MyTurnContext context)
         return null;
       }
 
+      var nameChanged = !string.Equals(company.Name, updatedData.Name, StringComparison.Ordinal);
       company.Name = updatedData.Name;
+      if (nameChanged)
+      {
+        company.Slug = await GetAvailableSlug(SlugService.FromName(updatedData.Name), id);
+      }
       company.MissedTicketExpiryMinutes = updatedData.MissedTicketExpiryMinutes;
       company.DefaultEstimatedServiceMinutes = updatedData.DefaultEstimatedServiceMinutes;
       company.UpdatedAt = DateTime.UtcNow;
@@ -98,6 +113,19 @@ public class CompanyDao(MyTurnContext context)
     {
       throw new Exception($"DAO: Failed to update company, {error.Message}", error);
     }
+  }
+
+  private async Task<string> GetAvailableSlug(string baseSlug, int? excludedId = null)
+  {
+    var slug = baseSlug;
+    var suffix = 2;
+    while (await context.Companies.AnyAsync(company =>
+      company.Slug == slug && (!excludedId.HasValue || company.Id != excludedId.Value)))
+    {
+      slug = $"{baseSlug}-{suffix++}";
+    }
+
+    return slug;
   }
 
   public async Task<Company?> Delete(int id)

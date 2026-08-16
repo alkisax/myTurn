@@ -24,6 +24,13 @@ public static class TicketEndpoints
       );
     });
 
+    group.MapPost("/kiosk", async (
+      CreateTicketDto dto,
+      TicketController controller,
+      HttpContext context
+    ) => await controller.CreateKiosk(dto, context.User))
+    .RequireAuthorization("AdminOnly");
+
     // GET /tickets/id/5
     group.MapGet("/id/{ticketId:int}", async (
       int ticketId,

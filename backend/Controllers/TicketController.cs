@@ -67,9 +67,34 @@ public class TicketController
     _hubContext = hubContext;
   }
 
-  public async Task<IResult> Create(
+  public Task<IResult> Create(
     CreateTicketDto dto,
-    ClaimsPrincipal currentUser // token payload
+    ClaimsPrincipal currentUser
+  ) => CreateInternal(dto, currentUser, false);
+
+  public async Task<IResult> CreateKiosk(
+    CreateTicketDto dto,
+    ClaimsPrincipal currentUser
+  )
+  {
+    var queue = await _queueDao.GetById(dto.QueueId);
+    if (queue is null)
+    {
+      return Results.NotFound(new { status = false, message = "Queue not found" });
+    }
+
+    if (!await HasCompanyAccess(queue.CompanyId, currentUser))
+    {
+      return Results.Forbid();
+    }
+
+    return await CreateInternal(dto, currentUser, true);
+  }
+
+  private async Task<IResult> CreateInternal(
+    CreateTicketDto dto,
+    ClaimsPrincipal currentUser,
+    bool kiosk
   )
   {
     // 1. Βρίσκουμε το Queue. έρχεται απο το request body του post στο CreateTicketDto
@@ -80,6 +105,15 @@ public class TicketController
       {
         status = false,
         message = "Queue not found"
+      });
+    }
+
+    if (!kiosk && !queue.IsRemoteTicketingAllowed)
+    {
+      return Results.BadRequest(new
+      {
+        status = false,
+        message = "Remote ticketing is disabled for this queue"
       });
     }
 
@@ -172,7 +206,7 @@ public class TicketController
     var userIdString = currentUser.FindFirst("id")?.Value;
 
     // προσπάθησε να μετατρέψεις το "17" σε 17
-    if (int.TryParse(userIdString, out var parsedUserId))
+    if (!kiosk && int.TryParse(userIdString, out var parsedUserId))
     {
       userId = parsedUserId;
     }
@@ -327,6 +361,17 @@ public class TicketController
         data
       }
     );
+  }
+
+  private async Task<bool> HasCompanyAccess(int companyId, ClaimsPrincipal currentUser)
+  {
+    var role = currentUser.FindFirst(ClaimTypes.Role)?.Value;
+    if (role == "SUPERADMIN") return true;
+
+    var userIdString = currentUser.FindFirst("id")?.Value;
+    if (!int.TryParse(userIdString, out var userId)) return false;
+
+    return await _companyUserDao.GetByUserAndCompany(userId, companyId) is not null;
   }
 
   // Βρίσκει τα services που έχουν συνδεθεί με ένα ticket και επιστρέφει id + όνομα του κάθε service.

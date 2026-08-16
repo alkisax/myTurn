@@ -2,6 +2,7 @@
 
 using Backend;
 using Microsoft.EntityFrameworkCore;
+using backend.Services;
 
 namespace backend;
 
@@ -37,6 +38,13 @@ public class LocationDao(MyTurnContext context)
     return await context.Locations.FindAsync(id);
   }
 
+  public async Task<Location?> GetBySlug(int companyId, string slug)
+  {
+    return await context.Locations
+      .AsNoTracking()
+      .SingleOrDefaultAsync(location => location.CompanyId == companyId && location.Slug == slug);
+  }
+
 
   public async Task<List<Location>> GetByCompanyId(int companyId)
   {
@@ -49,6 +57,16 @@ public class LocationDao(MyTurnContext context)
 
   public async Task<Location> Create(Location location)
   {
+    var baseSlug = SlugService.FromName(location.Name);
+    var slug = baseSlug;
+    var suffix = 2;
+    while (await context.Locations.AnyAsync(existing =>
+      existing.CompanyId == location.CompanyId && existing.Slug == slug))
+    {
+      slug = $"{baseSlug}-{suffix++}";
+    }
+
+    location.Slug = slug;
     context.Locations.Add(location);
     await context.SaveChangesAsync();
 
@@ -66,6 +84,10 @@ public class LocationDao(MyTurnContext context)
     }
 
     location.Name = updatedData.Name;
+    location.Slug = await GetAvailableSlug(
+      location.CompanyId,
+      SlugService.FromName(updatedData.Name),
+      id);
     location.Address = updatedData.Address;
     location.Country = updatedData.Country;
     location.Latitude = updatedData.Latitude;
@@ -77,6 +99,20 @@ public class LocationDao(MyTurnContext context)
     await context.SaveChangesAsync();
 
     return location;
+  }
+
+  private async Task<string> GetAvailableSlug(int companyId, string baseSlug, int? excludedId = null)
+  {
+    var slug = baseSlug;
+    var suffix = 2;
+    while (await context.Locations.AnyAsync(location =>
+      location.CompanyId == companyId && location.Slug == slug &&
+      (!excludedId.HasValue || location.Id != excludedId.Value)))
+    {
+      slug = $"{baseSlug}-{suffix++}";
+    }
+
+    return slug;
   }
 
 
