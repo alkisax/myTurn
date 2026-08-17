@@ -23,6 +23,7 @@ import TicketInfo from "./pages/TicketInfo";
 import PublicCompany from "./pages/PublicCompany";
 import PublicLocation from "./pages/PublicLocation";
 import PublicRemoteTicket from "./pages/PublicRemoteTicket";
+import StaffProfile from "./pages/StaffProfile";
 
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
 
         <Route element={<StaffPrivateRoute />}>
           <Route path="/staff" element={<Staff />} />
+          <Route path="/staff/profile" element={<StaffProfile />} />
           <Route path="/staff/public-tablet" element={<PublicTablet />} />
           <Route
             path="/staff/public-tablet/issue"

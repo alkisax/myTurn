@@ -1,8 +1,8 @@
 // frontend\src\pages\Admin.tsx
-const Admin = () => {
-  return (
-    <div>only SuperAdmin and Admin can see this</div>
-  )
-}
+import AdminLayout from "../admin/AdminLayout";
 
-export default Admin
+const Admin = () => {
+  return <AdminLayout />;
+};
+
+export default Admin;

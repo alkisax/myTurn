@@ -10,4 +10,6 @@ export const colors = {
   secondary: "#6c63ff", // μωβ/astro vibe
   text: "#ffffff",
   dim: "#aaaaaa",
+  selectedOrganization: "#fff176",
+  adminSelectorBackground: "#e0e0e0",
 };

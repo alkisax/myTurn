@@ -27,7 +27,7 @@ const Home = () => {
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
+        // justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#f5f5f5",
         p: 2,
@@ -36,6 +36,12 @@ const Home = () => {
     >
       <Typography variant="h3">
         MyTurn
+      </Typography>
+
+      <Typography
+        sx={{ width: 300 }}
+      >
+        MyTurn is a digital queue management system for customers, staff, and organizations.
       </Typography>
 
       <Typography>
@@ -51,7 +57,7 @@ const Home = () => {
         }}
       >
         {/* CUSTOMER */}
-        <Card
+        {/* <Card
           sx={{
             width: 320,
             minHeight: 200,
@@ -74,7 +80,7 @@ const Home = () => {
               </Typography>
             </CardContent>
           </CardActionArea>
-        </Card>
+        </Card> */}
 
         {/* STAFF */}
         <Card
@@ -87,7 +93,14 @@ const Home = () => {
             sx={{ height: "100%" }}
             onClick={() => navigate("/staff")}
           >
-            <CardContent>
+            <CardContent
+              sx={{
+                minHeight: 200,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center"
+              }}
+            >
               <Typography
                 variant="h5"
                 gutterBottom
@@ -103,6 +116,15 @@ const Home = () => {
           </CardActionArea>
         </Card>
 
+        <Typography
+          sx={{
+            mt: 6,
+            width: 300
+          }}
+          color="text.secondary">
+          Start from Here. Set up an organization, add locations and waiting queues, define services, and assign staff to serve customers.
+        </Typography>
+
         {/* ORGANIZATION */}
         <Card
           sx={{
@@ -114,7 +136,14 @@ const Home = () => {
             sx={{ height: "100%" }}
             onClick={() => setView("organization")}
           >
-            <CardContent>
+            <CardContent
+              sx={{
+                minHeight: 200,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center"
+              }}
+            >
               <Typography
                 variant="h5"
                 gutterBottom

@@ -6,7 +6,9 @@ import MenuIcon from "@mui/icons-material/Menu";
 import LoginIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
 import InfoIcon from "@mui/icons-material/Info";
-import SchoolIcon from "@mui/icons-material/School";
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 import { appName } from "../../constants/constants";
 
@@ -32,6 +34,9 @@ const Navbar = () => {
   const handleLogoutClick = () => {
     handleLogout(setUser, navigate);
   };
+
+  const isAdmin = user?.roles.includes("ADMIN") || user?.roles.includes("SUPERADMIN");
+  const isStaffOnly = user?.roles.includes("STAFF") && !isAdmin;
 
   return (
     <>
@@ -70,15 +75,19 @@ const Navbar = () => {
 
             {user ? (
               <>
-                <Tooltip title="private">
+                {isAdmin && <Tooltip title="Admin Panel">
                   <IconButton
                     component={NavLink}
-                    to="/private"
+                    to="/admin"
                     sx={{ color: "inherit" }}
                   >
-                    <SchoolIcon />
+                    <AdminPanelSettingsIcon />
                   </IconButton>
-                </Tooltip>
+                </Tooltip>}
+                {isStaffOnly && <>
+                  <Tooltip title="Staff Workspace"><IconButton component={NavLink} to="/staff" sx={{ color: "inherit" }}><SupportAgentIcon /></IconButton></Tooltip>
+                  <Tooltip title="My Profile"><IconButton component={NavLink} to="/staff/profile" sx={{ color: "inherit" }}><AccountCircleIcon /></IconButton></Tooltip>
+                </>}
 
                 <Tooltip title="Logout">
                   <IconButton
@@ -117,15 +126,11 @@ const Navbar = () => {
                 Info
               </MenuItem>
 
-              {user && (
-                <MenuItem
-                  component={NavLink}
-                  to="/private"
-                  onClick={handleMenuClose}
-                >
-                  private
-                </MenuItem>
-              )}
+              {isAdmin && <MenuItem component={NavLink} to="/admin" onClick={handleMenuClose}>Admin Panel</MenuItem>}
+              {isStaffOnly && <>
+                <MenuItem component={NavLink} to="/staff" onClick={handleMenuClose}>Staff Workspace</MenuItem>
+                <MenuItem component={NavLink} to="/staff/profile" onClick={handleMenuClose}>My Profile</MenuItem>
+              </>}
 
               {user ? (
                 <MenuItem
