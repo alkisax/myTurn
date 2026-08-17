@@ -5,7 +5,10 @@ namespace backend;
 
 public class StaffDiscoveryDao(MyTurnContext context)
 {
-  public async Task<List<StaffDeskDto>> GetDesksByCompanyId(int companyId)
+  public async Task<List<StaffDeskDto>> GetDesksByCompanyId(
+    int companyId,
+    int? currentUserId = null
+  )
   {
     return await (
       from desk in context.Desks.AsNoTracking()
@@ -14,6 +17,10 @@ public class StaffDiscoveryDao(MyTurnContext context)
       where desk.CompanyId == companyId
         && location.CompanyId == companyId
         && queue.CompanyId == companyId
+        && !context.StaffSessions.Any(session =>
+          session.DeskId == desk.Id &&
+          session.EndedAt == null &&
+          (currentUserId == null || session.UserId != currentUserId))
       orderby location.Name, desk.Name
       select new StaffDeskDto(
         desk.Id,

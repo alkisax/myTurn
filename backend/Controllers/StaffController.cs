@@ -21,7 +21,14 @@ public class StaffController(
       }
     }
 
-    var desks = await discoveryDao.GetDesksByCompanyId(companyId);
+    int? currentUserId = null;
+    var currentUserIdValue = currentUser.FindFirst("id")?.Value;
+    if (int.TryParse(currentUserIdValue, out var parsedUserId))
+    {
+      currentUserId = parsedUserId;
+    }
+
+    var desks = await discoveryDao.GetDesksByCompanyId(companyId, currentUserId);
     return Results.Ok(new { status = true, data = desks });
   }
 }
