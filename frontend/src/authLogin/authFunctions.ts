@@ -6,7 +6,8 @@ type SetUser = (user: IUser | null) => void;
 
 export const handleLogout = async (
   setUser: SetUser,
-  navigate: (path: string) => void
+  navigate: (path: string) => void,
+  redirectPath = "/"
 ) => {
 
   try {
@@ -17,7 +18,7 @@ export const handleLogout = async (
     setUser(null);
 
     // Redirect
-    navigate("/");
+    navigate(redirectPath);
   } catch (error) {
     console.error("Error during universal logout:", error);
   }

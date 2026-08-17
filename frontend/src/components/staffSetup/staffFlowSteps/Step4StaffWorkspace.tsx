@@ -468,7 +468,10 @@ const Step4StaffWorkspace = ({
 
       <Button
         variant="outlined"
-        onClick={() => navigate("/staff/public-tablet")}
+        onClick={() => {
+          sessionStorage.setItem("myturn-kiosk-mode", "true");
+          navigate("/staff/public-tablet");
+        }}
       >
         Set this screen as a public tablet / kiosk
       </Button>
