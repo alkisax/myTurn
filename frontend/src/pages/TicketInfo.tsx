@@ -1,22 +1,11 @@
 import { useEffect, useState } from "react";
+import type { TicketInfoData as PublicTicketInfoData } from "../types/ticket.types";
 import { Box, Paper, Typography } from "@mui/material";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { backendUrl } from "../constants/constants";
 
-interface TicketInfoData {
-  number: number;
-  pin: string;
-  status: string;
-  services?: Array<{ name: string }>;
-  estimatedWaitingMinutes: number;
-  peopleAhead: number;
-  nowServing: Array<{
-    deskId: number;
-    deskName: string;
-    number: number;
-  }>;
-}
+type TicketInfoData = PublicTicketInfoData;
 
 const TicketInfo = () => {
   const { trackingToken } = useParams<{ trackingToken: string }>();

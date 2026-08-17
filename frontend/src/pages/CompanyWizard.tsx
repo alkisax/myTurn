@@ -12,27 +12,8 @@ import Step3SelectCompany from "../components/companySetup/companyWizardSteps/St
 import Step4CompanyActions from "../components/companySetup/companyWizardSteps/Step4CompanyActions";
 import Step5LocationActions from "../components/companySetup/companyWizardSteps/Step5LocationActions";
 
-interface Company {
-  id: number;
-  name: string;
-  missedTicketExpiryMinutes: number;
-  defaultEstimatedServiceMinutes: number;
-  createdAt: string;
-}
+type Company = CompanySummary;
 
-interface Location {
-  id: number;
-  companyId: number;
-  name: string;
-  address?: string | null;
-  country?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  timeZoneId?: string | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
 
 const CompanyWizard = () => {
   const { user, isLoading } = useContext(UserAuthContext);
@@ -207,3 +188,5 @@ const CompanyWizard = () => {
 };
 
 export default CompanyWizard;
+import type { CompanySummary } from "../types/company.types";
+import type { Location } from "../types/location.types";

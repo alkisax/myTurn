@@ -1,25 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { backendUrl } from "../../constants/constants";
+import type { LocationOption } from "../../types/location.types";
+import type { QueueOption } from "../../types/queue.types";
+import type { AdminService } from "../../types/adminPanel.types";
 
-export interface AdminService {
-  id: number;
-  locationId: number;
-  queueId: number;
-  name: string;
-  description: string | null;
-  estimatedServiceMinutes: number | null;
-  isActive: boolean;
-  isGeneric: boolean;
-}
-interface AdminLocation {
-  id: number;
-  name: string;
-}
-interface AdminQueue {
-  id: number;
-  name: string;
-}
 export interface ServiceFormValues {
   name: string;
   description: string;
@@ -45,11 +30,11 @@ const errorMessage = (error: unknown, fallback: string) =>
     : fallback;
 
 const useAdminServices = (selectedCompanyId: number | null) => {
-  const [locations, setLocations] = useState<AdminLocation[]>([]);
+  const [locations, setLocations] = useState<LocationOption[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
     null,
   );
-  const [queues, setQueues] = useState<AdminQueue[]>([]);
+  const [queues, setQueues] = useState<QueueOption[]>([]);
   const [selectedQueueId, setSelectedQueueId] = useState<number | null>(null);
   const [services, setServices] = useState<AdminService[]>([]);
   const [loading, setLoading] = useState(false);

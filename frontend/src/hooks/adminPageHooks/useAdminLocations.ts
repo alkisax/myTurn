@@ -1,19 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { backendUrl } from "../../constants/constants";
-
-export interface AdminLocation {
-  id: number;
-  companyId: number;
-  name: string;
-  slug: string;
-  address: string | null;
-  country: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  timeZoneId: string | null;
-  isActive: boolean;
-}
+import type { AdminLocation } from "../../types/adminPanel.types";
 
 export interface LocationFormValues {
   name: string;

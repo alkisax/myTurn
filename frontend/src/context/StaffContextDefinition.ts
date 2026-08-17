@@ -1,48 +1,8 @@
 import { createContext } from "react";
+import type { Company, StaffDesk, StaffSession } from "../types/staff.types";
+import type { Ticket, TicketService } from "../types/ticket.types";
 
-export interface Company {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-export interface StaffDesk {
-  id: number;
-  name: string;
-  locationId: number;
-  locationName: string;
-  queueId: number;
-  queueName: string;
-  isActive: boolean;
-}
-
-export interface StaffSession {
-  id: number;
-  userId: number;
-  companyId: number;
-  locationId: number;
-  queueId: number;
-  deskId: number;
-  status: string;
-  startedAt: string;
-  breakStartedAt: string | null;
-  totalBreakSeconds: number;
-  endedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface TicketService {
-  id: number;
-  name: string;
-}
-
-export interface Ticket {
-  id: number;
-  number: number;
-  status: string;
-  services: TicketService[];
-}
+export type { Company, StaffDesk, StaffSession, Ticket, TicketService };
 
 export interface StaffContextValue {
   companies: Company[];

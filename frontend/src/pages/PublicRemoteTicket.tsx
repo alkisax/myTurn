@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { PublicCompany, PublicLocationDetails, PublicQueue, PublicService } from "../types/public.types";
 import axios from "axios";
 import {
   Box,
@@ -12,26 +13,8 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { backendUrl } from "../constants/constants";
 
-interface PublicCompanyData {
-  name: string;
-}
-
-interface PublicLocationData {
-  name: string;
-}
-
-interface PublicQueue {
-  id: number;
-  name: string;
-  description?: string | null;
-  isRemoteTicketingAllowed: boolean;
-}
-
-interface PublicService {
-  id: number;
-  name: string;
-  description?: string | null;
-}
+type PublicCompanyData = PublicCompany;
+type PublicLocationData = PublicLocationDetails;
 
 const PublicRemoteTicket = () => {
   const { companySlug, locationSlug, queueId } = useParams<{

@@ -1,12 +1,6 @@
 import { Button } from "@mui/material";
 
-interface Company {
-  id: number;
-  name: string;
-  missedTicketExpiryMinutes: number;
-  defaultEstimatedServiceMinutes: number;
-  createdAt: string;
-}
+type Company = CompanySummary;
 
 interface Props {
   companies: Company[];
@@ -65,3 +59,4 @@ const Step3SelectCompany = ({
 };
 
 export default Step3SelectCompany;
+import type { CompanySummary } from "../../../types/company.types";

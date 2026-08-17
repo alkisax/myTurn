@@ -1,15 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { backendUrl } from "../../constants/constants";
-
-export interface AdminCompany {
-  id: number;
-  name: string;
-  slug: string;
-  missedTicketExpiryMinutes: number;
-  defaultEstimatedServiceMinutes: number;
-  createdAt: string;
-}
+import type { AdminCompany } from "../../types/adminPanel.types";
 
 export interface CompanyFormValues {
   name: string;

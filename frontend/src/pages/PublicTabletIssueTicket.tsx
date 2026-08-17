@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import type { PublicLocationSummary, PublicService, PublicTabletQueue } from "../types/public.types";
 import axios from "axios";
 import {
   Box,
@@ -13,22 +14,8 @@ import { useNavigate } from "react-router-dom";
 import { backendUrl } from "../constants/constants";
 import { useStaffContext } from "../context/useStaffContext";
 
-interface PublicLocation {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface PublicQueue {
-  id: number;
-  name: string;
-  isActive: boolean;
-}
-
-interface PublicService {
-  id: number;
-  name: string;
-}
+type PublicLocation = PublicLocationSummary;
+type PublicQueue = PublicTabletQueue;
 
 const PublicTabletIssueTicket = () => {
   const navigate = useNavigate();

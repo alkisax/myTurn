@@ -9,13 +9,7 @@ import CreateLocationForm from "../CreateLocationForm";
 import { backendUrl } from "../../../constants/constants";
 import type { Roles } from "../../../authLogin/types/types";
 
-interface Company {
-  id: number;
-  name: string;
-  missedTicketExpiryMinutes: number;
-  defaultEstimatedServiceMinutes: number;
-  createdAt: string;
-}
+type Company = CompanySummary;
 
 interface Staff {
   id: number;
@@ -27,19 +21,6 @@ interface Staff {
   updatedAt: string;
 }
 
-interface Location {
-  id: number;
-  companyId: number;
-  name: string;
-  address?: string | null;
-  country?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  timeZoneId?: string | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface Props {
   company: Company;
@@ -262,3 +243,5 @@ const Step4CompanyActions = ({
 };
 
 export default Step4CompanyActions;
+import type { CompanySummary } from "../../../types/company.types";
+import type { Location } from "../../../types/location.types";

@@ -1,26 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { backendUrl } from "../../constants/constants";
+import type { LocationOption } from "../../types/location.types";
+import type { AdminQueue } from "../../types/adminPanel.types";
 
-interface AdminLocation {
-  id: number;
-  name: string;
-}
-export interface AdminQueue {
-  id: number;
-  locationId: number;
-  name: string;
-  description: string | null;
-  isActive: boolean;
-  isRemoteTicketingAllowed: boolean;
-  defaultServiceMinutes: number | null;
-  maxWaitingTickets: number | null;
-  opensAt: string | null;
-  closesAt: string | null;
-  resetNumberDaily: boolean;
-  autoResetEnabled: boolean;
-  resetAt: string | null;
-}
 export interface QueueFormValues {
   name: string;
   description: string;
@@ -56,7 +39,7 @@ const getErrorMessage = (error: unknown, fallback: string) =>
     : fallback;
 
 const useAdminQueues = (selectedCompanyId: number | null) => {
-  const [locations, setLocations] = useState<AdminLocation[]>([]);
+  const [locations, setLocations] = useState<LocationOption[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
     null,
   );

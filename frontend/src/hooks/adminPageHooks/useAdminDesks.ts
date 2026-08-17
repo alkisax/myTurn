@@ -1,23 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { backendUrl } from "../../constants/constants";
+import type { LocationOption } from "../../types/location.types";
+import type { QueueOption } from "../../types/queue.types";
+import type { AdminDesk } from "../../types/adminPanel.types";
 
-export interface AdminDesk {
-  id: number;
-  companyId: number;
-  locationId: number;
-  queueId: number;
-  name: string;
-  isActive: boolean;
-}
-interface AdminLocation {
-  id: number;
-  name: string;
-}
-interface AdminQueue {
-  id: number;
-  name: string;
-}
 export interface DeskFormValues {
   name: string;
   queueId: number | null;
@@ -33,11 +20,11 @@ const getErrorMessage = (error: unknown, fallback: string) =>
     : fallback;
 
 const useAdminDesks = (selectedCompanyId: number | null) => {
-  const [locations, setLocations] = useState<AdminLocation[]>([]);
+  const [locations, setLocations] = useState<LocationOption[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
     null,
   );
-  const [queues, setQueues] = useState<AdminQueue[]>([]);
+  const [queues, setQueues] = useState<QueueOption[]>([]);
   const [selectedQueueId, setSelectedQueueId] = useState<number | null>(null);
   const [desks, setDesks] = useState<AdminDesk[]>([]);
   const [locationsLoading, setLocationsLoading] = useState(false);

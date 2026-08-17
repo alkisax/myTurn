@@ -13,10 +13,6 @@ import {
 
 import { backendUrl } from "../../constants/constants";
 
-interface QueueOption {
-  id: number;
-  name: string;
-}
 
 interface Props {
   locationId: number;
@@ -138,3 +134,4 @@ const CreateDeskForm = ({
 };
 
 export default CreateDeskForm;
+import type { QueueOption } from "../../types/queue.types";

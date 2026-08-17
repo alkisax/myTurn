@@ -10,54 +10,14 @@ import CreateDeskForm from "../CreateDeskForm";
 
 import { backendUrl } from "../../../constants/constants";
 
-interface Company {
-  id: number;
-  name: string;
-  missedTicketExpiryMinutes: number;
-  defaultEstimatedServiceMinutes: number;
-  createdAt: string;
-}
+type Company = CompanySummary;
 
-interface Location {
-  id: number;
-  companyId: number;
-  name: string;
-  address?: string | null;
-  country?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  timeZoneId?: string | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
 
-interface Queue {
-  id: number;
-  companyId: number;
-  locationId: number;
-  name: string;
-}
+type Queue = QueueSummary;
 
-interface Service {
-  id: number;
-  companyId: number;
-  locationId: number;
-  name: string;
-  description?: string | null;
-  isActive: boolean;
-  isGeneric: boolean;
-  estimatedServiceMinutes?: number | null;
-}
+type Service = ServiceSummary;
 
-interface Desk {
-  id: number;
-  companyId: number;
-  locationId: number;
-  queueId: number;
-  name: string;
-  isActive: boolean;
-}
+type Desk = DeskSummary;
 
 interface Props {
   company: Company;
@@ -433,3 +393,8 @@ const Step5LocationActions = ({
 };
 
 export default Step5LocationActions;
+import type { CompanySummary } from "../../../types/company.types";
+import type { Location } from "../../../types/location.types";
+import type { QueueSummary } from "../../../types/queue.types";
+import type { ServiceSummary } from "../../../types/service.types";
+import type { DeskSummary } from "../../../types/desk.types";

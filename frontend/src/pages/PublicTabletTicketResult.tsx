@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import type { TicketResult } from "../types/ticket.types";
 import axios from "axios";
 import { Box, Button, Paper, Typography } from "@mui/material";
 import { QRCodeSVG } from "qrcode.react";
@@ -6,17 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { useStaffContext } from "../context/useStaffContext";
 import { backendUrl } from "../constants/constants";
 
-interface TicketResult {
-  ticket: {
-    number: number;
-    pin: string;
-    status: string;
-    trackingToken: string;
-    estimatedWaitingMinutes?: number;
-  };
-  queueName: string;
-  serviceNames: string[];
-}
 
 const ticketStorageKey = "myturn-public-tablet-ticket";
 

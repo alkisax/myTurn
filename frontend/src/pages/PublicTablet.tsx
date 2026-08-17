@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import type { NowServingChangedEvent, NowServingEndedEvent } from "../types/signalr.types";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import axios from "axios";
 import { Box, Button, Paper, Typography } from "@mui/material";
@@ -6,11 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { backendUrl } from "../constants/constants";
 import { useStaffContext } from "../context/useStaffContext";
 
-interface NowServingEvent {
-  number: number;
-  deskId: number;
-  queueId: number;
-}
+type NowServingEvent = NowServingChangedEvent | NowServingEndedEvent;
 
 interface PublicNowServing {
   queueId: number;

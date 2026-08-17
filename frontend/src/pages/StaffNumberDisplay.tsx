@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { NowServingChangedEvent, NowServingEndedEvent } from "../types/signalr.types";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import axios from "axios";
 import { Box, Button, Paper, Typography } from "@mui/material";
@@ -19,11 +20,7 @@ interface PublicQueue {
   isActive: boolean;
 }
 
-interface NowServingEvent {
-  number: number;
-  deskId: number;
-  queueId: number | string;
-}
+type NowServingEvent = NowServingChangedEvent | NowServingEndedEvent;
 
 interface QueueDisplayState {
   queueId: number;

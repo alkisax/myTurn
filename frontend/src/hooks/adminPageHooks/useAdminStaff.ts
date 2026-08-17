@@ -1,16 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { backendUrl } from "../../constants/constants";
+import type { AdminStaffMember } from "../../types/adminPanel.types";
 
-export interface AdminStaffMember {
-  id: number;
-  username: string;
-  name: string | null;
-  email: string | null;
-  role: string;
-  createdAt: string;
-  updatedAt: string;
-}
 export interface StaffFormValues {
   username: string;
   name: string;

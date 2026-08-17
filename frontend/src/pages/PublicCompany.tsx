@@ -1,21 +1,15 @@
 import { useEffect, useState } from "react";
+import type {
+  PublicCompany as PublicCompanyDataType,
+  PublicLocationSummary,
+} from "../types/public.types";
 import axios from "axios";
 import { Box, Card, CardActionArea, CardContent, Typography } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { backendUrl } from "../constants/constants";
 
-interface PublicCompanyData {
-  name: string;
-  slug: string;
-}
-
-interface PublicLocation {
-  id: number;
-  name: string;
-  slug: string;
-  address?: string | null;
-  country?: string | null;
-}
+type PublicCompanyData = PublicCompanyDataType & { slug: string };
+type PublicLocation = PublicLocationSummary;
 
 const PublicCompany = () => {
   const { companySlug } = useParams<{ companySlug: string }>();

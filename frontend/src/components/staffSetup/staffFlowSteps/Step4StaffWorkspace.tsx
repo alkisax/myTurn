@@ -7,6 +7,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import type { TicketIdentification } from "../../../types/staff.types";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -42,12 +43,6 @@ interface Props {
   onEndShift: () => void;
 }
 
-interface TicketIdentification {
-  number: number;
-  queueName: string;
-  status: string;
-  services: Array<{ id: number; name: string }>;
-}
 
 const Step4StaffWorkspace = ({
   desk,
