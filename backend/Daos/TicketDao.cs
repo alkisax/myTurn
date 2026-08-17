@@ -565,7 +565,7 @@ public class TicketDao(MyTurnContext context)
       .ToListAsync();
   }
 
-  public async Task<Ticket?> GetNowServingByQueueId(int queueId)
+  public async Task<List<Ticket>> GetServingByQueueId(int queueId)
   {
     return await context.Tickets
       .AsNoTracking()
@@ -573,7 +573,7 @@ public class TicketDao(MyTurnContext context)
         ticket.QueueId == queueId &&
         ticket.Status == "SERVING")
       .OrderBy(ticket => ticket.Number)
-      .FirstOrDefaultAsync();
+      .ToListAsync();
   }
 
 }

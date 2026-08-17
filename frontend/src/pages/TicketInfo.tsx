@@ -8,10 +8,14 @@ interface TicketInfoData {
   number: number;
   pin: string;
   status: string;
-  services?: Array<{ Name: string }>;
+  services?: Array<{ name: string }>;
   estimatedWaitingMinutes: number;
   peopleAhead: number;
-  nowServingNumber: number | null;
+  nowServing: Array<{
+    deskId: number;
+    deskName: string;
+    number: number;
+  }>;
 }
 
 const TicketInfo = () => {
@@ -60,15 +64,22 @@ const TicketInfo = () => {
         <Typography sx={{ mt: 2 }}>PIN: {ticket.pin}</Typography>
         <Typography>Status: {ticket.status}</Typography>
         <Typography>
-          Services: {ticket.services?.map((service) => service.Name).join(", ") || "None selected"}
+          Services: {ticket.services?.map((service) => service.name).join(", ") || "None selected"}
         </Typography>
         <Typography>
           Estimated waiting time: {ticket.estimatedWaitingMinutes.toFixed(1)} minutes
         </Typography>
         <Typography>Tickets ahead: {ticket.peopleAhead}</Typography>
-        <Typography>
-          Now serving: {ticket.nowServingNumber ?? "Nobody"}
-        </Typography>
+        <Typography sx={{ mt: 2 }}>Now serving</Typography>
+        {ticket.nowServing.length > 0 ? (
+          ticket.nowServing.map((entry) => (
+            <Typography key={entry.deskId}>
+              {entry.deskName} → {entry.number}
+            </Typography>
+          ))
+        ) : (
+          <Typography>Nobody</Typography>
+        )}
       </Paper>
     </Box>
   );

@@ -3,6 +3,12 @@
 using backend.Dtos.TicketServiceDtos;
 namespace backend.Dtos.TicketDtos;
 
+public record TicketServingInfoDto(
+  int DeskId,
+  string DeskName,
+  int Number
+);
+
 // o χρήστης θα ακολουθάει ένα qr και θα βλέπει τις πληροφορίες το ticket του
 // Δεν επιστρέφουμε: UserId CustomerEmail TrackingToken ServedByUserId
 public record TicketTrackingDto(
@@ -19,5 +25,5 @@ public record TicketTrackingDto(
   List<TicketServiceInfoDto>? Services = null,
   double EstimatedWaitingMinutes = 0,
   int PeopleAhead = 0,
-  int? NowServingNumber = null
+  List<TicketServingInfoDto>? NowServing = null
 );

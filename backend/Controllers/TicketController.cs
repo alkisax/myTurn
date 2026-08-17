@@ -27,6 +27,7 @@ public class TicketController
   private readonly TicketPdfService _ticketPdfService;
   private readonly CompanyDao _companyDao;
   private readonly LocationDao _locationDao;
+  private readonly DeskDao _deskDao;
   private readonly IConfiguration _configuration;
   private readonly IHubContext<QueueHub> _hubContext;
 
@@ -45,6 +46,7 @@ public class TicketController
     TicketPdfService ticketPdfService,
     CompanyDao companyDao,
     LocationDao locationDao,
+    DeskDao deskDao,
     IConfiguration configuration,
     IHubContext<QueueHub> hubContext
   )
@@ -63,6 +65,7 @@ public class TicketController
     _ticketPdfService = ticketPdfService;
     _companyDao = companyDao;
     _locationDao = locationDao;
+    _deskDao = deskDao;
     _configuration = configuration;
     _hubContext = hubContext;
   }
@@ -473,7 +476,26 @@ public class TicketController
       ticket.Number,
       queue.LastResetAt
     )).Count;
-    var nowServing = await _dao.GetNowServingByQueueId(ticket.QueueId);
+    var servingTickets = await _dao.GetServingByQueueId(ticket.QueueId);
+    var nowServing = new List<TicketServingInfoDto>();
+
+    foreach (var servingTicket in servingTickets)
+    {
+      if (servingTicket.ServedAtDeskId is null)
+      {
+        continue;
+      }
+
+      var desk = await _deskDao.GetById(servingTicket.ServedAtDeskId.Value);
+      if (desk is not null)
+      {
+        nowServing.Add(new TicketServingInfoDto(
+          desk.Id,
+          desk.Name,
+          servingTicket.Number
+        ));
+      }
+    }
 
     var data = new TicketTrackingDto(
       ticket.Id,
@@ -489,7 +511,7 @@ public class TicketController
       services,
       estimatedWaitingMinutes,
       peopleAhead,
-      nowServing?.Number
+      nowServing
     );
 
     return Results.Ok(new
