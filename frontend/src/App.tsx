@@ -19,6 +19,7 @@ import PublicTablet from "./pages/PublicTablet";
 import PublicTabletIssueTicket from "./pages/PublicTabletIssueTicket";
 import PublicTabletTicketResult from "./pages/PublicTabletTicketResult";
 import StaffNumberDisplay from "./pages/StaffNumberDisplay";
+import TicketInfo from "./pages/TicketInfo";
 
 
 function App() {
@@ -65,6 +66,7 @@ function App() {
         </Route>
 
         <Route path="/company-wizard" element={<CompanyWizard />} />
+        <Route path="/tickets/:trackingToken" element={<TicketInfo />} />
       </Route>
     </Routes>
   );

@@ -468,6 +468,13 @@ public class TicketController
         queue.LastResetAt
       );
 
+    var peopleAhead = (await _dao.GetWaitingAhead(
+      ticket.QueueId,
+      ticket.Number,
+      queue.LastResetAt
+    )).Count;
+    var nowServing = await _dao.GetNowServingByQueueId(ticket.QueueId);
+
     var data = new TicketTrackingDto(
       ticket.Id,
       ticket.CompanyId,
@@ -480,7 +487,9 @@ public class TicketController
       ticket.ServingStartedAt,
       ticket.CompletedAt,
       services,
-      estimatedWaitingMinutes
+      estimatedWaitingMinutes,
+      peopleAhead,
+      nowServing?.Number
     );
 
     return Results.Ok(new

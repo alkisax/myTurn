@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import axios from "axios";
 import { Box, Button, Paper, Typography } from "@mui/material";
+import { QRCodeSVG } from "qrcode.react";
 import { useNavigate } from "react-router-dom";
 import { useStaffContext } from "../context/useStaffContext";
 import { backendUrl } from "../constants/constants";
@@ -109,6 +110,11 @@ const PublicTabletTicketResult = () => {
           Queue
         </Typography>
         <Typography>{result.queueName}</Typography>
+        <QRCodeSVG
+          value={`${window.location.origin}/tickets/${result.ticket.trackingToken}`}
+          size={180}
+          style={{ marginTop: 24 }}
+        />
         {typeof result.ticket.estimatedWaitingMinutes === "number" && (
           <>
             <Typography variant="h6" sx={{ mt: 3 }}>

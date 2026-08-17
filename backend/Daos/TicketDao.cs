@@ -565,4 +565,15 @@ public class TicketDao(MyTurnContext context)
       .ToListAsync();
   }
 
+  public async Task<Ticket?> GetNowServingByQueueId(int queueId)
+  {
+    return await context.Tickets
+      .AsNoTracking()
+      .Where(ticket =>
+        ticket.QueueId == queueId &&
+        ticket.Status == "SERVING")
+      .OrderBy(ticket => ticket.Number)
+      .FirstOrDefaultAsync();
+  }
+
 }
