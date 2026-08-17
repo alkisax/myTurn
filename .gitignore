@@ -164,3 +164,4 @@ testSuperAdmin.http
 testLocation.http
 testAdminCompanyLocationStaff.http
 appsettings.Development.json
+backend/appsettings.Production.json
