@@ -42,18 +42,17 @@ public class TicketDao(MyTurnContext context)
     string pin
   )
   {
-    var today = DateTime.UtcNow.Date;
-    var tomorrow = today.AddDays(1);
-
-    return await context.Tickets
+    return await (
+      from ticket in context.Tickets.AsNoTracking()
+      join queue in context.Queues.AsNoTracking()
+        on ticket.QueueId equals queue.Id
       // το .Where θα μου επέστρεφε λιστα, ενώ το AnyAsync μου απαντάει ναι/οχι
       // αν υπάρχει εισιτήριο με ιδιο location που έχει ίδιο πιν και έχει εκδοθεί μετα απο σημερα και πριν απο αυριο
-      .AnyAsync(ticket =>
-        ticket.LocationId == locationId &&
-        ticket.Pin == pin &&
-        ticket.CreatedAt >= today &&
-        ticket.CreatedAt < tomorrow
-      );
+      where ticket.LocationId == locationId &&
+            ticket.Pin == pin &&
+            (queue.LastResetAt == null || ticket.CreatedAt >= queue.LastResetAt)
+      select ticket.Id
+    ).AnyAsync();
   }
 
   // 3. Αποθηκεύει το νέο Ticket μαζί με τα Services του σαν μία atomic διαδικασία.
