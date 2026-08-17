@@ -381,7 +381,11 @@ const StaffNumberDisplay = () => {
                     <Box key={current.deskId}>
                       <Typography
                         variant="h1"
-                        sx={{ fontWeight: 700, color: "#f06f6f" }}
+                        sx={{
+                          fontFamily: '"DSEG7 Classic", sans-serif',
+                          fontWeight: 700,
+                          color: "#f06f6f",
+                        }}
                       >
                         #{current.number}
                       </Typography>

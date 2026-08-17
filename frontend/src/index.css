@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "DSEG7 Classic";
+  src: url("./assets/DSEG7Classic-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --app-background: #1f1f1f;
   --text: #6b6375;
