@@ -1,6 +1,3 @@
-import { useEffect, useState } from "react";
-import type { PublicCompany, PublicLocationDetails, PublicQueue, PublicService } from "../types/public.types";
-import axios from "axios";
 import {
   Box,
   Button,
@@ -11,10 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { backendUrl } from "../constants/constants";
-
-type PublicCompanyData = PublicCompany;
-type PublicLocationData = PublicLocationDetails;
+import usePublicRemoteTicket from "../hooks/publicPageHooks/usePublicRemoteTicket";
 
 const PublicRemoteTicket = () => {
   const { companySlug, locationSlug, queueId } = useParams<{
@@ -23,104 +17,21 @@ const PublicRemoteTicket = () => {
     queueId: string;
   }>();
   const navigate = useNavigate();
-  const [company, setCompany] = useState<PublicCompanyData | null>(null);
-  const [location, setLocation] = useState<PublicLocationData | null>(null);
-  const [queue, setQueue] = useState<PublicQueue | null>(null);
-  const [services, setServices] = useState<PublicService[]>([]);
-  const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [loadErrorMessage, setLoadErrorMessage] = useState("");
-  const [submitErrorMessage, setSubmitErrorMessage] = useState("");
-
-  useEffect(() => {
-    if (!companySlug || !locationSlug || !queueId) {
-      return;
-    }
-
-    let ignore = false;
-    const publicBase = `${backendUrl}/public/${companySlug}`;
-    const locationBase = `${publicBase}/${locationSlug}`;
-
-    Promise.all([
-      axios.get(publicBase),
-      axios.get(locationBase),
-      axios.get(`${locationBase}/queues`),
-      axios.get(`${locationBase}/queues/${queueId}/services`),
-    ])
-      .then(([companyResponse, locationResponse, queuesResponse, servicesResponse]) => {
-        if (ignore) {
-          return;
-        }
-
-        const selectedQueue = (queuesResponse.data.data as PublicQueue[]).find(
-          (item) => item.id === Number(queueId)
-        );
-
-        setCompany(companyResponse.data.data);
-        setLocation(locationResponse.data.data);
-        setQueue(selectedQueue ?? null);
-        setServices(servicesResponse.data.data);
-
-        if (!selectedQueue || !selectedQueue.isRemoteTicketingAllowed) {
-          setLoadErrorMessage("This queue is not available for remote ticketing");
-        }
-      })
-      .catch((error: unknown) => {
-        if (!ignore) {
-          setLoadErrorMessage(
-            axios.isAxiosError(error) && error.response?.status === 404
-              ? "Company, location, or queue not found"
-              : "Unable to load ticket options"
-          );
-        }
-      })
-      .finally(() => {
-        if (!ignore) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [companySlug, locationSlug, queueId]);
-
-  const toggleService = (serviceId: number) => {
-    setSelectedServiceIds((current) =>
-      current.includes(serviceId)
-        ? current.filter((id) => id !== serviceId)
-        : [...current, serviceId]
-    );
-  };
-
-  const submitTicket = async () => {
-    if (!queue || !companySlug || !locationSlug) {
-      return;
-    }
-
-    setSubmitting(true);
-    setSubmitErrorMessage("");
-
-    try {
-      const response = await axios.post(`${backendUrl}/tickets`, {
-        queueId: queue.id,
-        email: email || null,
-        serviceIds: selectedServiceIds,
-      });
-      const trackingToken = response.data.data.trackingToken;
-      navigate(`/tickets/${trackingToken}`);
-    } catch (error: unknown) {
-      setSubmitErrorMessage(
-        axios.isAxiosError(error)
-          ? error.response?.data?.message || "Unable to create ticket"
-          : "Unable to create ticket"
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const {
+    company,
+    location,
+    queue,
+    services,
+    selectedServiceIds,
+    email,
+    setEmail,
+    loading,
+    submitting,
+    loadErrorMessage,
+    submitErrorMessage,
+    toggleService,
+    submitTicket,
+  } = usePublicRemoteTicket(companySlug, locationSlug, queueId);
 
   if (loading) {
     return (
@@ -209,7 +120,11 @@ const PublicRemoteTicket = () => {
           size="large"
           sx={{ mt: 3 }}
           disabled={submitting}
-          onClick={() => void submitTicket()}
+          onClick={() => {
+            void submitTicket().then((trackingToken) => {
+              if (trackingToken) navigate(`/tickets/${trackingToken}`);
+            });
+          }}
         >
           {submitting ? "Getting Ticket..." : "Get Ticket"}
         </Button>

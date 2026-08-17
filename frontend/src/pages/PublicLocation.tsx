@@ -1,6 +1,3 @@
-import { useEffect, useState } from "react";
-import type { PublicCompany, PublicLocationDetails, PublicQueue } from "../types/public.types";
-import axios from "axios";
 import {
   Box,
   Button,
@@ -10,10 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { backendUrl } from "../constants/constants";
-
-type PublicCompanyData = PublicCompany;
-type PublicLocationData = PublicLocationDetails;
+import usePublicLocation from "../hooks/publicPageHooks/usePublicLocation";
 
 const PublicLocation = () => {
   const { companySlug, locationSlug } = useParams<{
@@ -21,58 +15,8 @@ const PublicLocation = () => {
     locationSlug: string;
   }>();
   const navigate = useNavigate();
-  const [company, setCompany] = useState<PublicCompanyData | null>(null);
-  const [location, setLocation] = useState<PublicLocationData | null>(null);
-  const [queues, setQueues] = useState<PublicQueue[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    if (!companySlug || !locationSlug) {
-      return;
-    }
-
-    let ignore = false;
-    const publicBase = `${backendUrl}/public/${companySlug}`;
-    const locationBase = `${publicBase}/${locationSlug}`;
-
-    Promise.all([
-      axios.get(publicBase),
-      axios.get(locationBase),
-      axios.get(`${locationBase}/queues`),
-    ])
-      .then(([companyResponse, locationResponse, queuesResponse]) => {
-        if (ignore) {
-          return;
-        }
-
-        setCompany(companyResponse.data.data);
-        setLocation(locationResponse.data.data);
-        setQueues(
-          queuesResponse.data.data.filter(
-            (queue: PublicQueue) => queue.isRemoteTicketingAllowed
-          )
-        );
-      })
-      .catch((error: unknown) => {
-        if (!ignore) {
-          setErrorMessage(
-            axios.isAxiosError(error) && error.response?.status === 404
-              ? "Company or location not found"
-              : "Unable to load location queues"
-          );
-        }
-      })
-      .finally(() => {
-        if (!ignore) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [companySlug, locationSlug]);
+  const { company, location, queues, loading, errorMessage } =
+    usePublicLocation(companySlug, locationSlug);
 
   if (loading) {
     return (
@@ -132,9 +76,7 @@ const PublicLocation = () => {
           <Card key={queue.id}>
             <CardActionArea
               onClick={() =>
-                navigate(
-                  `/${companySlug}/${locationSlug}/queues/${queue.id}`
-                )
+                navigate(`/${companySlug}/${locationSlug}/queues/${queue.id}`)
               }
             >
               <CardContent>
@@ -156,10 +98,7 @@ const PublicLocation = () => {
         )}
       </Box>
 
-      <Button
-        variant="outlined"
-        onClick={() => navigate(`/${companySlug}`)}
-      >
+      <Button variant="outlined" onClick={() => navigate(`/${companySlug}`)}>
         Back to locations
       </Button>
     </Box>

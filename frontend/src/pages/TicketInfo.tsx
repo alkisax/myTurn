@@ -1,40 +1,10 @@
-import { useEffect, useState } from "react";
-import type { TicketInfoData as PublicTicketInfoData } from "../types/ticket.types";
 import { Box, Paper, Typography } from "@mui/material";
 import { useParams } from "react-router-dom";
-import axios from "axios";
-import { backendUrl } from "../constants/constants";
-
-type TicketInfoData = PublicTicketInfoData;
+import useTicketInfo from "../hooks/publicPageHooks/useTicketInfo";
 
 const TicketInfo = () => {
   const { trackingToken } = useParams<{ trackingToken: string }>();
-  const [ticket, setTicket] = useState<TicketInfoData | null>(null);
-
-  useEffect(() => {
-    if (!trackingToken) {
-      return;
-    }
-
-    let ignore = false;
-
-    axios
-      .get(`${backendUrl}/tickets/${trackingToken}`)
-      .then((response) => {
-        if (!ignore) {
-          setTicket(response.data.data);
-        }
-      })
-      .catch((error: unknown) => {
-        if (!ignore) {
-          console.error("Failed to load ticket information:", error);
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [trackingToken]);
+  const { ticket } = useTicketInfo(trackingToken);
 
   if (!ticket) {
     return (
@@ -45,7 +15,9 @@ const TicketInfo = () => {
   }
 
   return (
-    <Box sx={{ p: { xs: 3, sm: 6 }, display: "flex", justifyContent: "center" }}>
+    <Box
+      sx={{ p: { xs: 3, sm: 6 }, display: "flex", justifyContent: "center" }}
+    >
       <Paper sx={{ p: 4, width: "100%", maxWidth: 520 }}>
         <Typography variant="h3" sx={{ textAlign: "center" }}>
           #{ticket.number}
@@ -53,10 +25,13 @@ const TicketInfo = () => {
         <Typography sx={{ mt: 2 }}>PIN: {ticket.pin}</Typography>
         <Typography>Status: {ticket.status}</Typography>
         <Typography>
-          Services: {ticket.services?.map((service) => service.name).join(", ") || "None selected"}
+          Services:{" "}
+          {ticket.services?.map((service) => service.name).join(", ") ||
+            "None selected"}
         </Typography>
         <Typography>
-          Estimated waiting time: {ticket.estimatedWaitingMinutes.toFixed(1)} minutes
+          Estimated waiting time: {ticket.estimatedWaitingMinutes.toFixed(1)}{" "}
+          minutes
         </Typography>
         <Typography>Tickets ahead: {ticket.peopleAhead}</Typography>
         <Typography sx={{ mt: 2 }}>Now serving</Typography>

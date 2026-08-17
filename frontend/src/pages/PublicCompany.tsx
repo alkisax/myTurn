@@ -1,63 +1,18 @@
-import { useEffect, useState } from "react";
-import type {
-  PublicCompany as PublicCompanyDataType,
-  PublicLocationSummary,
-} from "../types/public.types";
-import axios from "axios";
-import { Box, Card, CardActionArea, CardContent, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardActionArea,
+  CardContent,
+  Typography,
+} from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { backendUrl } from "../constants/constants";
-
-type PublicCompanyData = PublicCompanyDataType & { slug: string };
-type PublicLocation = PublicLocationSummary;
+import usePublicCompany from "../hooks/publicPageHooks/usePublicCompany";
 
 const PublicCompany = () => {
   const { companySlug } = useParams<{ companySlug: string }>();
   const navigate = useNavigate();
-  const [company, setCompany] = useState<PublicCompanyData | null>(null);
-  const [locations, setLocations] = useState<PublicLocation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    if (!companySlug) {
-      return;
-    }
-
-    let ignore = false;
-    const publicBase = `${backendUrl}/public/${companySlug}`;
-
-    Promise.all([
-      axios.get(publicBase),
-      axios.get(`${publicBase}/locations`),
-    ])
-      .then(([companyResponse, locationsResponse]) => {
-        if (ignore) {
-          return;
-        }
-
-        setCompany(companyResponse.data.data);
-        setLocations(locationsResponse.data.data);
-      })
-      .catch((error: unknown) => {
-        if (!ignore) {
-          setErrorMessage(
-            axios.isAxiosError(error) && error.response?.status === 404
-              ? "Company not found"
-              : "Unable to load company locations"
-          );
-        }
-      })
-      .finally(() => {
-        if (!ignore) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [companySlug]);
+  const { company, locations, loading, errorMessage } =
+    usePublicCompany(companySlug);
 
   if (loading) {
     return (

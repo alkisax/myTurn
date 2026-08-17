@@ -1,164 +1,39 @@
-// frontend/src/components/companySetup/companyWizardSteps/Step4CompanyActions.tsx
+// Step 4 του wizard: εμφανίζει staff και locations της organization.
 
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useState } from "react";
 import { Button } from "@mui/material";
 
 import RegisterStaffPage from "../../../authLogin/loginBackend/RegisterStaffPage";
+import useCompanySetupActions from "../../../hooks/companySetupHooks/useCompanySetupActions";
 import CreateLocationForm from "../CreateLocationForm";
-import { backendUrl } from "../../../constants/constants";
-import type { Roles } from "../../../authLogin/types/types";
-
-type Company = CompanySummary;
-
-interface Staff {
-  id: number;
-  username: string;
-  name?: string;
-  email?: string;
-  role: Roles;
-  createdAt: string;
-  updatedAt: string;
-}
-
+import type { CompanySummary } from "../../../types/company.types";
+import type { Location } from "../../../types/location.types";
 
 interface Props {
-  company: Company;
+  company: CompanySummary;
   onSelectLocation: (location: Location) => void;
 }
 
-const Step4CompanyActions = ({
-  company,
-  onSelectLocation,
-}: Props) => {
-  const [staff, setStaff] = useState<Staff[]>([]);
+const Step4CompanyActions = ({ company, onSelectLocation }: Props) => {
   const [showStaffForm, setShowStaffForm] = useState(false);
-
-  const [locations, setLocations] = useState<Location[]>([]);
   const [showLocationForm, setShowLocationForm] = useState(false);
 
-  // Initial load STAFF
-  useEffect(() => {
-    let ignore = false;
-
-    const token = localStorage.getItem("token");
-
-    axios
-      .get(
-        `${backendUrl}/company-users/company/${company.id}/staff`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      .then((response) => {
-        if (!ignore) {
-          setStaff(response.data.data);
-        }
-      })
-      .catch((error) => {
-        if (!ignore) {
-          console.error("Failed to fetch staff:", error);
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [company.id]);
-
-  // Initial load LOCATIONS
-  useEffect(() => {
-    let ignore = false;
-
-    const token = localStorage.getItem("token");
-
-    axios
-      .get(
-        `${backendUrl}/locations/company/${company.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      .then((response) => {
-        if (!ignore) {
-          setLocations(response.data.data);
-        }
-      })
-      .catch((error) => {
-        if (!ignore) {
-          console.error("Failed to fetch locations:", error);
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [company.id]);
-
-  // Manual refresh μετά από create staff
-  const fetchStaff = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await axios.get(
-        `${backendUrl}/company-users/company/${company.id}/staff`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setStaff(response.data.data);
-    } catch (error) {
-      console.error("Failed to fetch staff:", error);
-    }
-  };
-
-  // Manual refresh μετά από create location
-  const fetchLocations = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await axios.get(
-        `${backendUrl}/locations/company/${company.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setLocations(response.data.data);
-    } catch (error) {
-      console.error("Failed to fetch locations:", error);
-    }
-  };
+  const { staff, locations, fetchStaff, fetchLocations } =
+    useCompanySetupActions(company);
 
   return (
     <div className="flex min-h-[calc(100vh-64px)] flex-col items-center justify-center gap-6">
-      <h1 className="text-2xl font-bold">
-        Step 4 — Set up {company.name}
-      </h1>
+      <h1 className="text-2xl font-bold">Step 4 — Set up {company.name}</h1>
 
-      {/* STAFF */}
       <div className="flex w-full max-w-md flex-col gap-3">
-        <h2 className="text-xl font-bold">
-          Staff
-        </h2>
-
+        <h2 className="text-xl font-bold">Staff</h2>
         <p>
-          Staff are employees who serve customers. They will later start a
-          work session at a desk, and staff accounts are created by the admin.
+          Staff are employees who serve customers. They will later start a work
+          session at a desk, and staff accounts are created by the admin.
         </p>
-
         <Button
           variant="contained"
-          onClick={() => setShowStaffForm((prev) => !prev)}
+          onClick={() => setShowStaffForm((previous) => !previous)}
         >
           Add Staff Member
         </Button>
@@ -175,15 +50,9 @@ const Step4CompanyActions = ({
 
         {staff.length > 0 && (
           <div className="flex flex-col gap-2">
-            <h3 className="font-bold">
-              Staff members
-            </h3>
-
+            <h3 className="font-bold">Staff members</h3>
             {staff.map((staffMember) => (
-              <Button
-                key={staffMember.id}
-                variant="outlined"
-              >
+              <Button key={staffMember.id} variant="outlined">
                 {staffMember.name || staffMember.username}
               </Button>
             ))}
@@ -191,21 +60,16 @@ const Step4CompanyActions = ({
         )}
       </div>
 
-      {/* LOCATIONS */}
       <div className="flex w-full max-w-md flex-col gap-3">
-        <h2 className="text-xl font-bold">
-          Locations
-        </h2>
-
+        <h2 className="text-xl font-bold">Locations</h2>
         <p>
           A location can be a branch, office, shop, or public service point.
           Queues, services, and desks are configured inside a location, and a
           company can have more than one location.
         </p>
-
         <Button
           variant="contained"
-          onClick={() => setShowLocationForm((prev) => !prev)}
+          onClick={() => setShowLocationForm((previous) => !previous)}
         >
           Add Location
         </Button>
@@ -222,10 +86,7 @@ const Step4CompanyActions = ({
 
         {locations.length > 0 && (
           <div className="flex flex-col gap-2">
-            <h3 className="font-bold">
-              Locations
-            </h3>
-
+            <h3 className="font-bold">Locations</h3>
             {locations.map((location) => (
               <Button
                 key={location.id}
@@ -243,5 +104,3 @@ const Step4CompanyActions = ({
 };
 
 export default Step4CompanyActions;
-import type { CompanySummary } from "../../../types/company.types";
-import type { Location } from "../../../types/location.types";

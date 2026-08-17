@@ -1,78 +1,36 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { TicketResult } from "../types/ticket.types";
-import axios from "axios";
 import { Box, Button, Paper, Typography } from "@mui/material";
 import { QRCodeSVG } from "qrcode.react";
 import { useNavigate } from "react-router-dom";
 import { useStaffContext } from "../context/useStaffContext";
-import { backendUrl } from "../constants/constants";
-
+import usePublicTabletTicketResult from "../hooks/publicPageHooks/usePublicTabletTicketResult";
 
 const ticketStorageKey = "myturn-public-tablet-ticket";
 
 const PublicTabletTicketResult = () => {
   const navigate = useNavigate();
   const { session } = useStaffContext();
-  const [result, setResult] = useState<TicketResult | null>(null);
-  const [secondsRemaining, setSecondsRemaining] = useState(60);
+  const [restoredResult, setRestoredResult] = useState<TicketResult | null>(
+    null,
+  );
+  const { trackingData, secondsRemaining, countdownFinished } =
+    usePublicTabletTicketResult(restoredResult);
 
   useEffect(() => {
     const storedResult = sessionStorage.getItem(ticketStorageKey);
-    let ignore = false;
-
-    Promise.resolve(storedResult).then(async (storedValue) => {
-      if (storedValue) {
-        const storedTicket = JSON.parse(storedValue) as TicketResult;
-
-        if (!ignore) {
-          setResult(storedTicket);
-        }
-
-        if (storedTicket.ticket.trackingToken) {
-          try {
-            const response = await axios.get(
-              `${backendUrl}/tickets/${storedTicket.ticket.trackingToken}`
-            );
-
-            if (!ignore) {
-              setResult((currentResult) =>
-                currentResult
-                  ? {
-                      ...currentResult,
-                      ticket: {
-                        ...currentResult.ticket,
-                        estimatedWaitingMinutes:
-                          response.data.data.estimatedWaitingMinutes,
-                      },
-                    }
-                  : currentResult
-              );
-            }
-          } catch (error: unknown) {
-            if (!ignore) {
-              console.error("Failed to fetch ticket estimate:", error);
-            }
-          }
-        }
-      }
+    Promise.resolve().then(() => {
+      if (storedResult)
+        setRestoredResult(JSON.parse(storedResult) as TicketResult);
     });
-
-    const intervalId = window.setInterval(() => {
-      setSecondsRemaining((seconds) => seconds - 1);
-    }, 1000);
-    const timeoutId = window.setTimeout(() => {
-      sessionStorage.removeItem(ticketStorageKey);
-      navigate("/staff/public-tablet", { replace: true });
-    }, 60000);
-
-    return () => {
-      ignore = true;
-      window.clearInterval(intervalId);
-      window.clearTimeout(timeoutId);
-    };
-  }, [navigate]);
-
-  if (!session || !result) {
+  }, []);
+  useEffect(() => {
+    if (!countdownFinished) return;
+    sessionStorage.removeItem(ticketStorageKey);
+    navigate("/staff/public-tablet", { replace: true });
+  }, [countdownFinished, navigate]);
+  const displayResult = trackingData;
+  if (!session || !displayResult) {
     return (
       <TabletLayout>
         <Typography variant="h4">Ticket result unavailable</Typography>
@@ -85,6 +43,7 @@ const PublicTabletTicketResult = () => {
       </TabletLayout>
     );
   }
+  const result = displayResult;
 
   return (
     <TabletLayout>

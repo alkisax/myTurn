@@ -1,17 +1,8 @@
 // frontend/src/components/staffSetup/staffFlowSteps/Step4StaffWorkspace.tsx
 
-import {
-  Box,
-  Button,
-  Paper,
-  TextField,
-  Typography,
-} from "@mui/material";
-import type { TicketIdentification } from "../../../types/staff.types";
-import axios from "axios";
+import { Box, Button, Paper, TextField, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { backendUrl } from "../../../constants/constants";
+import useStaffTicketIdentification from "../../../hooks/staffPageHooks/useStaffTicketIdentification";
 import type {
   StaffDesk,
   StaffSession,
@@ -43,7 +34,6 @@ interface Props {
   onEndShift: () => void;
 }
 
-
 const Step4StaffWorkspace = ({
   desk,
   session,
@@ -66,37 +56,17 @@ const Step4StaffWorkspace = ({
   onEndShift,
 }: Props) => {
   const navigate = useNavigate();
-  const [pin, setPin] = useState("");
-  const [identification, setIdentification] = useState<TicketIdentification | null>(null);
-  const [identifying, setIdentifying] = useState(false);
-  const [identificationMessage, setIdentificationMessage] = useState("");
   const isBreak = session.status === "BREAK";
-
-  const identifyTicket = async () => {
-    setIdentification(null);
-    setIdentificationMessage("");
-    setIdentifying(true);
-
-    try {
-      const response = await axios.get(
-        `${backendUrl}/tickets/identify-by-pin/${encodeURIComponent(pin)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      setIdentification(response.data.data);
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.status === 404) {
-        setIdentificationMessage("Ticket not found");
-      } else {
-        setIdentificationMessage("Failed to search for ticket");
-      }
-    } finally {
-      setIdentifying(false);
-    }
-  };
+  const {
+    pin,
+    setPin,
+    identification,
+    identifying,
+    identificationMessage,
+    identifyTicket,
+  } = useStaffTicketIdentification({
+    token: localStorage.getItem("token"),
+  });
 
   return (
     <Box
@@ -108,23 +78,15 @@ const Step4StaffWorkspace = ({
         gap: 3,
       }}
     >
-      <Typography variant="h5">
-        Step 4 — Staff Workspace
-      </Typography>
+      <Typography variant="h5">Step 4 — Staff Workspace</Typography>
 
       {/* WORKPLACE */}
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h6">
-          {desk.name}
-        </Typography>
+        <Typography variant="h6">{desk.name}</Typography>
 
-        <Typography>
-          Location: {desk.locationName}
-        </Typography>
+        <Typography>Location: {desk.locationName}</Typography>
 
-        <Typography>
-          Queue: {desk.queueName}
-        </Typography>
+        <Typography>Queue: {desk.queueName}</Typography>
 
         <Typography
           sx={{
@@ -171,7 +133,10 @@ const Step4StaffWorkspace = ({
             <Typography>Queue: {identification.queueName}</Typography>
             <Typography>Status: {identification.status}</Typography>
             <Typography>
-              Services: {identification.services.map((service) => service.name).join(", ") || "None selected"}
+              Services:{" "}
+              {identification.services
+                .map((service) => service.name)
+                .join(", ") || "None selected"}
             </Typography>
           </Box>
         )}
@@ -186,76 +151,47 @@ const Step4StaffWorkspace = ({
         }}
       >
         <Paper sx={{ p: 2, flex: 1, minWidth: 130 }}>
-          <Typography color="text.secondary">
-            Waiting
-          </Typography>
+          <Typography color="text.secondary">Waiting</Typography>
 
-          <Typography variant="h4">
-            {waitingCount}
-          </Typography>
+          <Typography variant="h4">{waitingCount}</Typography>
         </Paper>
 
         <Paper sx={{ p: 2, flex: 1, minWidth: 130 }}>
-          <Typography color="text.secondary">
-            Serving
-          </Typography>
+          <Typography color="text.secondary">Serving</Typography>
 
-          <Typography variant="h4">
-            {servingCount}
-          </Typography>
+          <Typography variant="h4">{servingCount}</Typography>
         </Paper>
 
         <Paper sx={{ p: 2, flex: 1, minWidth: 130 }}>
-          <Typography color="text.secondary">
-            Missed
-          </Typography>
+          <Typography color="text.secondary">Missed</Typography>
 
-          <Typography variant="h4">
-            {missedCount}
-          </Typography>
+          <Typography variant="h4">{missedCount}</Typography>
         </Paper>
 
         <Paper sx={{ p: 2, flex: 1, minWidth: 130 }}>
-          <Typography color="text.secondary">
-            Total
-          </Typography>
+          <Typography color="text.secondary">Total</Typography>
 
-          <Typography variant="h4">
-            {totalTickets}
-          </Typography>
+          <Typography variant="h4">{totalTickets}</Typography>
         </Paper>
       </Box>
 
-      {errorMessage && (
-        <Typography color="error">
-          {errorMessage}
-        </Typography>
-      )}
+      {errorMessage && <Typography color="error">{errorMessage}</Typography>}
 
       {/* CURRENT TICKET */}
       {currentTicket && (
         <Paper sx={{ p: 3 }}>
-          <Typography variant="h6">
-            Current Customer
-          </Typography>
+          <Typography variant="h6">Current Customer</Typography>
 
-          <Typography
-            variant="h3"
-            sx={{ my: 2 }}
-          >
+          <Typography variant="h3" sx={{ my: 2 }}>
             #{currentTicket.number}
           </Typography>
 
           {currentTicket.services.length > 0 && (
             <Box sx={{ mb: 2 }}>
-              <Typography sx={{ fontWeight: 700 }}>
-                Services
-              </Typography>
+              <Typography sx={{ fontWeight: 700 }}>Services</Typography>
 
               {currentTicket.services.map((service) => (
-                <Typography key={service.id}>
-                  {service.name}
-                </Typography>
+                <Typography key={service.id}>{service.name}</Typography>
               ))}
             </Box>
           )}
@@ -301,9 +237,7 @@ const Step4StaffWorkspace = ({
 
       {/* WAITING */}
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h6">
-          Waiting
-        </Typography>
+        <Typography variant="h6">Waiting</Typography>
 
         {waitingTickets.length === 0 && (
           <Typography color="text.secondary">
@@ -328,14 +262,11 @@ const Step4StaffWorkspace = ({
                 gap: 2,
               }}
             >
-              <Typography sx={{ fontWeight: 700 }}>
-                #{ticket.number}
-              </Typography>
+              <Typography sx={{ fontWeight: 700 }}>#{ticket.number}</Typography>
 
               <Typography color="text.secondary">
-                {ticket.services
-                  .map((service) => service.name)
-                  .join(", ") || "No service selected"}
+                {ticket.services.map((service) => service.name).join(", ") ||
+                  "No service selected"}
               </Typography>
             </Box>
           ))}
@@ -344,9 +275,7 @@ const Step4StaffWorkspace = ({
 
       {/* SERVING */}
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h6">
-          Currently Serving
-        </Typography>
+        <Typography variant="h6">Currently Serving</Typography>
 
         {servingTickets.length === 0 && (
           <Typography color="text.secondary">
@@ -364,14 +293,11 @@ const Step4StaffWorkspace = ({
               gap: 2,
             }}
           >
-            <Typography sx={{ fontWeight: 700 }}>
-              #{ticket.number}
-            </Typography>
+            <Typography sx={{ fontWeight: 700 }}>#{ticket.number}</Typography>
 
             <Typography color="text.secondary">
-              {ticket.services
-                .map((service) => service.name)
-                .join(", ") || "No service selected"}
+              {ticket.services.map((service) => service.name).join(", ") ||
+                "No service selected"}
             </Typography>
           </Box>
         ))}
@@ -379,14 +305,10 @@ const Step4StaffWorkspace = ({
 
       {/* MISSED */}
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h6">
-          Missed Tickets
-        </Typography>
+        <Typography variant="h6">Missed Tickets</Typography>
 
         {missedTickets.length === 0 && (
-          <Typography color="text.secondary">
-            No missed tickets.
-          </Typography>
+          <Typography color="text.secondary">No missed tickets.</Typography>
         )}
 
         <Box
@@ -413,9 +335,8 @@ const Step4StaffWorkspace = ({
                 </Typography>
 
                 <Typography color="text.secondary">
-                  {ticket.services
-                    .map((service) => service.name)
-                    .join(", ") || "No service selected"}
+                  {ticket.services.map((service) => service.name).join(", ") ||
+                    "No service selected"}
                 </Typography>
               </Box>
 
@@ -440,14 +361,8 @@ const Step4StaffWorkspace = ({
             gap: 2,
           }}
         >
-          <Button
-            variant="outlined"
-            disabled={loading}
-            onClick={onToggleBreak}
-          >
-            {isBreak
-              ? "Return to Work"
-              : "Take Break"}
+          <Button variant="outlined" disabled={loading} onClick={onToggleBreak}>
+            {isBreak ? "Return to Work" : "Take Break"}
           </Button>
 
           <Button
