@@ -55,6 +55,13 @@ public static class TicketEndpoints
     })
     .RequireAuthorization();
 
+    group.MapGet("/identify-by-pin/{pin}", async (
+      string pin,
+      TicketController controller,
+      HttpContext context
+    ) => await controller.IdentifyByPin(pin, context.User))
+    .RequireAuthorization();
+
     // GET /tickets/{trackingToken}
     // Public tracking endpoint. δεν βάζουμε: .RequireAuthorization()
     group.MapGet("/{trackingToken}", async (

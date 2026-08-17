@@ -562,6 +562,73 @@ public class TicketController
     });
   }
 
+  public async Task<IResult> IdentifyByPin(
+    string pin,
+    ClaimsPrincipal currentUser
+  )
+  {
+    if (currentUser.FindFirst(ClaimTypes.Role)?.Value != "STAFF")
+    {
+      return Results.Forbid();
+    }
+
+    var userIdString = currentUser.FindFirst("id")?.Value;
+    if (!int.TryParse(userIdString, out var userId))
+    {
+      return Results.Unauthorized();
+    }
+
+    var session = await _staffSessionDao.GetActiveByUserId(userId);
+    if (session is null)
+    {
+      return Results.BadRequest(new
+      {
+        status = false,
+        message = "An active staff session is required"
+      });
+    }
+
+    var ticket = await _dao.GetByPinAndLocation(pin, session.LocationId);
+    if (ticket is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Ticket not found"
+      });
+    }
+
+    var queue = await _queueDao.GetById(ticket.QueueId);
+    if (queue is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Ticket not found"
+      });
+    }
+
+    var services = (await GetServicesForTicket(ticket.Id))
+      .Select(service => new TicketIdentificationServiceDto(
+        service.ServiceId,
+        service.Name
+      ))
+      .ToList();
+
+    return Results.Ok(new
+    {
+      status = true,
+      data = new TicketIdentificationDto(
+        ticket.Number,
+        ticket.Pin,
+        ticket.QueueId,
+        queue.Name,
+        ticket.Status,
+        services
+      )
+    });
+  }
+
   public async Task<MyTicketDto?> GetServingForStaffSession(
     int userId,
     int deskId,

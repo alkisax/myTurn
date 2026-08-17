@@ -269,6 +269,51 @@ public class StaffSessionTests
   }
 
   [Fact]
+  public async Task StaffCanIdentifyTicketByPinAcrossQueuesInOwnLocation()
+  {
+    await CheckBackendIsRunning();
+    StaffSetup setup = await CreateSetupAndStaff();
+    await StartSession(setup);
+
+    int otherQueueId = await ReadId(await SendWithToken(
+      HttpMethod.Post,
+      "/queues/",
+      setup.AdminToken,
+      new
+      {
+        locationId = setup.LocationId,
+        name = $"other_staff_queue_{Guid.NewGuid():N}",
+        description = "other queue",
+        autoResetEnabled = false,
+        resetAt = (string?)null
+      }
+    ));
+    HttpResponseMessage ticketResponse = await Client.PostAsJsonAsync(
+      "/tickets/",
+      new { queueId = otherQueueId, email = (string?)null, serviceIds = (int[]?)null }
+    );
+    using JsonDocument ticketJson = JsonDocument.Parse(
+      await ticketResponse.Content.ReadAsStringAsync()
+    );
+    string pin = ticketJson.RootElement.GetProperty("data").GetProperty("pin").GetString()!;
+
+    HttpResponseMessage response = await SendWithToken(
+      HttpMethod.Get,
+      $"/tickets/identify-by-pin/{pin}",
+      setup.StaffToken
+    );
+
+    using JsonDocument identificationJson = JsonDocument.Parse(
+      await response.Content.ReadAsStringAsync()
+    );
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    Assert.Equal(
+      otherQueueId,
+      identificationJson.RootElement.GetProperty("data").GetProperty("queueId").GetInt32()
+    );
+  }
+
+  [Fact]
   public async Task StaffServingTicketRecoveryIsScopedToStaffAndDesk()
   {
     await CheckBackendIsRunning();

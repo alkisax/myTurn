@@ -4,9 +4,13 @@ import {
   Box,
   Button,
   Paper,
+  TextField,
   Typography,
 } from "@mui/material";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { backendUrl } from "../../../constants/constants";
 import type {
   StaffDesk,
   StaffSession,
@@ -38,6 +42,13 @@ interface Props {
   onEndShift: () => void;
 }
 
+interface TicketIdentification {
+  number: number;
+  queueName: string;
+  status: string;
+  services: Array<{ id: number; name: string }>;
+}
+
 const Step4StaffWorkspace = ({
   desk,
   session,
@@ -60,7 +71,37 @@ const Step4StaffWorkspace = ({
   onEndShift,
 }: Props) => {
   const navigate = useNavigate();
+  const [pin, setPin] = useState("");
+  const [identification, setIdentification] = useState<TicketIdentification | null>(null);
+  const [identifying, setIdentifying] = useState(false);
+  const [identificationMessage, setIdentificationMessage] = useState("");
   const isBreak = session.status === "BREAK";
+
+  const identifyTicket = async () => {
+    setIdentification(null);
+    setIdentificationMessage("");
+    setIdentifying(true);
+
+    try {
+      const response = await axios.get(
+        `${backendUrl}/tickets/identify-by-pin/${encodeURIComponent(pin)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setIdentification(response.data.data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        setIdentificationMessage("Ticket not found");
+      } else {
+        setIdentificationMessage("Failed to search for ticket");
+      }
+    } finally {
+      setIdentifying(false);
+    }
+  };
 
   return (
     <Box
@@ -98,6 +139,47 @@ const Step4StaffWorkspace = ({
         >
           Status: {session.status}
         </Typography>
+      </Paper>
+
+      <Paper sx={{ p: 2 }}>
+        <Typography variant="h6">Search Ticket by PIN</Typography>
+        <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+          <TextField
+            size="small"
+            label="PIN"
+            value={pin}
+            onChange={(event) => setPin(event.target.value)}
+            slotProps={{
+              htmlInput: { maxLength: 4, inputMode: "numeric" },
+            }}
+          />
+          <Button
+            variant="contained"
+            disabled={identifying || pin.length === 0}
+            onClick={() => void identifyTicket()}
+          >
+            {identifying ? "Searching..." : "Search"}
+          </Button>
+        </Box>
+
+        {identificationMessage && (
+          <Typography color="error" sx={{ mt: 1 }}>
+            {identificationMessage}
+          </Typography>
+        )}
+
+        {identification && (
+          <Box sx={{ mt: 2 }}>
+            <Typography sx={{ fontWeight: 700 }}>
+              Ticket #{identification.number}
+            </Typography>
+            <Typography>Queue: {identification.queueName}</Typography>
+            <Typography>Status: {identification.status}</Typography>
+            <Typography>
+              Services: {identification.services.map((service) => service.name).join(", ") || "None selected"}
+            </Typography>
+          </Box>
+        )}
       </Paper>
 
       {/* COUNTS */}

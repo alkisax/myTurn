@@ -178,6 +178,23 @@ public class TicketDao(MyTurnContext context)
       );
   }
 
+  public async Task<Ticket?> GetByPinAndLocation(
+    string pin,
+    int locationId
+  )
+  {
+    return await (
+      from ticket in context.Tickets.AsNoTracking()
+      join queue in context.Queues.AsNoTracking()
+        on ticket.QueueId equals queue.Id
+      where ticket.LocationId == locationId &&
+            ticket.Pin == pin &&
+            (queue.LastResetAt == null || ticket.CreatedAt >= queue.LastResetAt)
+      orderby ticket.CreatedAt descending
+      select ticket
+    ).FirstOrDefaultAsync();
+  }
+
   public async Task<List<Ticket>> GetServingByLocationId(int locationId)
   {
     return await context.Tickets

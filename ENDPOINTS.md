@@ -691,6 +691,14 @@ The StaffSession flow remains unchanged:
 - Errors: `401`, `403` where controller ownership rules reject access.
 - Ελληνικά: Ο USER βλέπει τα tickets που έχει εκδώσει ο ίδιος.
 
+### `GET /tickets/identify-by-pin/{pin}`
+
+- Authorization: STAFF only. The STAFF user must have an active StaffSession.
+- Scope: searches only the active/reset ticket scope for the session's current location. The ticket may belong to any queue in that location.
+- Success: `200 OK` with `{ "status": true, "data": { "number": 48, "pin": "4242", "queueId": 5, "queueName": "Deli Queue", "status": "WAITING", "services": [{ "id": 3, "name": "Ham" }] } }`.
+- Errors: `401` when the user identity is invalid, `403` for non-STAFF users, `400` when no active StaffSession exists, and `404` when no matching PIN exists in the current location/reset scope.
+- This is an identification-only lookup and does not change ticket state or expose customer/private tracking fields.
+
 ### `GET /tickets/{trackingToken}`
 
 - Authorization: Public / Anonymous.
