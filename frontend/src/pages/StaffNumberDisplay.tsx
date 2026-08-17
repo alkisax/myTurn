@@ -301,7 +301,6 @@ const StaffNumberDisplay = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
         p: { xs: 2, sm: 4 },
         display: "flex",
         flexDirection: "column",
@@ -339,8 +338,8 @@ const StaffNumberDisplay = () => {
 
       <Box
         sx={{
-          flex: 1,
           display: "grid",
+          alignItems: "start",
           gridTemplateColumns: {
             xs: "1fr",
             sm: `repeat(${columnCount}, minmax(0, 1fr))`,
@@ -356,7 +355,7 @@ const StaffNumberDisplay = () => {
               key={queue.id}
               sx={{
                 p: { xs: 3, sm: 5 },
-                minHeight: 260,
+                aspectRatio: "1 / 1",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
