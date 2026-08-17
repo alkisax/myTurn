@@ -20,6 +20,9 @@ import PublicTabletIssueTicket from "./pages/PublicTabletIssueTicket";
 import PublicTabletTicketResult from "./pages/PublicTabletTicketResult";
 import StaffNumberDisplay from "./pages/StaffNumberDisplay";
 import TicketInfo from "./pages/TicketInfo";
+import PublicCompany from "./pages/PublicCompany";
+import PublicLocation from "./pages/PublicLocation";
+import PublicRemoteTicket from "./pages/PublicRemoteTicket";
 
 
 function App() {
@@ -67,6 +70,15 @@ function App() {
 
         <Route path="/company-wizard" element={<CompanyWizard />} />
         <Route path="/tickets/:trackingToken" element={<TicketInfo />} />
+        <Route path="/:companySlug" element={<PublicCompany />} />
+        <Route
+          path="/:companySlug/:locationSlug"
+          element={<PublicLocation />}
+        />
+        <Route
+          path="/:companySlug/:locationSlug/queues/:queueId"
+          element={<PublicRemoteTicket />}
+        />
       </Route>
     </Routes>
   );
