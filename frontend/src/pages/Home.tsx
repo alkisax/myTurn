@@ -45,9 +45,9 @@ const Home = () => {
       <Box
         sx={{
           display: "flex",
+          flexDirection: "column",
           gap: 3,
-          flexWrap: "wrap",
-          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         {/* CUSTOMER */}
