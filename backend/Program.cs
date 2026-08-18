@@ -90,7 +90,7 @@ app.MapHub<QueueHub>("/queue-hub");
 
 app.MapGet("/", () => "Hello World!");
 app.MapGet("/health", () => "ok");
-app.MapGet("/api/ping", () =>
+app.MapGet("/ping", () =>
 {
   System.Console.WriteLine("someone pinged here");
   return "Pong";
