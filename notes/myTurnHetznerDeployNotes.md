@@ -1,12 +1,14 @@
-
 ssh root@49.12.76.128
+
 # name cheap1
-Type:  A Record
-Host:  myturn
+
+Type: A Record
+Host: myturn
 Value: 49.12.76.128
-TTL:   Automatic
+TTL: Automatic
 
 # NGINX
+
 ```nginx
 server {
     listen 80;
@@ -30,6 +32,7 @@ server {
 ```
 
 # appsettings.Production.json
+
 ```json
 {
   "Logging": {
@@ -45,9 +48,9 @@ server {
   "AllowedHosts": "*",
   "JWT_SECRET": "JWT_SECRET_-----",
   "Frontend": {
-    "TicketTrackingBaseUrl": "http://localhost:5173/track"
+    "TicketTrackingBaseUrl": "https://myturn.portfolio-projects.space/track"
   },
-    "Email": {
+  "Email": {
     "SmtpHost": "smtp.zoho.eu",
     "SmtpPort": 587,
     "Username": "alkisax@zohomail.eu",
@@ -58,6 +61,7 @@ server {
 ```
 
 # bash
+
 ```bash
 cd /var/www
 mkdir myturn
@@ -98,9 +102,22 @@ curl https://myturn.portfolio-projects.space/api/ping
 cd /var/www/myturn/frontend
 cat package.json
 nano .env.production
-# VITE_BACKEND_URL=https://myturn.portfolio-projects.space
+# VITE_BACKEND_URL=https://myturn.portfolio-projects.space/api
 cat .env.production
 npm install
 npm run build
 
+```
+
+# one line deploy command
+
+ssh root@49.12.76.128
+
+```bash
+cd /var/www/myturn && git pull origin main && cd backend && pm2 stop myturn-backend && rm -rf out && dotnet publish -c Release -o out && pm2 restart myturn-backend && cd ../frontend && npm install && npm run build && sleep 3 && echo && curl https://myturn.portfolio-projects.space/api/health && echo
+```
+
+```bash
+pm2 flush myturn-backend
+pm2 logs myturn-backend --lines 30
 ```
