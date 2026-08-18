@@ -122,7 +122,7 @@ const PublicRemoteTicket = () => {
           disabled={submitting}
           onClick={() => {
             void submitTicket().then((trackingToken) => {
-              if (trackingToken) navigate(`/tickets/${trackingToken}`);
+              if (trackingToken) navigate(`/track/${trackingToken}`);
             });
           }}
         >

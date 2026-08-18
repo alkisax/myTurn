@@ -71,7 +71,7 @@ function App() {
         </Route>
 
         <Route path="/company-wizard" element={<CompanyWizard />} />
-        <Route path="/tickets/:trackingToken" element={<TicketInfo />} />
+        <Route path="/track/:trackingToken" element={<TicketInfo />} />
         <Route path="/:companySlug" element={<PublicCompany />} />
         <Route
           path="/:companySlug/:locationSlug"

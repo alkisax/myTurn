@@ -45,7 +45,7 @@ server {
   "AllowedHosts": "*",
   "JWT_SECRET": "JWT_SECRET_-----",
   "Frontend": {
-    "TicketTrackingBaseUrl": "http://localhost:5173/tickets"
+    "TicketTrackingBaseUrl": "http://localhost:5173/track"
   },
     "Email": {
     "SmtpHost": "smtp.zoho.eu",

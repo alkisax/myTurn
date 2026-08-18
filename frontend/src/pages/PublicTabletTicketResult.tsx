@@ -60,7 +60,7 @@ const PublicTabletTicketResult = () => {
         </Typography>
         <Typography>{result.queueName}</Typography>
         <QRCodeSVG
-          value={`${window.location.origin}/tickets/${result.ticket.trackingToken}`}
+          value={`${window.location.origin}/track/${result.ticket.trackingToken}`}
           size={180}
           style={{ marginTop: 24 }}
         />
