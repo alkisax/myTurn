@@ -59,11 +59,18 @@ const PublicTabletTicketResult = () => {
           Queue
         </Typography>
         <Typography>{result.queueName}</Typography>
-        <QRCodeSVG
-          value={`${window.location.origin}/track/${result.ticket.trackingToken}`}
-          size={180}
-          style={{ marginTop: 24 }}
-        />
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            mt: 3,
+          }}
+        >
+          <QRCodeSVG
+            value={`${window.location.origin}/track/${result.ticket.trackingToken}`}
+            size={180}
+          />
+        </Box>
         {typeof result.ticket.estimatedWaitingMinutes === "number" && (
           <>
             <Typography variant="h6" sx={{ mt: 3 }}>

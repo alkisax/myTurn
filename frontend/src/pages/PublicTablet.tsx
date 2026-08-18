@@ -59,9 +59,11 @@ const PublicTablet = () => {
       >
         Issue a Ticket
       </Button>
+      {/*
       <Button variant="text" onClick={() => navigate("/staff")}>
         Exit Public Tablet
       </Button>
+      */}
     </TabletLayout>
   );
 };

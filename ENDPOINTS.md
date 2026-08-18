@@ -862,6 +862,19 @@ Common errors for all: `401 Unauthorized`, `403 Forbidden` for role or company d
 
 ## PDF / Tracking
 
+### Frontend public tracking route
+
+The public frontend tracking page is available at:
+
+```text
+/track/{trackingToken}
+```
+
+This is a frontend route, not a backend API endpoint. The page calls
+`GET /tickets/{trackingToken}` to load the ticket tracking data. QR codes and
+public tracking links must target the frontend `/track/{trackingToken}` URL;
+the backend `/tickets/...` routes remain unchanged.
+
 ### `GET /tickets/{trackingToken}/pdf`
 
 - Authorization: Public / Anonymous.
