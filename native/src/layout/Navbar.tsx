@@ -1,17 +1,19 @@
 // native\src\layout\Navbar.tsx
 
-import { View, Text, Pressable, StyleSheet, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useContext, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { ThemeContext } from '../context/ThemeContext';
-import { appName } from '@/constants/constants';
-import MoonToggleIcon from '@/components/layout/ui/MoonToggleIcon';
-import SunToggleIcon from '@/components/layout/ui/SunToggleIcon';
-import ChatBox from '@/components/chat/ChatBox'
-import { useRoomContext } from '@/context/RoomContext';
-import { useNotificationSound } from '@/hooks/useNotificationSound'
+import { View, Text, Pressable, StyleSheet, TextInput } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useContext, useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { ThemeContext } from "../context/ThemeContext";
+import { appName } from "@/constants/constants";
+import MoonToggleIcon from "@/components/layout/ui/MoonToggleIcon";
+import SunToggleIcon from "@/components/layout/ui/SunToggleIcon";
+import ChatBox from "@/components/chat/ChatBox";
+import { useRoomContext } from "@/context/RoomContext";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
+import { UserAuthContext } from "@/authLogin/context/UserAuthContext";
+import { handleLogout } from "@/authLogin/authFunctions";
 
 type Props = {
   minimal?: boolean;
@@ -39,49 +41,44 @@ const Navbar = ({
   const { colors, toggle, theme } = useContext(ThemeContext);
   const styles = createStyles(colors);
 
-  const { playChatNotification } = useNotificationSound()
+  const { playChatNotification } = useNotificationSound();
 
   const router = useRouter();
+  const { user, setUser } = useContext(UserAuthContext);
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showChatBox, setShowChatBox] = useState(false)
-  const [hasUnreadChat, setHasUnreadChat] = useState(false)
+  const [showChatBox, setShowChatBox] = useState(false);
+  const [hasUnreadChat, setHasUnreadChat] = useState(false);
 
-  const lastMessageCountRef = useRef(0)
+  const lastMessageCountRef = useRef(0);
 
-  const {
-    chatMessages,
-    username: contextUsername,
-  } = useRoomContext()
+  const handleLogoutPress = async () => {
+    await handleLogout(setUser);
+    router.replace("/login");
+  };
+
+  const { chatMessages, username: contextUsername } = useRoomContext();
 
   useEffect(() => {
     if (chatMessages.length <= lastMessageCountRef.current) {
-      lastMessageCountRef.current = chatMessages.length
-      return
+      lastMessageCountRef.current = chatMessages.length;
+      return;
     }
 
-    const lastMessage = chatMessages[chatMessages.length - 1]
+    const lastMessage = chatMessages[chatMessages.length - 1];
 
-    if (
-      !showChatBox &&
-      lastMessage.username !== contextUsername
-    ) {
-      setHasUnreadChat(true)
-      playChatNotification()
+    if (!showChatBox && lastMessage.username !== contextUsername) {
+      setHasUnreadChat(true);
+      playChatNotification();
     }
 
-    lastMessageCountRef.current = chatMessages.length
-  }, [
-    chatMessages,
-    contextUsername,
-    showChatBox,
-    playChatNotification,
-  ])
+    lastMessageCountRef.current = chatMessages.length;
+  }, [chatMessages, contextUsername, showChatBox, playChatNotification]);
 
   if (minimal) {
     return (
       <SafeAreaView
-        edges={['top']}
+        edges={["top"]}
         style={{
           backgroundColor: colors.topBar,
           zIndex: 999,
@@ -89,17 +86,10 @@ const Navbar = ({
         }}
       >
         <View style={styles.navbar}>
-
           {/* home */}
-          <Pressable
-            onPress={() => router.push('/')}
-            style={styles.centerRow}
-          >
-            <Text style={styles.logo}>
-              {appName}
-            </Text>
+          <Pressable onPress={() => router.push("/")} style={styles.centerRow}>
+            <Text style={styles.logo}>{appName}</Text>
           </Pressable>
-
         </View>
       </SafeAreaView>
     );
@@ -107,7 +97,7 @@ const Navbar = ({
 
   return (
     <SafeAreaView
-      edges={['top']}
+      edges={["top"]}
       style={{
         backgroundColor: colors.topBar,
         zIndex: 999,
@@ -115,14 +105,9 @@ const Navbar = ({
       }}
     >
       <View style={styles.navbar}>
-
         {/* logo */}
-        <Pressable
-          onPress={() => router.push('/')}
-        >
-          <Text style={styles.logo}>
-            {appName}
-          </Text>
+        <Pressable onPress={() => router.push("/")}>
+          <Text style={styles.logo}>{appName}</Text>
         </Pressable>
 
         <View style={{ flex: 1 }} />
@@ -131,33 +116,27 @@ const Navbar = ({
         <Pressable
           onPress={() => {
             setShowChatBox((prev) => {
-              const nextValue = !prev
+              const nextValue = !prev;
 
               if (nextValue) {
-                setHasUnreadChat(false)
+                setHasUnreadChat(false);
               }
 
-              return nextValue
-            })
+              return nextValue;
+            });
 
-            setMenuOpen(false)
+            setMenuOpen(false);
           }}
           style={styles.iconButton}
         >
           <View>
             <Ionicons
-              name={
-                showChatBox
-                  ? 'chatbubble'
-                  : 'chatbubble-outline'
-              }
+              name={showChatBox ? "chatbubble" : "chatbubble-outline"}
               size={26}
               color={colors.text}
             />
 
-            {hasUnreadChat && (
-              <View style={styles.chatBadge} />
-            )}
+            {hasUnreadChat && <View style={styles.chatBadge} />}
           </View>
         </Pressable>
 
@@ -168,26 +147,36 @@ const Navbar = ({
         )}
 
         {/* hamburger */}
-        <Pressable
-          onPress={() =>
-            setMenuOpen((prev) => !prev)
-          }
-        >
+        <Pressable onPress={() => setMenuOpen((prev) => !prev)}>
           <Ionicons
-            name={
-              menuOpen
-                ? 'close'
-                : 'menu'
-            }
+            name={menuOpen ? "close" : "menu"}
             size={30}
             color={colors.text}
           />
         </Pressable>
 
-        <View style={styles.rightRow}>
+        {/* Auth action δίπλα στο hamburger */}
+        <Pressable
+          onPress={() => {
+            if (user) {
+              void handleLogoutPress();
+              return;
+            }
 
+            router.push("/login");
+          }}
+          style={styles.iconButton}
+        >
+          <Ionicons
+            name={user ? "log-out-outline" : "log-in-outline"}
+            size={26}
+            color={colors.text}
+          />
+        </Pressable>
+
+        <View style={styles.rightRow}>
           <Pressable
-            onPress={() => router.push('/info')}
+            onPress={() => router.push("/info")}
             style={styles.iconButton}
           >
             <Ionicons
@@ -204,7 +193,7 @@ const Navbar = ({
           <Pressable
             onPress={() => {
               setMenuOpen(false);
-              setShowChatBox(false)
+              setShowChatBox(false);
             }}
             style={styles.overlay}
           />
@@ -212,26 +201,23 @@ const Navbar = ({
 
         {menuOpen && (
           <View style={styles.menu}>
-
             {/* theme */}
             <View style={styles.centerRow}>
-              {theme === 'dark'
-                ? (
-                  <MoonToggleIcon
-                    color={colors.text}
-                    onFinished={() => {
-                      toggle();
-                    }}
-                  />
-                )
-                : (
-                  <SunToggleIcon
-                    color={colors.text}
-                    onFinished={() => {
-                      toggle();
-                    }}
-                  />
-                )}
+              {theme === "dark" ? (
+                <MoonToggleIcon
+                  color={colors.text}
+                  onFinished={() => {
+                    toggle();
+                  }}
+                />
+              ) : (
+                <SunToggleIcon
+                  color={colors.text}
+                  onFinished={() => {
+                    toggle();
+                  }}
+                />
+              )}
             </View>
 
             {username !== undefined && setUsername && (
@@ -265,28 +251,22 @@ const Navbar = ({
               {/* connect */}
               <Pressable
                 onPress={
-                  isConnected
-                    ? handleDisconnectSocket
-                    : handleConnectSocket
+                  isConnected ? handleDisconnectSocket : handleConnectSocket
                 }
                 style={styles.iconButton}
               >
                 <Text style={{ fontSize: 18 }}>
-                  {isConnected ? '❌' : '🔌'}
+                  {isConnected ? "❌" : "🔌"}
                 </Text>
               </Pressable>
 
               {/* status */}
               <View style={styles.statusColumn}>
-
                 <View
                   style={[
                     styles.statusCircle,
                     {
-                      backgroundColor:
-                        isConnected
-                          ? colors.green
-                          : colors.red,
+                      backgroundColor: isConnected ? colors.green : colors.red,
                     },
                   ]}
                 />
@@ -295,10 +275,7 @@ const Navbar = ({
                   style={[
                     styles.statusCircle,
                     {
-                      backgroundColor:
-                        hasPeer
-                          ? colors.green
-                          : colors.red,
+                      backgroundColor: hasPeer ? colors.green : colors.red,
                     },
                   ]}
                 />
@@ -306,7 +283,6 @@ const Navbar = ({
             </View>
           </View>
         )}
-
       </View>
     </SafeAreaView>
   );
@@ -314,15 +290,12 @@ const Navbar = ({
 
 export default Navbar;
 
-const createStyles = (
-  colors: Record<string, string>,
-) =>
+const createStyles = (colors: Record<string, string>) =>
   StyleSheet.create({
-
     navbar: {
       height: 60,
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       paddingHorizontal: 12,
       backgroundColor: colors.topBar,
       borderBottomWidth: 1,
@@ -332,13 +305,13 @@ const createStyles = (
     },
 
     logo: {
-      fontWeight: 'bold',
+      fontWeight: "bold",
       fontSize: 18,
       color: colors.text,
     },
 
     menu: {
-      position: 'absolute',
+      position: "absolute",
       right: 0,
       top: 52,
       minWidth: 190,
@@ -354,24 +327,24 @@ const createStyles = (
     },
 
     centerRow: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
       gap: 22,
     },
 
     socketRow: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
       gap: 14,
     },
 
     // status circles το ενα κατω απο το αλλο
     statusColumn: {
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
       gap: 6,
     },
 
@@ -380,17 +353,17 @@ const createStyles = (
       height: 40,
       borderBottomWidth: 1,
       borderBottomColor: colors.buttonBorder,
-      borderColor: '#d8cf9d',
-      backgroundColor: '#ffffff',
-      textAlign: 'center',
-      color: '#030303',
+      borderColor: "#d8cf9d",
+      backgroundColor: "#ffffff",
+      textAlign: "center",
+      color: "#030303",
       fontSize: 16,
     },
 
     iconButton: {
       padding: 4,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
     },
 
     statusCircle: {
@@ -400,14 +373,14 @@ const createStyles = (
     },
 
     rightRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 12,
     },
 
     menuItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 10,
       paddingVertical: 12,
     },
@@ -418,7 +391,7 @@ const createStyles = (
     },
 
     overlay: {
-      position: 'absolute',
+      position: "absolute",
       top: 0,
       left: 0,
       right: 0,
@@ -434,18 +407,18 @@ const createStyles = (
       height: 40,
       borderBottomWidth: 1,
       borderBottomColor: colors.buttonBorder,
-      backgroundColor: '#ffffff',
-      color: '#030303',
+      backgroundColor: "#ffffff",
+      color: "#030303",
       fontSize: 16,
       paddingHorizontal: 8,
     },
 
     chatPanel: {
-      position: 'absolute',
+      position: "absolute",
       right: 8,
       top: 52,
       width: 320,
-      maxWidth: '95%',
+      maxWidth: "95%",
       backgroundColor: colors.panel,
       borderRadius: 16,
       padding: 8,
@@ -456,7 +429,7 @@ const createStyles = (
     },
 
     chatBadge: {
-      position: 'absolute',
+      position: "absolute",
       top: -2,
       right: -2,
       width: 9,

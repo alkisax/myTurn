@@ -92,7 +92,4 @@ export const createMarkdownStyles = (
     marginVertical: SPACING.sm,
   },
 
-  link: {
-    color: colors.player1,
-  },
 })

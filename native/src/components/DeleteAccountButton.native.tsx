@@ -81,7 +81,7 @@ const DeleteAccountButton = ({ userId }: Props) => {
     <Pressable
       onPress={handleDelete}
       style={[
-        globalStyles.button,
+        globalStyles.primaryButton,
         {
           backgroundColor: colors.alert,
           alignSelf: 'center',

@@ -1,136 +1,162 @@
-// native\src\app\register.tsx
-
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  Alert,
-} from 'react-native'
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
-import { useContext, useState } from 'react'
-import { useRouter } from 'expo-router'
-import axios from 'axios'
-import { backendUrl } from '../constants/constants'
-import BgScreenWrapper from '../components/layout/BgScreenWrapper'
-
+import { View, Text, TextInput, Pressable, Alert } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useContext, useState } from "react";
+import { useRouter } from "expo-router";
+import axios from "axios";
+import { backendUrl } from "../constants/constants";
+import BgScreenWrapper from "../components/layout/BgScreenWrapper";
 import {
   frontendValidatePassword,
   frontEndValidateEmail,
-} from '../authLogin/utils/registerBackend'
-import { createGlobalStyles } from '@/styles/global'
-import { ThemeContext } from '@/context/ThemeContext'
+} from "../authLogin/utils/registerBackend";
+import { api } from "../authLogin/services/api";
+import { createGlobalStyles } from "@/styles/global";
+import { ThemeContext } from "@/context/ThemeContext";
+import { useRoomContext } from "@/context/RoomContext";
+import Navbar from "@/layout/Navbar";
 
 const Register = () => {
-  const [username, setUsername] = useState('')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const router = useRouter()
-  const { colors } = useContext(ThemeContext)
-  const globalStyles = createGlobalStyles(colors)
+  const router = useRouter();
+  const { colors } = useContext(ThemeContext);
+  const globalStyles = createGlobalStyles(colors);
+  const {
+    roomCode,
+    setRoomCode,
+    username: roomUsername,
+    setUsername: setRoomUsername,
+    isConnected,
+    hasPeer,
+    connectToChatRoom,
+    disconnectFromChatRoom,
+  } = useRoomContext();
 
   const handleRegister = async () => {
-    setError(null)
+    setError(null);
 
-    // 🔥 validation (reuse 100%)
-    const passError = frontendValidatePassword(password)
-    if (passError) return setError(passError)
+    const passError = frontendValidatePassword(password);
+    if (passError) {
+      setError(passError);
+      return;
+    }
 
-    const emailError = frontEndValidateEmail(email)
-    if (emailError) return setError(emailError)
+    const emailError = frontEndValidateEmail(email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
 
     if (!username || !name || !email || !password || !confirmPassword) {
-      return setError('Please fill in all fields')
+      setError("Please fill in all fields");
+      return;
     }
 
     if (password !== confirmPassword) {
-      return setError('Passwords do not match')
+      setError("Passwords do not match");
+      return;
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
 
-      const res = await axios.post(`${backendUrl}/auth/register`, {
+      const response = await api.post(`${backendUrl}/auth/register-user`, {
         username,
         name,
         email,
         password,
-      })
+      });
 
-      if (res.data.status) {
-        Alert.alert('Success 🚀', 'Account created successfully')
-
-        // 👉 redirect to login
-        router.replace('/login')
+      if (response.data.status) {
+        Alert.alert("Success", "Account created successfully");
+        router.replace("/login");
       } else {
-        setError(
-          res.data.error || res.data.data || 'Registration failed'
-        )
+        setError(response.data.message || "Registration failed");
       }
-    } catch (err: any) {
-      const backendMsg =
-        err?.response?.data?.error || err?.response?.data?.message
+    } catch (requestError: unknown) {
+      if (!axios.isAxiosError(requestError)) {
+        setError("Registration failed");
+        return;
+      }
 
-      if (backendMsg) {
-        setError(Array.isArray(backendMsg) ? backendMsg.join(', ') : backendMsg)
-      } else {
-        setError('Registration failed')
-      }
+      const responseData: unknown = requestError.response?.data;
+      const backendMessage =
+        typeof responseData === "object" &&
+        responseData !== null &&
+        "message" in responseData &&
+        typeof responseData.message === "string"
+          ? responseData.message
+          : undefined;
+
+      setError(backendMessage || "Registration failed");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <BgScreenWrapper>
+      <Navbar
+        roomId={roomCode}
+        setRoomId={setRoomCode}
+        username={roomUsername}
+        setUsername={setRoomUsername}
+        handleConnectSocket={connectToChatRoom}
+        handleDisconnectSocket={disconnectFromChatRoom}
+        isConnected={isConnected}
+        hasPeer={hasPeer}
+      />
       <KeyboardAwareScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         enableOnAndroid
         extraScrollHeight={20}
-        keyboardShouldPersistTaps='handled'
+        keyboardShouldPersistTaps="handled"
       >
-
-        <View style={[globalStyles.container]}>
+        <View style={globalStyles.container}>
           <View style={globalStyles.centered}>
-            <Text style={[globalStyles.title, { marginBottom: 20, textAlign: 'center' }]}>Register!</Text>
+            <Text
+              style={[
+                globalStyles.title,
+                { marginBottom: 20, textAlign: "center" },
+              ]}
+            >
+              Register!
+            </Text>
 
             <TextInput
-              placeholder='Username'
+              placeholder="Username"
               value={username}
               onChangeText={setUsername}
               style={[globalStyles.input, { marginBottom: 12 }]}
             />
-
             <TextInput
-              placeholder='Full Name'
+              placeholder="Full Name"
               value={name}
               onChangeText={setName}
               style={[globalStyles.input, { marginBottom: 12 }]}
             />
-
             <TextInput
-              placeholder='Email'
+              placeholder="Email"
               value={email}
               onChangeText={setEmail}
               style={[globalStyles.input, { marginBottom: 12 }]}
-              autoCapitalize='none'
+              autoCapitalize="none"
             />
-
             <TextInput
-              placeholder='Password'
+              placeholder="Password"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
               style={[globalStyles.input, { marginBottom: 12 }]}
             />
-
             <TextInput
-              placeholder='Confirm Password'
+              placeholder="Confirm Password"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
@@ -138,16 +164,21 @@ const Register = () => {
             />
 
             {error && (
-              <Text style={[globalStyles.error, { marginBottom: 10 }]}>{error}</Text>
+              <Text style={[globalStyles.error, { marginBottom: 10 }]}>
+                {error}
+              </Text>
             )}
 
-            <Pressable style={globalStyles.button} onPress={handleRegister}>
-              <Text style={globalStyles.buttonText}>
-                {loading ? 'Loading...' : 'Register'}
+            <Pressable
+              style={globalStyles.primaryButton}
+              onPress={handleRegister}
+            >
+              <Text style={globalStyles.primaryButtonText}>
+                {loading ? "Loading..." : "Register"}
               </Text>
             </Pressable>
 
-            <Pressable onPress={() => router.replace('/login')}>
+            <Pressable onPress={() => router.replace("/login")}>
               <Text style={[globalStyles.link, { marginTop: 12 }]}>
                 Already have an account? Login
               </Text>
@@ -155,11 +186,8 @@ const Register = () => {
           </View>
         </View>
       </KeyboardAwareScrollView>
-
-      <View style={globalStyles.container}>
-      </View>
     </BgScreenWrapper>
-  )
-}
+  );
+};
 
-export default Register
+export default Register;
