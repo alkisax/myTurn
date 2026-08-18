@@ -110,7 +110,7 @@ const CreateQueueForm = ({
           type="number"
           value={defaultServiceMinutes}
           onChange={(e) => setDefaultServiceMinutes(e.target.value)}
-          inputProps={{ min: 1 }}
+          slotProps={{ htmlInput: { min: 1 } }}
           fullWidth
         />
 

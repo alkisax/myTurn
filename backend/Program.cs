@@ -67,7 +67,8 @@ builder.Services.AddCors( options =>
     policy
       .WithOrigins(
         "http://localhost:8081",
-        "http://localhost:5173"
+        "http://localhost:5173",
+        "https://myturn.portfolio-projects.space"
       )
       .AllowAnyHeader()
       .AllowAnyMethod()
