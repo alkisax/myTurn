@@ -42,23 +42,6 @@ export default function Index() {
         <View style={globalStyles.centerContent}>
           <Text style={globalStyles.title}>Hello World</Text>
         </View>
-
-
-         <View style={globalStyles.centerContent}>
-        <Text style={globalStyles.title}>Hello World</Text>
-
-        <Pressable
-          style={globalStyles.primaryButton}
-          onPress={() => {
-            void logToServer('TEST FROM NATIVE FRONTEND');
-          }}
-        >
-          <Text style={globalStyles.primaryButtonText}>
-            Test Log From Front
-          </Text>
-        </Pressable>
-      </View>        
-          
       </View>
     </>
 
