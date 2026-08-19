@@ -165,3 +165,5 @@ testLocation.http
 testAdminCompanyLocationStaff.http
 appsettings.Development.json
 backend/appsettings.Production.json
+
+gradle.properties

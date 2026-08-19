@@ -8,7 +8,7 @@ export const logToServer = async (msg: string) => {
   try {
     console.log(formattedMsg);
 
-    await axios.post(`${backendUrl}/api/log-from-front`, {
+    await axios.post(`${backendUrl}/front-logs/`, {
       data: formattedMsg,
     });
   } catch (err) {

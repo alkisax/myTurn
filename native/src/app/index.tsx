@@ -5,7 +5,8 @@ import { ThemeContext } from "@/context/ThemeContext";
 import Navbar from "@/layout/Navbar";
 import { createGlobalStyles } from "@/styles/global";
 import { useContext } from "react";
-import { Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet, Pressable } from "react-native";
+import { logToServer } from '@/utils/logToServer';
 
 export default function Index() {
 
@@ -39,8 +40,25 @@ export default function Index() {
 
         {/* page content */}
         <View style={globalStyles.centerContent}>
-          <Text  style={globalStyles.title}>Hello World</Text>
+          <Text style={globalStyles.title}>Hello World</Text>
         </View>
+
+
+         <View style={globalStyles.centerContent}>
+        <Text style={globalStyles.title}>Hello World</Text>
+
+        <Pressable
+          style={globalStyles.primaryButton}
+          onPress={() => {
+            void logToServer('TEST FROM NATIVE FRONTEND');
+          }}
+        >
+          <Text style={globalStyles.primaryButtonText}>
+            Test Log From Front
+          </Text>
+        </Pressable>
+      </View>        
+          
       </View>
     </>
 
