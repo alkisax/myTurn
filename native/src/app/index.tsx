@@ -52,12 +52,15 @@ export default function Index() {
         </Text>
 
         <View style={styles.cardGroup}>
-          <View style={[globalStyles.card, styles.actionCard]}>
+          <Pressable
+            style={[globalStyles.card, styles.actionCard]}
+            onPress={() => router.push("/staff")}
+          >
             <Text style={styles.cardTitle}>Enter as Staff</Text>
             <Text style={globalStyles.dimText}>
               Choose your workplace and desk, then start serving customers.
             </Text>
-          </View>
+          </Pressable>
 
           <Text style={styles.startText}>
             Start from Here. Set up an organization, add locations and waiting

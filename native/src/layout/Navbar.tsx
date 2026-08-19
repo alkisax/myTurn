@@ -45,6 +45,12 @@ const Navbar = ({
 
   const router = useRouter();
   const { user, setUser } = useContext(UserAuthContext);
+  const canManageAdminPanel = Boolean(
+    user?.roles.includes("ADMIN") || user?.roles.includes("SUPERADMIN"),
+  );
+  const isStaffOnly = Boolean(
+    user?.roles.includes("STAFF") && !canManageAdminPanel,
+  );
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [showChatBox, setShowChatBox] = useState(false);
@@ -113,6 +119,44 @@ const Navbar = ({
         <View style={{ flex: 1 }} />
 
         {/* chat */}
+        {canManageAdminPanel && (
+          <Pressable
+            onPress={() => router.push("/admin")}
+            style={styles.iconButton}
+          >
+            <Ionicons
+              name="business-outline"
+              size={26}
+              color={colors.text}
+            />
+          </Pressable>
+        )}
+
+        {isStaffOnly && (
+          <>
+            <Pressable
+              onPress={() => router.push("/staff")}
+              style={styles.iconButton}
+            >
+              <Ionicons
+                name="people-outline"
+                size={26}
+                color={colors.text}
+              />
+            </Pressable>
+            <Pressable
+              onPress={() => router.push("/staff/profile")}
+              style={styles.iconButton}
+            >
+              <Ionicons
+                name="person-circle-outline"
+                size={26}
+                color={colors.text}
+              />
+            </Pressable>
+          </>
+        )}
+
         <Pressable
           onPress={() => {
             setShowChatBox((prev) => {
