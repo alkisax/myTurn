@@ -120,69 +120,71 @@ const Register = () => {
       >
         <View style={globalStyles.container}>
           <View style={globalStyles.centered}>
-            <Text
-              style={[
-                globalStyles.title,
-                { marginBottom: 20, textAlign: "center" },
-              ]}
-            >
-              Register!
-            </Text>
-
-            <TextInput
-              placeholder="Username"
-              value={username}
-              onChangeText={setUsername}
-              style={[globalStyles.input, { marginBottom: 12 }]}
-            />
-            <TextInput
-              placeholder="Full Name"
-              value={name}
-              onChangeText={setName}
-              style={[globalStyles.input, { marginBottom: 12 }]}
-            />
-            <TextInput
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              style={[globalStyles.input, { marginBottom: 12 }]}
-              autoCapitalize="none"
-            />
-            <TextInput
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              style={[globalStyles.input, { marginBottom: 12 }]}
-            />
-            <TextInput
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              style={[globalStyles.input, { marginBottom: 12 }]}
-            />
-
-            {error && (
-              <Text style={[globalStyles.error, { marginBottom: 10 }]}>
-                {error}
+            <View style={[globalStyles.card, { width: "100%", maxWidth: 420 }]}>
+              <Text
+                style={[
+                  globalStyles.title,
+                  { marginBottom: 20, textAlign: "center" },
+                ]}
+              >
+                Register!
               </Text>
-            )}
 
-            <Pressable
-              style={globalStyles.primaryButton}
-              onPress={handleRegister}
-            >
-              <Text style={globalStyles.primaryButtonText}>
-                {loading ? "Loading..." : "Register"}
-              </Text>
-            </Pressable>
+              <TextInput
+                placeholder="Username"
+                value={username}
+                onChangeText={setUsername}
+                style={[globalStyles.input, { marginBottom: 12 }]}
+              />
+              <TextInput
+                placeholder="Full Name"
+                value={name}
+                onChangeText={setName}
+                style={[globalStyles.input, { marginBottom: 12 }]}
+              />
+              <TextInput
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                style={[globalStyles.input, { marginBottom: 12 }]}
+                autoCapitalize="none"
+              />
+              <TextInput
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                style={[globalStyles.input, { marginBottom: 12 }]}
+              />
+              <TextInput
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                style={[globalStyles.input, { marginBottom: 12 }]}
+              />
 
-            <Pressable onPress={() => router.replace("/login")}>
-              <Text style={[globalStyles.link, { marginTop: 12 }]}>
-                Already have an account? Login
-              </Text>
-            </Pressable>
+              {error && (
+                <Text style={[globalStyles.error, { marginBottom: 10 }]}>
+                  {error}
+                </Text>
+              )}
+
+              <Pressable
+                style={globalStyles.primaryButton}
+                onPress={handleRegister}
+              >
+                <Text style={globalStyles.primaryButtonText}>
+                  {loading ? "Loading..." : "Register"}
+                </Text>
+              </Pressable>
+
+              <Pressable onPress={() => router.replace("/login")}>
+                <Text style={[globalStyles.link, { marginTop: 12 }]}>
+                  Already have an account? Login
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </KeyboardAwareScrollView>

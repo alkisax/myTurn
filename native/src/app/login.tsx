@@ -1,4 +1,5 @@
 import { View, Text, TextInput, Pressable } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "expo-router";
@@ -91,62 +92,71 @@ const Login = () => {
         isConnected={isConnected}
         hasPeer={hasPeer}
       />
-      <View style={[globalStyles.container, globalStyles.centered]}>
-        <Text
-          style={[
-            globalStyles.title,
-            { marginBottom: 20, textAlign: "center" },
-          ]}
-        >
-          Login
-        </Text>
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        enableOnAndroid
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={[globalStyles.container, globalStyles.centered]}>
+          <View style={[globalStyles.card, { width: "100%", maxWidth: 420 }]}>
+            <Text
+              style={[
+                globalStyles.title,
+                { marginBottom: 20, textAlign: "center" },
+              ]}
+            >
+              Login
+            </Text>
 
-        <TextInput
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-          placeholderTextColor="rgba(255,255,255,0.5)"
-          style={[globalStyles.input, { marginBottom: 12 }]}
-        />
-
-        <View style={{ position: "relative" }}>
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            style={[globalStyles.input, { marginBottom: 12 }]}
-            placeholderTextColor="rgba(255,255,255,0.5)"
-          />
-
-          <Pressable
-            onPress={() => setShowPassword(!showPassword)}
-            style={{ position: "absolute", right: 12, top: "20%" }}
-          >
-            <Ionicons
-              name={showPassword ? "eye-off" : "eye"}
-              size={20}
-              color={colors.secondary}
+            <TextInput
+              placeholder="Username"
+              value={username}
+              onChangeText={setUsername}
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              style={[globalStyles.input, { marginBottom: 12 }]}
             />
-          </Pressable>
+
+            <View style={{ position: "relative" }}>
+              <TextInput
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                style={[globalStyles.input, { marginBottom: 12 }]}
+                placeholderTextColor="rgba(255,255,255,0.5)"
+              />
+
+              <Pressable
+                onPress={() => setShowPassword(!showPassword)}
+                style={{ position: "absolute", right: 12, top: "20%" }}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={20}
+                  color={colors.secondary}
+                />
+              </Pressable>
+            </View>
+
+            {error && (
+              <Text style={[globalStyles.error, { marginBottom: 10 }]}>
+                {error}
+              </Text>
+            )}
+
+            <Pressable style={globalStyles.primaryButton} onPress={handleLogin}>
+              <Text style={globalStyles.primaryButtonText}>Login</Text>
+            </Pressable>
+
+            <Pressable onPress={() => router.push("/register")}>
+              <Text style={[globalStyles.link, { marginTop: 12 }]}>
+                Don't have an account? Register
+              </Text>
+            </Pressable>
+          </View>
         </View>
-
-        {error && (
-          <Text style={[globalStyles.error, { marginBottom: 10 }]}>
-            {error}
-          </Text>
-        )}
-
-        <Pressable style={globalStyles.primaryButton} onPress={handleLogin}>
-          <Text style={globalStyles.primaryButtonText}>Login</Text>
-        </Pressable>
-
-        <Pressable onPress={() => router.push("/register")}>
-          <Text style={[globalStyles.link, { marginTop: 12 }]}>
-            Don't have an account? Register
-          </Text>
-        </Pressable>
-      </View>
+      </KeyboardAwareScrollView>
     </BgScreenWrapper>
   );
 };
