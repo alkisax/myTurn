@@ -268,6 +268,16 @@ const useAdminPanel = () => {
     await loadStaff();
   };
 
+  const updateStaff = async (id: number, body: unknown) => {
+    if (selectedCompanyId === null) return;
+    await request(
+      "put",
+      `${backendUrl}/company-users/company/${selectedCompanyId}/staff/${id}`,
+      body,
+    );
+    await loadStaff();
+  };
+
   const removeStaff = async (id: number) => {
     if (selectedCompanyId === null) return;
     await request("delete", `${backendUrl}/company-users/company/${selectedCompanyId}/staff/${id}`);
@@ -304,6 +314,7 @@ const useAdminPanel = () => {
     saveDesk,
     deleteDesk,
     createStaff,
+    updateStaff,
     removeStaff,
   };
 };

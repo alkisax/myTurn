@@ -346,6 +346,20 @@ Company bodies use `name`, `missedTicketExpiryMinutes`, and `defaultEstimatedSer
 - Errors: `400`, `401`, `403`, `404`, `409` for duplicate account/relation conditions supported by the controller.
 - Ελληνικά: Ο ADMIN δημιουργεί λογαριασμό STAFF και τον συνδέει με την εταιρεία.
 
+### `PUT /company-users/company/{companyId}/staff/{userId}`
+
+- Authorization: ADMIN/SUPERADMIN plus access to `companyId`. The target user must be STAFF and must have a `CompanyUser` membership for `companyId`.
+- Input body (`UpdateCompanyStaffDto`):
+
+```json
+{ "username": "staff1", "name": "Updated Staff", "email": "staff@example.com", "password": "newsecret123" }
+```
+
+- `username` is required. `name` and `email` may be updated. The `password` field is optional; omitted, `null`, or blank passwords preserve the current password. A supplied password must be at least six characters and is BCrypt-hashed.
+- The endpoint never changes the target user's role.
+- Success: `200 OK` with the updated `UserSummaryDto`.
+- Errors: `400` for a non-STAFF target or invalid input, `401`, `403` when the ADMIN lacks company access, `404` when the user or STAFF membership is missing, and `409` for a duplicate username.
+
 ### `DELETE /company-users/company/{companyId}/staff/{userId}`
 
 - Authorization: ADMIN/SUPERADMIN plus access to `companyId`.

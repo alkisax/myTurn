@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { backendUrl } from "../../constants/constants";
 import type { AdminStaffMember } from "../../types/adminPanel.types";
+import { frontendValidatePassword } from "../../authLogin/utils/registerBackend";
 
 export interface StaffFormValues {
   username: string;
@@ -31,6 +32,7 @@ const useAdminStaff = (selectedCompanyId: number | null) => {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
   const [form, setForm] = useState<StaffFormValues>(emptyForm);
 
   useEffect(() => {
@@ -73,43 +75,85 @@ const useAdminStaff = (selectedCompanyId: number | null) => {
     setStaff(response.data.data);
   };
   const openCreate = () => {
+    setEditingMemberId(null);
     setForm(emptyForm);
     setError("");
     setDialogOpen(true);
   };
+  const openEdit = (member: AdminStaffMember) => {
+    setEditingMemberId(member.id);
+    setForm({
+      username: member.username,
+      name: member.name ?? "",
+      email: member.email ?? "",
+      password: "",
+      confirmPassword: "",
+    });
+    setError("");
+    setDialogOpen(true);
+  };
   const closeDialog = () => {
-    if (!saving) setDialogOpen(false);
+    if (!saving) {
+      setDialogOpen(false);
+      setEditingMemberId(null);
+    }
   };
   const updateForm = (field: keyof StaffFormValues, value: string) =>
     setForm((current) => ({ ...current, [field]: value }));
   const save = async () => {
-    if (
-      selectedCompanyId === null ||
-      !form.username.trim() ||
-      form.password.length < 6
-    ) {
-      setError("Username and a password of at least 6 characters are required");
+    if (selectedCompanyId === null || !form.username.trim()) {
+      setError("Username is required");
       return;
     }
-    if (form.password !== form.confirmPassword) {
+    if (editingMemberId === null && !form.password) {
+      setError("Password is required");
+      return;
+    }
+    const hasPassword = form.password.length > 0 || form.confirmPassword.length > 0;
+    if (hasPassword && !form.password) {
+      setError("New password is required");
+      return;
+    }
+    if (hasPassword) {
+      const passwordError = frontendValidatePassword(form.password);
+      if (passwordError) {
+        setError(passwordError);
+        return;
+      }
+    }
+    if (hasPassword && form.password !== form.confirmPassword) {
       setError("Passwords do not match");
       return;
     }
     setSaving(true);
     setError("");
     try {
-      await axios.post(
-        `${backendUrl}/company-users/company/${selectedCompanyId}/staff`,
-        {
-          username: form.username.trim(),
-          name: form.name.trim() || null,
-          email: form.email.trim() || null,
-          password: form.password,
-        },
-        authConfig(),
-      );
+      if (editingMemberId === null) {
+        await axios.post(
+          `${backendUrl}/company-users/company/${selectedCompanyId}/staff`,
+          {
+            username: form.username.trim(),
+            name: form.name.trim() || null,
+            email: form.email.trim() || null,
+            password: form.password,
+          },
+          authConfig(),
+        );
+      } else {
+        await axios.put(
+          `${backendUrl}/company-users/company/${selectedCompanyId}/staff/${editingMemberId}`,
+          {
+            username: form.username.trim(),
+            name: form.name.trim() || null,
+            email: form.email.trim() || null,
+            ...(hasPassword ? { password: form.password } : {}),
+          },
+          authConfig(),
+        );
+      }
       await refresh();
       setDialogOpen(false);
+      setEditingMemberId(null);
       setForm(emptyForm);
     } catch (reason: unknown) {
       setError(getErrorMessage(reason, "Failed to create staff member"));
@@ -141,8 +185,10 @@ const useAdminStaff = (selectedCompanyId: number | null) => {
     error,
     saving,
     dialogOpen,
+    editingMemberId,
     form,
     openCreate,
+    openEdit,
     closeDialog,
     updateForm,
     save,

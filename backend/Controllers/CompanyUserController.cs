@@ -321,6 +321,115 @@ public class CompanyUserController
     });
   }
 
+  public async Task<IResult> UpdateStaff(
+    int companyId,
+    int userId,
+    UpdateCompanyStaffDto dto,
+    ClaimsPrincipal currentUser
+  )
+  {
+    if (!await HasCompanyAccess(companyId, currentUser))
+    {
+      return Results.Forbid();
+    }
+
+    var staff = await _userDao.GetById(userId);
+
+    if (staff is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "User not found"
+      });
+    }
+
+    if (staff.Role != "STAFF")
+    {
+      return Results.BadRequest(new
+      {
+        status = false,
+        message = "Only STAFF users can be updated with this endpoint"
+      });
+    }
+
+    var membership = await _dao.GetByUserAndCompany(userId, companyId);
+
+    if (membership is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "Staff user does not belong to this company"
+      });
+    }
+
+    if (string.IsNullOrWhiteSpace(dto.Username))
+    {
+      return Results.BadRequest(new
+      {
+        status = false,
+        message = "Username is required"
+      });
+    }
+
+    var usernameOwner = await _userDao.GetByUsername(dto.Username);
+
+    if (usernameOwner is not null && usernameOwner.Id != userId)
+    {
+      return Results.Conflict(new
+      {
+        status = false,
+        message = "Username already taken"
+      });
+    }
+
+    if (dto.Password is not null &&
+        !string.IsNullOrWhiteSpace(dto.Password) &&
+        dto.Password.Length < 6)
+    {
+      return Results.BadRequest(new
+      {
+        status = false,
+        message = "Password must be at least 6 characters"
+      });
+    }
+
+    staff.Username = dto.Username;
+    staff.Name = dto.Name;
+    staff.Email = dto.Email;
+
+    if (!string.IsNullOrWhiteSpace(dto.Password))
+    {
+      staff.HashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+    }
+
+    var updated = await _userDao.Update(userId, staff);
+
+    if (updated is null)
+    {
+      return Results.NotFound(new
+      {
+        status = false,
+        message = "User not found"
+      });
+    }
+
+    return Results.Ok(new
+    {
+      status = true,
+      data = new UserSummaryDto(
+        updated.Id,
+        updated.Username,
+        updated.Name,
+        updated.Email,
+        updated.Role,
+        updated.CreatedAt,
+        updated.UpdatedAt
+      )
+    });
+  }
+
   // Ο ADMIN μπορεί να αφαιρέσει STAFF μόνο από Company
   // στην οποία έχει ο ίδιος πρόσβαση.
   //

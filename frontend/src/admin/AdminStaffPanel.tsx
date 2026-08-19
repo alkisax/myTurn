@@ -1,4 +1,10 @@
-import { Delete, People, Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  Delete,
+  Edit,
+  People,
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
 import { useState } from "react";
 import {
   Box,
@@ -80,14 +86,24 @@ const AdminStaffPanel = ({ selectedCompanyId }: Props) => {
                 Email: {member.email || "Not provided"} · Role: {member.role}
               </Typography>
             </Box>
-            <Tooltip title="Remove Staff">
-              <IconButton
-                aria-label="Remove Staff"
-                onClick={() => void admin.remove(member)}
-              >
-                <Delete />
-              </IconButton>
-            </Tooltip>
+            <Box>
+              <Tooltip title="Edit Staff">
+                <IconButton
+                  aria-label="Edit Staff"
+                  onClick={() => admin.openEdit(member)}
+                >
+                  <Edit />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Remove Staff">
+                <IconButton
+                  aria-label="Remove Staff"
+                  onClick={() => void admin.remove(member)}
+                >
+                  <Delete />
+                </IconButton>
+              </Tooltip>
+            </Box>
           </Paper>
         ))}
       <Dialog
@@ -96,7 +112,9 @@ const AdminStaffPanel = ({ selectedCompanyId }: Props) => {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Add Staff</DialogTitle>
+        <DialogTitle>
+          {admin.editingMemberId === null ? "Add Staff" : "Edit Staff"}
+        </DialogTitle>
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
         >
@@ -122,8 +140,12 @@ const AdminStaffPanel = ({ selectedCompanyId }: Props) => {
             onChange={(event) => admin.updateForm("email", event.target.value)}
           />
           <TextField
-            required
-            label="Password"
+            required={admin.editingMemberId === null}
+            label={
+              admin.editingMemberId === null
+                ? "Password"
+                : "New Password (optional)"
+            }
             type={showPassword ? "text" : "password"}
             value={admin.form.password}
             onChange={(event) =>
@@ -148,8 +170,12 @@ const AdminStaffPanel = ({ selectedCompanyId }: Props) => {
             }}
           />
           <TextField
-            required
-            label="Confirm password"
+            required={admin.editingMemberId === null}
+            label={
+              admin.editingMemberId === null
+                ? "Confirm password"
+                : "Confirm New Password"
+            }
             type={showPassword ? "text" : "password"}
             value={admin.form.confirmPassword}
             onChange={(event) =>
@@ -183,7 +209,11 @@ const AdminStaffPanel = ({ selectedCompanyId }: Props) => {
             onClick={() => void admin.save()}
             disabled={admin.saving}
           >
-            {admin.saving ? "Saving..." : "Create"}
+            {admin.saving
+              ? "Saving..."
+              : admin.editingMemberId === null
+                ? "Create"
+                : "Save"}
           </Button>
         </DialogActions>
       </Dialog>

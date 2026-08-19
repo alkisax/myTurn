@@ -16,6 +16,7 @@ import QRCode from "react-native-qrcode-svg";
 import { UserAuthContext } from "@/authLogin/context/UserAuthContext";
 import { publicWebUrl } from "@/constants/constants";
 import Navbar from "@/layout/Navbar";
+import { frontendValidatePassword } from "@/authLogin/utils/registerBackend";
 import { ThemeContext } from "@/context/ThemeContext";
 import { createAdminStyles } from "@/styles/admin.styles";
 import useAdminPanel, {
@@ -412,40 +413,71 @@ export default function AdminPanel() {
     }
   };
 
-  const openStaff = () => {
-    setEditingId(null);
-    setForm(emptyForm);
+  const openStaff = (member?: AdminStaffMember) => {
+    setEditingId(member?.id ?? null);
+    setForm(
+      member
+        ? {
+            ...emptyForm,
+            username: member.username,
+            name: member.name ?? "",
+            email: member.email ?? "",
+          }
+        : emptyForm,
+    );
     setFormOpen(true);
   };
 
   const saveStaff = async () => {
-    if (
-      admin.selectedCompanyId === null ||
-      !form.username.trim() ||
-      form.password.length < 6
-    ) {
-      admin.setError(
-        "Username and a password of at least 6 characters are required",
-      );
+    if (admin.selectedCompanyId === null || !form.username.trim()) {
+      admin.setError("Username is required");
       return;
     }
-    if (form.password !== form.confirmPassword) {
+
+    const hasPassword =
+      form.password.length > 0 || form.confirmPassword.length > 0;
+
+    if (editingId === null && !form.password) {
+      admin.setError("Password is required");
+      return;
+    }
+
+    if (hasPassword) {
+      const passwordError = frontendValidatePassword(form.password);
+
+      if (passwordError) {
+        admin.setError(passwordError);
+        return;
+      }
+    }
+
+    if (hasPassword && form.password !== form.confirmPassword) {
       admin.setError("Passwords do not match");
       return;
     }
+
     try {
-      await admin.createStaff({
+      const body = {
         username: form.username.trim(),
         name: form.name.trim() || null,
         email: form.email.trim() || null,
-        password: form.password,
-      });
+        ...(hasPassword ? { password: form.password } : {}),
+      };
+
+      if (editingId === null) {
+        await admin.createStaff({ ...body, password: form.password });
+      } else {
+        await admin.updateStaff(editingId, body);
+      }
+
       closeForm();
     } catch (error) {
       admin.setError(
         error instanceof Error
           ? error.message
-          : "Failed to create staff member",
+          : editingId === null
+            ? "Failed to create staff member"
+            : "Failed to update staff member",
       );
     }
   };
@@ -606,13 +638,23 @@ export default function AdminPanel() {
       );
     return (
       <AdminForm
-        title="Add Staff"
+        title={editingId === null ? "Add Staff" : "Edit Staff"}
         fields={[
           field("Username", "username"),
           field("Name", "name"),
           field("Email", "email", "email-address"),
-          field("Password", "password", "default", true),
-          field("Confirm password", "confirmPassword", "default", true),
+          field(
+            editingId === null ? "Password" : "New Password (optional)",
+            "password",
+            "default",
+            true,
+          ),
+          field(
+            editingId === null ? "Confirm password" : "Confirm New Password",
+            "confirmPassword",
+            "default",
+            true,
+          ),
         ]}
         onSave={() => void saveStaff()}
         onCancel={closeForm}
@@ -1271,7 +1313,7 @@ const Staff = ({
   onDelete,
 }: {
   admin: AdminPanelApi;
-  onOpen: () => void;
+  onOpen: (member?: AdminStaffMember) => void;
   onDelete: (member: AdminStaffMember) => void;
 }) => (
   <View style={styles.section}>
@@ -1288,6 +1330,10 @@ const Staff = ({
           {member.username}
           {member.email ? ` · ${member.email}` : ""}
         </Text>
+        <Action
+          title="Edit"
+          onPress={() => onOpen(member)}
+        />
         <Action
           title="Remove organization access"
           onPress={() => onDelete(member)}

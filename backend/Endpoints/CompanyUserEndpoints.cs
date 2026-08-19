@@ -114,6 +114,25 @@ public static class CompanyUserEndpoints
     })
     .RequireAuthorization("AdminOnly");
 
+    // PUT /company-users/company/:companyId/staff/:userId
+    // ADMIN μπορεί να ενημερώσει μόνο STAFF της συγκεκριμένης Company.
+    group.MapPut("/company/{companyId:int}/staff/{userId:int}", async (
+      int companyId,
+      int userId,
+      UpdateCompanyStaffDto dto,
+      CompanyUserController controller,
+      HttpContext context
+    ) =>
+    {
+      return await controller.UpdateStaff(
+        companyId,
+        userId,
+        dto,
+        context.User
+      );
+    })
+    .RequireAuthorization("AdminOnly");
+
     // DELETE /company-users/company/:companyId/staff/:userId
     // ADMIN αφαιρεί STAFF από μία από τις companies του.
     group.MapDelete("/company/{companyId:int}/staff/{userId:int}", async (
