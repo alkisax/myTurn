@@ -11,9 +11,6 @@ export const publicWebUrl =
 export const publicTabletTicketStorageKey =
   "myturn-public-tablet-ticket";
 
-export const CHAT_RELAY_URL = "https://signalr-room-relay.portfolio-projects.space";
-export const CHAT_SIGNALR_URL = `${CHAT_RELAY_URL}/room`;
-
 export const appName = "My Turn";
 
 export const bannerAdUnitId = "ca-app-pub-change later";

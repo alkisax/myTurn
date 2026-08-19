@@ -1,7 +1,6 @@
 import { useContext } from "react";
 import { Pressable, ScrollView, Text, View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { useRoomContext } from "@/context/RoomContext";
 import { ThemeContext } from "@/context/ThemeContext";
 import Navbar from "@/layout/Navbar";
 import { createGlobalStyles } from "@/styles/global";
@@ -12,29 +11,9 @@ export default function Index() {
   const styles = createStyles(colors);
   const router = useRouter();
 
-  const {
-    roomCode,
-    setRoomCode,
-    username,
-    setUsername,
-    isConnected,
-    hasPeer,
-    connectToChatRoom,
-    disconnectFromChatRoom,
-  } = useRoomContext();
-
   return (
     <View style={globalStyles.screen}>
-      <Navbar
-        roomId={roomCode}
-        setRoomId={setRoomCode}
-        username={username}
-        setUsername={setUsername}
-        handleConnectSocket={connectToChatRoom}
-        handleDisconnectSocket={disconnectFromChatRoom}
-        isConnected={isConnected}
-        hasPeer={hasPeer}
-      />
+      <Navbar />
 
       <ScrollView
         contentContainerStyle={styles.content}

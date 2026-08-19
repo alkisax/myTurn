@@ -121,8 +121,7 @@ const Step4StaffWorkspace = ({
   } = useStaffTicketIdentification();
 
   const handlePinChange = (value: string) => {
-    const numericPin = value.replace(/[^0-9]/g, "").slice(0, 4);
-    setPin(numericPin);
+    setPin(value.slice(0, 4));
   };
 
   const handleOpenNumberDisplay = () => {

@@ -14,15 +14,7 @@ const Info = () => {
 
     <>
       <View style={globalStyles.screen}>
-        <Navbar
-          minimal
-          roomId=''
-          setRoomId={() => { }}
-          handleConnectSocket={async () => { }}
-          handleDisconnectSocket={async () => { }}
-          isConnected={false}
-          hasPeer={false}
-        />
+        <Navbar minimal />
         <View style={globalStyles.centerContent}>
           <Text style={globalStyles.title}>Info</Text>
         </View>

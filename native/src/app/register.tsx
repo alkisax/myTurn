@@ -12,7 +12,6 @@ import {
 import { api } from "../authLogin/services/api";
 import { createGlobalStyles } from "@/styles/global";
 import { ThemeContext } from "@/context/ThemeContext";
-import { useRoomContext } from "@/context/RoomContext";
 import Navbar from "@/layout/Navbar";
 
 const Register = () => {
@@ -27,17 +26,6 @@ const Register = () => {
   const router = useRouter();
   const { colors } = useContext(ThemeContext);
   const globalStyles = createGlobalStyles(colors);
-  const {
-    roomCode,
-    setRoomCode,
-    username: roomUsername,
-    setUsername: setRoomUsername,
-    isConnected,
-    hasPeer,
-    connectToChatRoom,
-    disconnectFromChatRoom,
-  } = useRoomContext();
-
   const handleRegister = async () => {
     setError(null);
 
@@ -102,16 +90,7 @@ const Register = () => {
 
   return (
     <BgScreenWrapper>
-      <Navbar
-        roomId={roomCode}
-        setRoomId={setRoomCode}
-        username={roomUsername}
-        setUsername={setRoomUsername}
-        handleConnectSocket={connectToChatRoom}
-        handleDisconnectSocket={disconnectFromChatRoom}
-        isConnected={isConnected}
-        hasPeer={hasPeer}
-      />
+      <Navbar />
       <KeyboardAwareScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         enableOnAndroid

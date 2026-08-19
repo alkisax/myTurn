@@ -11,24 +11,12 @@ import BgScreenWrapper from "../components/layout/BgScreenWrapper";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemeContext } from "@/context/ThemeContext";
 import { createGlobalStyles } from "@/styles/global";
-import { useRoomContext } from "@/context/RoomContext";
 import Navbar from "@/layout/Navbar";
 
 const Login = () => {
   const { colors } = useContext(ThemeContext);
   const globalStyles = createGlobalStyles(colors);
   const { user, setUser } = useContext(UserAuthContext);
-  const {
-    roomCode,
-    setRoomCode,
-    username: roomUsername,
-    setUsername: setRoomUsername,
-    isConnected,
-    hasPeer,
-    connectToChatRoom,
-    disconnectFromChatRoom,
-  } = useRoomContext();
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,7 +25,7 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      router.replace("/user");
+      router.replace("/");
     }
   }, [router, user]);
 
@@ -64,7 +52,7 @@ const Login = () => {
           provider: "backend",
         });
 
-        router.replace("/user");
+      router.replace("/");
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -82,16 +70,7 @@ const Login = () => {
 
   return (
     <BgScreenWrapper>
-      <Navbar
-        roomId={roomCode}
-        setRoomId={setRoomCode}
-        username={roomUsername}
-        setUsername={setRoomUsername}
-        handleConnectSocket={connectToChatRoom}
-        handleDisconnectSocket={disconnectFromChatRoom}
-        isConnected={isConnected}
-        hasPeer={hasPeer}
-      />
+      <Navbar />
       <KeyboardAwareScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         enableOnAndroid
@@ -151,7 +130,7 @@ const Login = () => {
 
             <Pressable onPress={() => router.push("/register")}>
               <Text style={[globalStyles.link, { marginTop: 12 }]}>
-                Don't have an account? Register
+                Don&apos;t have an account? Register
               </Text>
             </Pressable>
           </View>

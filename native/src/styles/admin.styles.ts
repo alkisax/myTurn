@@ -14,8 +14,16 @@ export const createAdminStyles = (colors: AppColors) =>
       gap: SPACING.md,
     },
     tabList: {
+      flexDirection: "row",
+      flexWrap: "wrap",
       gap: SPACING.sm,
-      paddingBottom: SPACING.xs,
+      alignItems: "stretch",
+      paddingBottom: SPACING.sm,
+    },
+    tabButton: {
+      flexGrow: 1,
+      flexBasis: "22%",
+      minWidth: 110,
     },
     section: {
       gap: SPACING.sm,

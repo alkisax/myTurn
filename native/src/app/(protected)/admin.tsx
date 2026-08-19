@@ -15,6 +15,7 @@ import { UserAuthContext } from "@/authLogin/context/UserAuthContext";
 import { COLORS, createGlobalStyles } from "@/styles/global";
 import { publicWebUrl } from "@/constants/constants";
 import { createAdminStyles } from "@/styles/admin.styles";
+import Navbar from "@/layout/Navbar";
 
 const styles = createAdminStyles(COLORS.light);
 import useAdminPanel, { type AdminPanelKey } from "@/hooks/adminPageHooks/useAdminPanel";
@@ -198,15 +199,12 @@ export default function AdminPanel() {
 
   return (
     <View style={globalStyles.screen}>
+      <Navbar />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabList}
-        >
+        <View style={styles.tabList}>
           {tabs.map((tab) => (
             <Pressable
               key={tab.key}
@@ -216,13 +214,14 @@ export default function AdminPanel() {
               }}
               style={[
                 globalStyles.secondaryButton,
+                styles.tabButton,
                 activeTab === tab.key && globalStyles.primaryButtonActive,
               ]}
             >
               <Text style={globalStyles.secondaryButtonText}>{tab.label}</Text>
             </Pressable>
           ))}
-        </ScrollView>
+        </View>
 
         {admin.loading && (
           <Text style={globalStyles.dimText}>Loading organizations...</Text>
