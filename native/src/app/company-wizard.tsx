@@ -1,5 +1,7 @@
 import { useContext, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { UserAuthContext } from "@/authLogin/context/UserAuthContext";
 import { ThemeContext } from "@/context/ThemeContext";
@@ -366,15 +368,18 @@ const LocationActions = ({
 
 const WizardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView edges={["bottom"]} style={{ flex: 1 }}>
       <Navbar />
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraHeight={110}
+        extraScrollHeight={20}
       >
         {children}
-      </ScrollView>
-    </View>
+      </KeyboardAwareScrollView>
+    </SafeAreaView>
   );
 };
 

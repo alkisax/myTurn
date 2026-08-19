@@ -1,5 +1,7 @@
 import { useContext } from "react";
-import { Pressable, ScrollView, Text, View, StyleSheet } from "react-native";
+import { Pressable, Text, View, StyleSheet } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ThemeContext } from "@/context/ThemeContext";
 import Navbar from "@/layout/Navbar";
@@ -12,12 +14,15 @@ export default function Index() {
   const router = useRouter();
 
   return (
-    <View style={globalStyles.screen}>
+    <SafeAreaView edges={["bottom"]} style={globalStyles.screen}>
       <Navbar />
 
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
       >
         <Text style={globalStyles.title}>MyTurn</Text>
 
@@ -56,8 +61,8 @@ export default function Index() {
             </Text>
           </Pressable>
         </View>
-      </ScrollView>
-    </View>
+      </KeyboardAwareScrollView>
+    </SafeAreaView>
   );
 }
 

@@ -11,11 +11,11 @@ export const COLORS = {
     text: "#222222",
     dimText: "#666666",
 
-    primary: "#5c1a1b",
-    primaryActive: "#7a2224",
+    primary: "#b8d8f2",
+    primaryActive: "#9fc5e5",
 
     switchTrackOff: "#d8cf9d",
-    switchTrackOn: "#7a2224",
+    switchTrackOn: "#9fc5e5",
     switchThumb: "#ffffff",
 
     topBar: "#ffffff",
@@ -41,11 +41,11 @@ export const COLORS = {
     text: "#f1f1f1",
     dimText: "#999999",
 
-    primary: "#7a2224",
-    primaryActive: "#a62d30",
+    primary: "#5f86aa",
+    primaryActive: "#78a6cf",
 
     switchTrackOff: "#444444",
-    switchTrackOn: "#a62d30",
+    switchTrackOn: "#78a6cf",
     switchThumb: "#ffffff",
 
     topBar: "#1b1b1b",

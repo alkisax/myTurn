@@ -1,33 +1,56 @@
-# Repository Guidelines
+# MyTurn Agent Guidelines
 
-## Project Structure & Module Organization
+MyTurn is a queue-management application with:
 
-This repository contains the MyTurn queue-management backend. The main application is in `backend/`, an ASP.NET Core .NET 10 web project using SQLite and Entity Framework Core. Keep web startup and route registration in `backend/Program.cs`; organize HTTP route mappings in `Endpoints/`, request handlers in `Controllers/`, persistence access in `Daos/`, EF Core configuration in `Data/`, domain entities in `Models/`, and transport types in `Dtos/`. Authentication-specific code is grouped under `backend/auth/`. Database migrations belong in `backend/Data/Migrations/`. Use `ZhttpTestsBackend/` for repeatable HTTP/API request scenarios and `notes/` for project notes.
+- `backend/` — ASP.NET Core / .NET / EF Core / SQLite
+- `frontend/` — React + Vite + TypeScript + MUI
+- `native/` — Expo React Native + TypeScript
 
-## Build, Test, and Development Commands
+## General Rules
 
-Run commands from the repository root unless noted:
+- Read the existing related files before changing code.
+- Preserve the current architecture and project patterns.
+- Make the smallest change that solves the task.
+- Do not refactor unrelated code.
+- Prefer readable, human-written code over condensed code.
+- Format JSX and TypeScript with normal Prettier-style line breaks.
+- Keep TypeScript and ESLint clean without suppressions.
+- Reuse existing hooks, types, styles, helpers, and API functions before creating new ones.
+- Do not duplicate logic that already exists elsewhere in the project.
 
-```powershell
-dotnet restore backend/backend.csproj
-dotnet build backend/backend.csproj
-dotnet run --project backend/backend.csproj
-```
+## Backend
 
-The server listens on `http://localhost:3020`; `/health` is a smoke check. Execute `.http` files in `ZhttpTestsBackend/` with an HTTP client such as VS Code REST Client. There is no committed automated test project; add one before relying on `dotnet test`.
+Backend V1 is considered stable.
 
-## Coding Style & Naming Conventions
+Do not change backend behavior unless:
+- fixing a confirmed bug, or
+- a frontend/native feature requires a genuinely missing endpoint.
 
-Use two-space indentation, nullable-aware C#, implicit usings, and PascalCase for types, methods, controllers, endpoints, and public members. Use descriptive suffixes such as `Controller`, `Dao`, `Endpoint`, `Dto`, and `Service`. Keep namespaces and folders aligned with `backend` and `backend.auth`. Preserve the separation between endpoints, controllers, DAOs, and EF models. Run `dotnet format backend/backend.csproj` for substantial formatting changes.
+Keep the existing:
+`Endpoint -> Controller -> DAO -> EF Model`
+structure.
 
-## Testing Guidelines
+Preserve JWT authorization, role checks, company isolation, ticket lifecycle, and SignalR behavior.
 
-For API changes, update or add a focused `.http` scenario in `ZhttpTestsBackend/` and verify authorization, validation, and tenant-scope behavior. For data-model changes, create an EF migration and exercise the affected endpoint against the local SQLite database. If adding automated tests, place them in a separate test project and use descriptive names such as `CreateTicket_WhenQueueIsOpen_ReturnsTicket`.
+## React Web
 
-## Commit & Pull Request Guidelines
+- Use current MUI with TypeScript.
+- Prefer `sx={{ ... }}` for MUI styling.
+- Before changing a MUI API, check the current documentation when uncertain.
+- Keep API/business logic in hooks when an existing hook pattern exists.
+- Avoid synchronous `setState` helper calls directly from `useEffect`.
 
-Use concise conventional-style commit subjects, as in the existing history: `feat: ...`, `fix: ...`, or `wip: ...`. Keep commits focused. Pull requests should describe the behavioral change, identify database or configuration impacts, list verification commands and manual HTTP scenarios, link the relevant issue, and include request/response examples or screenshots when an API/UI behavior is difficult to review from code alone.
+## React Native
 
-## Security & Configuration Tips
+- Read `styles/global.ts` before adding styles.
+- Reuse `ThemeContext`, global styles, existing screen layouts, and hooks.
+- Respect Safe Areas and keyboard avoidance where relevant.
+- Use AsyncStorage for native persistence where existing patterns already do so.
+- Preserve the current Expo Router structure.
+- When porting web functionality, adapt it to native patterns rather than copying browser-specific APIs.
 
-Do not commit secrets, tokens, production connection strings, or local signing keys. Review `appsettings*.json` before sharing changes, use environment-specific configuration for credentials, and treat the local `backend/MyTurn.db` as development data only. Check migrations and authorization rules carefully for every schema or multi-tenant change.
+## Verification
+
+After changes, run the relevant TypeScript/ESLint/build checks.
+
+For behavior changes, test the affected user flow instead of only checking that the code compiles.

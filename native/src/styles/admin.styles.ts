@@ -14,16 +14,26 @@ export const createAdminStyles = (colors: AppColors) =>
       gap: SPACING.md,
     },
     tabList: {
-      flexDirection: "row",
-      flexWrap: "wrap",
       gap: SPACING.sm,
-      alignItems: "stretch",
       paddingBottom: SPACING.sm,
     },
     tabButton: {
-      flexGrow: 1,
-      flexBasis: "22%",
-      minWidth: 110,
+      minWidth: 0,
+      paddingVertical: SPACING.xs,
+      paddingHorizontal: SPACING.md,
+      borderRadius: RADIUS.round,
+      flexGrow: 0,
+      flexShrink: 0,
+    },
+    tabButtonSelected: {
+      backgroundColor: colors.surfaceAlt,
+      borderColor: colors.primary,
+    },
+    tabText: {
+      color: colors.text,
+      fontSize: FONT_SIZE.sm,
+      fontWeight: "600",
+      includeFontPadding: false,
     },
     section: {
       gap: SPACING.sm,
@@ -41,6 +51,10 @@ export const createAdminStyles = (colors: AppColors) =>
       borderColor: colors.border,
       borderRadius: RADIUS.md,
       backgroundColor: colors.surface,
+    },
+    itemSelected: {
+      backgroundColor: colors.surfaceAlt,
+      borderColor: colors.primary,
     },
     itemTitle: {
       fontSize: FONT_SIZE.lg,
@@ -67,5 +81,33 @@ export const createAdminStyles = (colors: AppColors) =>
     qrContainer: {
       alignItems: "center",
       paddingVertical: SPACING.sm,
+    },
+    overviewCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.sm,
+      paddingVertical: SPACING.sm,
+      paddingHorizontal: SPACING.md,
+      borderRadius: RADIUS.md,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+    },
+    overviewCardContent: {
+      flex: 1,
+      gap: SPACING.xs,
+    },
+    overviewCardTitle: {
+      color: colors.text,
+      fontSize: FONT_SIZE.md,
+      fontWeight: "700",
+    },
+    overviewIndicator: {
+      color: colors.dimText,
+      fontSize: FONT_SIZE.lg,
+    },
+    overviewIntro: {
+      color: colors.dimText,
+      lineHeight: 20,
     },
   });

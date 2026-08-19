@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -18,7 +18,6 @@ const Navbar = ({ minimal = false }: Props) => {
   const { user, setUser } = useContext(UserAuthContext);
   const router = useRouter();
   const styles = createStyles(colors);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const canManageAdminPanel = Boolean(
     user?.roles.includes("ADMIN") || user?.roles.includes("SUPERADMIN"),
@@ -87,13 +86,13 @@ const Navbar = ({ minimal = false }: Props) => {
           </>
         )}
 
-        <Pressable onPress={() => setMenuOpen((previous) => !previous)}>
-          <Ionicons
-            name={menuOpen ? "close" : "menu"}
-            size={30}
-            color={colors.text}
-          />
-        </Pressable>
+        <View style={styles.centerRow}>
+          {theme === "dark" ? (
+            <MoonToggleIcon color={colors.text} onFinished={toggle} />
+          ) : (
+            <SunToggleIcon color={colors.text} onFinished={toggle} />
+          )}
+        </View>
 
         <Pressable
           onPress={() => {
@@ -124,6 +123,16 @@ const Navbar = ({ minimal = false }: Props) => {
           />
         </Pressable>
 
+        {/* Το hamburger/menu είναι προσωρινά απενεργοποιημένο. */}
+        {/*
+        <Pressable onPress={() => setMenuOpen((previous) => !previous)}>
+          <Ionicons
+            name={menuOpen ? "close" : "menu"}
+            size={30}
+            color={colors.text}
+          />
+        </Pressable>
+
         {menuOpen && (
           <View style={styles.menu}>
             <View style={styles.centerRow}>
@@ -135,6 +144,7 @@ const Navbar = ({ minimal = false }: Props) => {
             </View>
           </View>
         )}
+        */}
       </View>
     </SafeAreaView>
   );
@@ -175,19 +185,5 @@ const createStyles = (colors: Record<string, string>) =>
       padding: 4,
       justifyContent: "center",
       alignItems: "center",
-    },
-    menu: {
-      position: "absolute",
-      right: 0,
-      top: 52,
-      minWidth: 190,
-      backgroundColor: colors.panel,
-      borderRadius: 16,
-      paddingVertical: 14,
-      paddingHorizontal: 16,
-      borderWidth: 1,
-      borderColor: colors.panelBorder,
-      zIndex: 999,
-      elevation: 999,
     },
   });
