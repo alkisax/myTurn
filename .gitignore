@@ -167,3 +167,10 @@ appsettings.Development.json
 backend/appsettings.Production.json
 
 gradle.properties
+
+# Android local SDK path
+local.properties
+
+# Android signing keys - anywhere in repo
+*.keystore
+*.jks
