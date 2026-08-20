@@ -75,7 +75,17 @@ const Navbar = () => {
 
             {user ? (
               <>
-                {isAdmin && <Tooltip title="Admin Panel">
+                {user.roles.includes("SUPERADMIN") ? (
+                  <Tooltip title="SuperAdmin Panel">
+                    <IconButton
+                      component={NavLink}
+                      to="/super-admin"
+                      sx={{ color: "inherit" }}
+                    >
+                      <AdminPanelSettingsIcon />
+                    </IconButton>
+                  </Tooltip>
+                ) : isAdmin && <Tooltip title="Admin Panel">
                   <IconButton
                     component={NavLink}
                     to="/admin"
@@ -126,7 +136,15 @@ const Navbar = () => {
                 Info
               </MenuItem>
 
-              {isAdmin && <MenuItem component={NavLink} to="/admin" onClick={handleMenuClose}>Admin Panel</MenuItem>}
+              {user?.roles.includes("SUPERADMIN") ? (
+                <MenuItem component={NavLink} to="/super-admin" onClick={handleMenuClose}>
+                  SuperAdmin Panel
+                </MenuItem>
+              ) : isAdmin && (
+                <MenuItem component={NavLink} to="/admin" onClick={handleMenuClose}>
+                  Admin Panel
+                </MenuItem>
+              )}
               {isStaffOnly && <>
                 <MenuItem component={NavLink} to="/staff" onClick={handleMenuClose}>Staff Workspace</MenuItem>
                 <MenuItem component={NavLink} to="/staff/profile" onClick={handleMenuClose}>My Profile</MenuItem>

@@ -10,6 +10,7 @@ using backend.auth.Endpoints;
 using backend.Controllers;
 using backend.Endpoints;
 using backend.Services;
+using backend.Daos;
 using backend.Hubs;
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -22,7 +23,10 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<LogController>();
 builder.Services.AddScoped<CompanyDao>();
 builder.Services.AddScoped<CompanyController>();
+builder.Services.AddScoped<SuperAdminDao>();
+builder.Services.AddScoped<SuperAdminController>();
 builder.Services.AddScoped<UserDao>();
+builder.Services.AddScoped<TenantDeletionService>();
 builder.Services.AddScoped<UserController>();
 builder.Services.AddScoped<AuthController>();
 builder.Services.AddScoped<AuthService>();
@@ -102,6 +106,7 @@ app.UseAuthorization();
 
 app.MapUsersEndpoints();
 app.MapAuthEndpoints();
+app.MapSuperAdminEndpoints();
 app.MapPublicEndpoints();
 
 app.MapCompanyEndpoints();
