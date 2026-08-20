@@ -20,7 +20,6 @@
     "axios": "^1.19.0",
     "expo": "~55.0.29",
     "expo-asset": "~55.0.19",
-    "expo-audio": "~55.0.17",
     "expo-constants": "~55.0.17",
     "expo-device": "~55.0.20",
     "expo-font": "~55.0.8",

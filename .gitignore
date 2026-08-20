@@ -174,3 +174,4 @@ local.properties
 # Android signing keys - anywhere in repo
 *.keystore
 *.jks
+build.gradle
