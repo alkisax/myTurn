@@ -1,7 +1,23 @@
+## σε powershell bash
 sqlite3 .\backend\MyTurn.db ".headers on" ".mode column" "SELECT * FROM Users;" "SELECT * FROM CompanyUsers;" "SELECT * FROM Companies;" "SELECT * FROM Locations;" "SELECT * FROM Queues;" "SELECT * FROM Desks;" "SELECT * FROM StaffSessions;" "SELECT * FROM Services;" "SELECT * FROM Tickets;" "SELECT * FROM TicketServices;" > db_snapshot.txt
 
-σε linux bash
+## σε linux bash
 sqlite3 /var/www/myturn/data/MyTurn.db ".headers on" ".mode column" "SELECT * FROM Users WHERE Role = 'ADMIN';"
+
+sqlite3 /var/www/myturn/data/MyTurn.db  \
+".headers on" \
+".mode column" \
+"SELECT * FROM Users;" \
+"SELECT * FROM CompanyUsers;" \
+"SELECT * FROM Companies;" \
+"SELECT * FROM Locations;" \
+"SELECT * FROM Queues;" \
+"SELECT * FROM Desks;" \
+"SELECT * FROM StaffSessions;" \
+"SELECT * FROM Services;" \
+"SELECT * FROM Tickets;" \
+"SELECT * FROM TicketServices;" \
+> db_snapshot.txt
 
 ## clear db (not superuser)
 ```

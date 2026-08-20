@@ -1,5 +1,6 @@
 import { Box, Paper, Typography } from "@mui/material";
 import AdminPanelInfo from "./AdminPanelInfo";
+import DeleteAccountButton from "../components/DeleteAccountButton";
 
 const sections = [
   [
@@ -47,6 +48,9 @@ const AdminOverviewPanel = () => (
       Select an organization from Organizations first. Then configure its
       locations, queues, services, desks, and staff.
     </AdminPanelInfo>
+    <Box sx={{ mt: 6 }}>
+      <DeleteAccountButton />
+    </Box>
   </Box>
 );
 export default AdminOverviewPanel;

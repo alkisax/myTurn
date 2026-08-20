@@ -225,10 +225,22 @@ Companies and locations have backend-generated `slug` values. Slugs are generate
 
 ### `DELETE /users/{id}`
 
-- Authorization: Self or ADMIN/SUPERADMIN. Path: `id` integer. No body.
+- Authorization: Self or ADMIN/SUPERADMIN (`SelfOrAdmin`). Path: `id` integer.
+- ADMIN behavior: the path `id` must match the authenticated ADMIN user. The request body must contain the current password:
+
+  ```json
+  {
+    "currentPassword": "current-password"
+  }
+  ```
+
+- The password is verified with BCrypt. The ADMIN's `CompanyUser` memberships are removed before the ADMIN user is deleted.
+- This does not delete Companies, STAFF users, Locations, Queues, Desks, Services, Tickets, TicketServices, or StaffSessions.
+- An ADMIN may delete their own account even when they are the last ADMIN of a Company. The Company remains without an ADMIN membership.
+- SUPERADMIN behavior remains unchanged and may delete users through the existing administrative flow.
 - Success: `200 OK` with deletion result.
-- Errors: `401`, `403`, `404`.
-- Ελληνικά: Χρησιμοποιείται για διαγραφή λογαριασμού από τον ίδιο τον χρήστη ή από διαχειριστή.
+- Errors: `400` when the ADMIN password is missing, `401` for an invalid password, `403` when an ADMIN targets another user, and `404` when the target user does not exist.
+- Ελληνικά: Ο ADMIN μπορεί να διαγράψει μόνο τον δικό του λογαριασμό μετά από επιβεβαίωση του τρέχοντος κωδικού. Αφαιρούνται οι CompanyUser σχέσεις του, αλλά η εταιρεία και τα δεδομένα λειτουργίας της παραμένουν.
 
 ## Companies
 

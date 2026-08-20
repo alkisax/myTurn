@@ -110,4 +110,7 @@ export const createAdminStyles = (colors: AppColors) =>
       color: colors.dimText,
       lineHeight: 20,
     },
+    overviewDeleteAccount: {
+      marginTop: SPACING.xl,
+    },
   });

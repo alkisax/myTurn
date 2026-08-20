@@ -16,12 +16,6 @@ const Settings = () => {
 
   if (!user) return null
 
-  const userId = user._id || user.id
-
-
-  console.log(user.role);
-  
-
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={globalStyles.scrollContainer}>
@@ -38,8 +32,7 @@ const Settings = () => {
           </Text>
         </View>
 
-        {/* DELETE */}
-        <DeleteAccountButton userId={Number(userId)} />
+        <DeleteAccountButton />
 
       </ScrollView>
     </View>

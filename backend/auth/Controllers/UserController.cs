@@ -1,6 +1,7 @@
 // backend\auth\Controllers\UserController.cs
 using backend.auth.Daos;
 using backend.auth.Dtos;
+using System.Security.Claims;
 
 namespace backend.auth.Controllers;
 
@@ -171,8 +172,70 @@ public class UserController
   }
 
   // DELETE
-  public async Task<IResult> Delete(int id)
+  public async Task<IResult> Delete(
+    int id,
+    DeleteOwnAdminDto? data,
+    ClaimsPrincipal currentUser
+  )
   {
+    var role = currentUser.FindFirst(ClaimTypes.Role)?.Value;
+
+    if (role == "ADMIN")
+    {
+      var authenticatedUserId = currentUser.FindFirst("id")?.Value;
+
+      if (!int.TryParse(authenticatedUserId, out var currentUserId) || currentUserId != id)
+      {
+        return Results.Forbid();
+      }
+
+      if (string.IsNullOrWhiteSpace(data?.CurrentPassword))
+      {
+        return Results.BadRequest(new
+        {
+          status = false,
+          message = "Current password is required"
+        });
+      }
+
+      var user = await _dao.GetById(id);
+
+      if (user is null)
+      {
+        return Results.NotFound(new
+        {
+          status = false,
+          message = "User not found"
+        });
+      }
+
+      if (!BCrypt.Net.BCrypt.Verify(data.CurrentPassword, user.HashedPassword))
+      {
+        return Results.Json(new
+        {
+          status = false,
+          message = "Invalid current password"
+        }, statusCode: StatusCodes.Status401Unauthorized);
+      }
+
+      var deletedAdmin = await _dao.DeleteAdminSelf(id);
+
+      if (!deletedAdmin)
+      {
+        return Results.Conflict(new
+        {
+          status = false,
+          message = "Cannot delete companies shared with another ADMIN"
+        });
+      }
+
+      return Results.Ok(new
+      {
+        status = true,
+        message = $"User {user.Username} deleted"
+      });
+    }
+
     var deleted = await _dao.Delete(id);
 
     if (deleted is null)

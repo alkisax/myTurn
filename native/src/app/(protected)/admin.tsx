@@ -16,6 +16,7 @@ import QRCode from "react-native-qrcode-svg";
 import { UserAuthContext } from "@/authLogin/context/UserAuthContext";
 import { publicWebUrl } from "@/constants/constants";
 import Navbar from "@/layout/Navbar";
+import DeleteAccountButton from "@/components/DeleteAccountButton.native";
 import { frontendValidatePassword } from "@/authLogin/utils/registerBackend";
 import { ThemeContext } from "@/context/ThemeContext";
 import { createAdminStyles } from "@/styles/admin.styles";
@@ -994,6 +995,9 @@ const Overview = ({
         title="Getting started"
         text="Select an organization from Organizations first. Then configure its locations, queues, services, desks, and staff."
       />
+      <View style={styles.overviewDeleteAccount}>
+        <DeleteAccountButton />
+      </View>
     </View>
   );
 };

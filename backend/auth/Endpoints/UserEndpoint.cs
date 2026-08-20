@@ -1,6 +1,7 @@
 // backend\auth\Endpoints\UserEndpoint.cs
 using backend.auth.Controllers;
 using backend.auth.Dtos;
+using Microsoft.AspNetCore.Mvc;
 
 namespace backend.auth.Endpoints;
 
@@ -74,10 +75,12 @@ public static class UserEndpoint
     // DELETE /users/:id
     group.MapDelete("/{id}", async (
       int id,
+      [FromBody] DeleteOwnAdminDto? data,
+      HttpContext httpContext,
       UserController controller
     ) =>
     {
-      return await controller.Delete(id);
+      return await controller.Delete(id, data, httpContext.User);
     })
     .RequireAuthorization("SelfOrAdmin");
   }
