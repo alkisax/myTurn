@@ -9,7 +9,7 @@ import Navbar from "@/layout/Navbar";
 import { createGlobalStyles } from "@/styles/global";
 import UserAdStatusLine from "@/components/UserAdStatusLine";
 import useUserAdStatus from "@/hooks/useUserAdStatus";
-import MockAdBanner from "@/ads/MockAdBanner";
+import AdsBanner from "@/ads/AdsBanner";
 
 export default function Index() {
   const { colors } = useContext(ThemeContext);
@@ -71,7 +71,7 @@ export default function Index() {
 
       {!isLoading && user && !adStatus.loading && !adStatus.hidden ? (
         <>
-          {!adStatus.hasPaid ? <MockAdBanner /> : null}
+          {!adStatus.hasPaid ? <AdsBanner /> : null}
           <UserAdStatusLine {...adStatus} />
         </>
       ) : null}

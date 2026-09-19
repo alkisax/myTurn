@@ -1,32 +1,29 @@
-// // native\src\ads\AdsBanner.tsx
-// import {
-//   BannerAd,
-//   BannerAdSize,
-//   TestIds
-// } from 'react-native-google-mobile-ads'
-// import { View } from 'react-native'
-// import { bannerAdUnitId } from '@/constants/constants'
-// import { logToServer } from '@/utils/logToServer'
+import { useState } from "react";
+import { View } from "react-native";
+import { BannerAd, BannerAdSize } from "react-native-google-mobile-ads";
 
-// const adUnitId = bannerAdUnitId
-// // const adUnitId = TestIds.BANNER
+import { bannerAdUnitId } from "@/constants/constants";
 
-// const AdsBanner = () => {
-//   return (
-//     <View style={{ alignItems: 'center' }}>
-//       <BannerAd
-//         unitId={adUnitId}
-//         size={BannerAdSize.FULL_BANNER}
-//         requestOptions={{
-//           requestNonPersonalizedAdsOnly: true,
-//         }}
-//         onAdLoaded={() => logToServer('BANNER LOADED')}
-//         onAdFailedToLoad={(e) =>
-//           logToServer('BANNER ERROR ' + JSON.stringify(e))
-//         }
-//       />
-//     </View>
-//   )
-// }
+const AdsBanner = () => {
+  const [failed, setFailed] = useState(false);
 
-// export default AdsBanner
+  if (failed) {
+    return null;
+  }
+
+  return (
+    <View style={{ alignItems: "center" }}>
+      <BannerAd
+        unitId={bannerAdUnitId}
+        size={BannerAdSize.LARGE_ANCHORED_ADAPTIVE_BANNER}
+        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        onAdFailedToLoad={(error) => {
+          console.warn("Native banner ad failed to load:", error);
+          setFailed(true);
+        }}
+      />
+    </View>
+  );
+};
+
+export default AdsBanner;

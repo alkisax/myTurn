@@ -25,8 +25,8 @@ import useAdminPanel, {
   type AdminPanelApi,
 } from "@/hooks/adminPageHooks/useAdminPanel";
 import { COLORS, createGlobalStyles } from "@/styles/global";
-import MockInterstitialAd from "@/ads/MockInterstitialAd";
 import useUserAdStatus from "@/hooks/useUserAdStatus";
+import { useInterstitialAd } from "@/ads/useInterstitialAd";
 import type {
   AdminCompany,
   AdminDesk,
@@ -122,8 +122,8 @@ export default function AdminPanel() {
   const [formOpen, setFormOpen] = useState(false);
   const [infoCompany, setInfoCompany] = useState<AdminCompany | null>(null);
   const adStatus = useUserAdStatus();
-  const [showInterstitial, setShowInterstitial] = useState(false);
   const interstitialShownRef = useRef(false);
+  const { isLoaded, showInterstitial } = useInterstitialAd();
 
   const isAdmin = Boolean(
     user?.roles.includes("ADMIN") || user?.roles.includes("SUPERADMIN"),
@@ -139,17 +139,23 @@ export default function AdminPanel() {
     if (
       !adStatus.loading &&
       !adStatus.hidden &&
-      !interstitialShownRef.current
+      !interstitialShownRef.current &&
+      isLoaded
     ) {
       interstitialShownRef.current = true;
-      setShowInterstitial(!adStatus.hasPaid);
+      if (!adStatus.hasPaid) {
+        void showInterstitial().then((completed) => {
+          if (completed) {
+            void adStatus.grantAdFree();
+          }
+        });
+      }
     }
-  }, [adStatus.hasPaid, adStatus.hidden, adStatus.loading]);
-
-  const completeInterstitial = async () => {
-    await adStatus.grantAdFree();
-    setShowInterstitial(false);
-  };
+  }, [
+    adStatus,
+    isLoaded,
+    showInterstitial,
+  ]);
 
   if (!isAdmin) {
     return (
@@ -783,10 +789,6 @@ export default function AdminPanel() {
   return (
     <SafeAreaView edges={["bottom"]} style={globalStyles.screen}>
       <Navbar />
-      <MockInterstitialAd
-        visible={showInterstitial}
-        onCompleted={() => void completeInterstitial()}
-      />
       <KeyboardAwareScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"

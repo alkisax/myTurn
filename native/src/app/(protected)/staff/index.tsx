@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 import StaffScreenLayout from "@/components/staffSetup/StaffScreenLayout";
@@ -10,8 +10,8 @@ import { ThemeContext } from "@/context/ThemeContext";
 import { useStaffContext } from "@/context/useStaffContext";
 import { createGlobalStyles } from "@/styles/global";
 import { createStaffStyles } from "@/styles/staff.styles";
-import MockInterstitialAd from "@/ads/MockInterstitialAd";
 import useUserAdStatus from "@/hooks/useUserAdStatus";
+import { useInterstitialAd } from "@/ads/useInterstitialAd";
 
 const Staff = () => {
   const { colors } = useContext(ThemeContext);
@@ -19,24 +19,30 @@ const Staff = () => {
   const styles = createStaffStyles(colors);
   const staff = useStaffContext();
   const adStatus = useUserAdStatus();
-  const [showInterstitial, setShowInterstitial] = useState(false);
   const interstitialShownRef = useRef(false);
+  const { isLoaded, showInterstitial } = useInterstitialAd();
 
   useEffect(() => {
     if (
       !adStatus.loading &&
       !adStatus.hidden &&
-      !interstitialShownRef.current
+      !interstitialShownRef.current &&
+      isLoaded
     ) {
       interstitialShownRef.current = true;
-      setShowInterstitial(!adStatus.hasPaid);
+      if (!adStatus.hasPaid) {
+        void showInterstitial().then((completed) => {
+          if (completed) {
+            void adStatus.grantAdFree();
+          }
+        });
+      }
     }
-  }, [adStatus.hasPaid, adStatus.hidden, adStatus.loading]);
-
-  const completeInterstitial = async () => {
-    await adStatus.grantAdFree();
-    setShowInterstitial(false);
-  };
+  }, [
+    adStatus,
+    isLoaded,
+    showInterstitial,
+  ]);
 
   const renderCurrentStep = () => {
     if (staff.session && staff.selectedDesk) {
@@ -99,10 +105,6 @@ const Staff = () => {
 
   return (
     <StaffScreenLayout>
-      <MockInterstitialAd
-        visible={showInterstitial}
-        onCompleted={() => void completeInterstitial()}
-      />
       <ScrollView
         style={globalStyles.screen}
         contentContainerStyle={styles.content}

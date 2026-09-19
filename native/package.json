@@ -37,6 +37,7 @@
     "react-dom": "19.2.0",
     "react-native": "0.83.10",
     "react-native-gesture-handler": "~2.30.0",
+    "react-native-google-mobile-ads": "^17.0.0",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-markdown-display": "^7.0.2",
     "react-native-qrcode-svg": "^6.3.21",

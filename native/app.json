@@ -22,7 +22,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-asset"
+      "expo-asset",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-4041382605494077~1762401082"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
