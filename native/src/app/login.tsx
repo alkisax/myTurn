@@ -88,22 +88,24 @@ const Login = () => {
               Login
             </Text>
 
+            <Text style={[globalStyles.text, { marginBottom: 4 }]}>Username</Text>
             <TextInput
-              placeholder="Username"
+              placeholder="Enter your username"
               value={username}
               onChangeText={setUsername}
-              placeholderTextColor="rgba(255,255,255,0.5)"
+              placeholderTextColor={colors.dimText}
               style={[globalStyles.input, { marginBottom: 12 }]}
             />
 
+            <Text style={[globalStyles.text, { marginBottom: 4 }]}>Password</Text>
             <View style={{ position: "relative" }}>
               <TextInput
-                placeholder="Password"
+                placeholder="Enter your password"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 style={[globalStyles.input, { marginBottom: 12 }]}
-                placeholderTextColor="rgba(255,255,255,0.5)"
+                placeholderTextColor={colors.dimText}
               />
 
               <Pressable

@@ -1,7 +1,9 @@
-import { useContext } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useCallback, useContext, useEffect } from "react";
+import { BackHandler, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
+import { UserAuthContext } from "@/authLogin/context/UserAuthContext";
+import { handleLogout } from "@/authLogin/authFunctions";
 import { ThemeContext } from "@/context/ThemeContext";
 import { useStaffContext } from "@/context/useStaffContext";
 import usePublicTablet from "@/hooks/publicPageHooks/usePublicTablet";
@@ -10,6 +12,7 @@ import { createStaffStyles } from "@/styles/staff.styles";
 
 const PublicTablet = () => {
   const router = useRouter();
+  const { setUser } = useContext(UserAuthContext);
   const { colors } = useContext(ThemeContext);
   const globalStyles = createGlobalStyles(colors);
   const styles = createStaffStyles(colors);
@@ -17,9 +20,22 @@ const PublicTablet = () => {
   const { number, deskId } = usePublicTablet({ session, selectedCompany });
   const servingDesk = desks.find((desk) => desk.id === deskId);
 
-  const handleBack = () => {
-    router.replace("/staff");
-  };
+  const handleBack = useCallback(async () => {
+    await handleLogout(setUser);
+    router.replace("/login");
+  }, [router, setUser]);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        void handleBack();
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [handleBack]);
 
   if (!session) {
     return (
@@ -28,7 +44,10 @@ const PublicTablet = () => {
         <Text style={globalStyles.text}>
           This public tablet requires an active staff session.
         </Text>
-        <Pressable onPress={handleBack} style={globalStyles.primaryButton}>
+        <Pressable
+          onPress={() => void handleBack()}
+          style={globalStyles.primaryButton}
+        >
           <Text style={globalStyles.primaryButtonText}>
             Back to Staff Workspace
           </Text>

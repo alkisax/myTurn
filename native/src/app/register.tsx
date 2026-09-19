@@ -109,37 +109,47 @@ const Register = () => {
                 Register!
               </Text>
 
+              <Text style={[globalStyles.text, { marginBottom: 4 }]}>Username</Text>
               <TextInput
-                placeholder="Username"
+                placeholder="Choose a username"
                 value={username}
                 onChangeText={setUsername}
+                placeholderTextColor={colors.dimText}
                 style={[globalStyles.input, { marginBottom: 12 }]}
               />
+              <Text style={[globalStyles.text, { marginBottom: 4 }]}>Full Name</Text>
               <TextInput
-                placeholder="Full Name"
+                placeholder="Enter your full name"
                 value={name}
                 onChangeText={setName}
+                placeholderTextColor={colors.dimText}
                 style={[globalStyles.input, { marginBottom: 12 }]}
               />
+              <Text style={[globalStyles.text, { marginBottom: 4 }]}>Email</Text>
               <TextInput
-                placeholder="Email"
+                placeholder="Enter your email"
                 value={email}
                 onChangeText={setEmail}
+                placeholderTextColor={colors.dimText}
                 style={[globalStyles.input, { marginBottom: 12 }]}
                 autoCapitalize="none"
               />
+              <Text style={[globalStyles.text, { marginBottom: 4 }]}>Password</Text>
               <TextInput
-                placeholder="Password"
+                placeholder="Create a password"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
+                placeholderTextColor={colors.dimText}
                 style={[globalStyles.input, { marginBottom: 12 }]}
               />
+              <Text style={[globalStyles.text, { marginBottom: 4 }]}>Confirm Password</Text>
               <TextInput
-                placeholder="Confirm Password"
+                placeholder="Confirm your password"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
+                placeholderTextColor={colors.dimText}
                 style={[globalStyles.input, { marginBottom: 12 }]}
               />
 
