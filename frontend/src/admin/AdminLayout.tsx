@@ -12,7 +12,6 @@ import AdminDesksPanel from "./AdminDesksPanel";
 import AdminStaffPanel from "./AdminStaffPanel";
 import AdminAnalyticsPanel from "./AdminAnalyticsPanel";
 import AdminOverviewPanel from "./AdminOverviewPanel";
-import UserAdStatusLine from "../components/UserAdStatusLine";
 
 const AdminLayout = () => {
   const [activePanel, setActivePanel] = useState("overview");
@@ -36,8 +35,6 @@ const AdminLayout = () => {
           p: 2,
           ml: { sm: 1 },
           maxWidth: 1200,
-          display: "flex",
-          flexDirection: "column",
         }}
       >
         {activePanel === "overview" && <AdminOverviewPanel />}
@@ -65,7 +62,6 @@ const AdminLayout = () => {
         {activePanel === "analytics" && (
           <AdminAnalyticsPanel selectedCompanyId={selectedCompanyId} />
         )}
-        <UserAdStatusLine />
       </Box>
     </Box>
   );

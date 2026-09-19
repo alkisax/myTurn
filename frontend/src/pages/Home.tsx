@@ -1,6 +1,6 @@
 // frontend/src/pages/Home.tsx
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -11,6 +11,8 @@ import {
 } from "@mui/material";
 
 import CompanyWizardCard from "../components/companySetup/CompanyWizardCard";
+import UserAdStatusLine from "../components/UserAdStatusLine";
+import { UserAuthContext } from "../authLogin/context/UserAuthContext";
 
 type HomeView =
   | "customer"
@@ -20,11 +22,12 @@ type HomeView =
 const Home = () => {
   const [view, setView] = useState<HomeView>(null);
   const navigate = useNavigate();
+  const { user, isLoading } = useContext(UserAuthContext);
 
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        minHeight: "calc(100vh - 64px)",
         display: "flex",
         flexDirection: "column",
         // justifyContent: "center",
@@ -182,6 +185,8 @@ const Home = () => {
       {view === "organization" && (
         <CompanyWizardCard />
       )}
+
+      {!isLoading && user && <UserAdStatusLine />}
     </Box>
   );
 };
