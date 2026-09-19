@@ -4,14 +4,17 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ThemeContext } from "@/context/ThemeContext";
+import { UserAuthContext } from "@/authLogin/context/UserAuthContext";
 import Navbar from "@/layout/Navbar";
 import { createGlobalStyles } from "@/styles/global";
+import UserAdStatusLine from "@/components/UserAdStatusLine";
 
 export default function Index() {
   const { colors } = useContext(ThemeContext);
   const globalStyles = createGlobalStyles(colors);
   const styles = createStyles(colors);
   const router = useRouter();
+  const { user, isLoading } = useContext(UserAuthContext);
 
   return (
     <SafeAreaView edges={["bottom"]} style={globalStyles.screen}>
@@ -62,6 +65,8 @@ export default function Index() {
           </Pressable>
         </View>
       </KeyboardAwareScrollView>
+
+      {!isLoading && user ? <UserAdStatusLine /> : null}
     </SafeAreaView>
   );
 }
