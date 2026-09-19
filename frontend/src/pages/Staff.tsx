@@ -4,6 +4,7 @@ import Step2SelectDesk from "../components/staffSetup/staffFlowSteps/Step2Select
 import Step3StartSession from "../components/staffSetup/staffFlowSteps/Step3StartSession";
 import Step4StaffWorkspace from "../components/staffSetup/staffFlowSteps/Step4StaffWorkspace";
 import { useStaffContext } from "../context/useStaffContext";
+import UserAdStatusLine from "../components/UserAdStatusLine";
 
 const Staff = () => {
   const staff = useStaffContext();
@@ -16,6 +17,7 @@ const Staff = () => {
           minHeight: "100vh",
           p: 4,
           display: "flex",
+          flexDirection: "column",
           justifyContent: "center",
         }}
       >
@@ -40,6 +42,7 @@ const Staff = () => {
           onToggleBreak={() => void staff.toggleBreak()}
           onEndShift={() => void staff.endShift()}
         />
+        <UserAdStatusLine />
       </Box>
     );
   }
@@ -83,6 +86,7 @@ const Staff = () => {
           onBack={staff.backToDeskSelection}
         />
       )}
+      <UserAdStatusLine />
     </Box>
   );
 };
