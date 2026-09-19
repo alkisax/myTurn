@@ -1,11 +1,13 @@
 using backend.Daos;
+using backend.Dtos.SuperAdminDtos;
 using backend.Services;
 
 namespace backend.Controllers;
 
 public class SuperAdminController(
   SuperAdminDao dao,
-  TenantDeletionService tenantDeletionService)
+  TenantDeletionService tenantDeletionService,
+  UserAdStatusService userAdStatusService)
 {
   public async Task<IResult> GetAdmins()
   {
@@ -59,6 +61,27 @@ public class SuperAdminController(
       {
         status = false,
         message = "Cannot delete companies shared with another ADMIN"
+      })
+    };
+  }
+
+  public async Task<IResult> UpdateUserAdStatus(
+    int userId,
+    UpdateUserAdStatusDto data)
+  {
+    var result = await userAdStatusService.OverrideAsync(userId, data);
+
+    return result.Result switch
+    {
+      UserAdStatusResult.Success => Results.Ok(new
+      {
+        status = true,
+        data = result.Status
+      }),
+      _ => Results.NotFound(new
+      {
+        status = false,
+        message = "User not found"
       })
     };
   }

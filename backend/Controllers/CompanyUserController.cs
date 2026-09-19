@@ -30,6 +30,37 @@ public class CompanyUserController
     _recoveryService = recoveryService;
   }
 
+  public async Task<IResult> GetMineAdStatus(
+    ClaimsPrincipal currentUser,
+    UserAdStatusService adStatusService)
+  {
+    return ToAdStatusResult(await adStatusService.GetMineAsync(currentUser));
+  }
+
+  public async Task<IResult> GrantMineAdFree(
+    ClaimsPrincipal currentUser,
+    UserAdStatusService adStatusService)
+  {
+    return ToAdStatusResult(await adStatusService.GrantMineAsync(currentUser));
+  }
+
+  private static IResult ToAdStatusResult(UserAdStatusOperation operation) =>
+    operation.Result switch
+    {
+      UserAdStatusResult.Success => Results.Ok(new
+      {
+        status = true,
+        data = operation.Status
+      }),
+      UserAdStatusResult.Unauthorized => Results.Unauthorized(),
+      UserAdStatusResult.Forbidden => Results.Forbid(),
+      _ => Results.NotFound(new
+      {
+        status = false,
+        message = "User not found"
+      })
+    };
+
   // Ελέγχει αν ο logged-in ADMIN έχει πρόσβαση στη συγκεκριμένη Company.
   // SUPERADMIN → έχει πάντα πρόσβαση.
   // ADMIN → πρέπει να υπάρχει CompanyUser relation.

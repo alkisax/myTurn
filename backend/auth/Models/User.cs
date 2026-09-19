@@ -9,6 +9,8 @@ public class User
   public string? Email { get; set; }
   public string Role { get; set; } = "USER";
   public required string HashedPassword { get; set; }
+  public bool HasPaid { get; set; } = false;
+  public DateTime? AdFreeUntil { get; set; }
   public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
   public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

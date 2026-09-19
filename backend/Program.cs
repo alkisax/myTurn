@@ -27,6 +27,7 @@ builder.Services.AddScoped<SuperAdminDao>();
 builder.Services.AddScoped<SuperAdminController>();
 builder.Services.AddScoped<UserDao>();
 builder.Services.AddScoped<TenantDeletionService>();
+builder.Services.AddScoped<UserAdStatusService>();
 builder.Services.AddScoped<UserController>();
 builder.Services.AddScoped<AuthController>();
 builder.Services.AddScoped<AuthService>();

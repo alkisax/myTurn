@@ -3,6 +3,7 @@
 using backend.Controllers;
 using backend.Dtos.CompanyUserDtos;
 using backend.auth.Dtos;
+using backend.Services;
 
 namespace backend.Endpoints;
 
@@ -33,6 +34,30 @@ public static class CompanyUserEndpoints
     ) =>
     {
       return await controller.GetMine(context.User);
+    })
+    .RequireAuthorization();
+
+    group.MapGet("/mine/ad-status", async (
+      CompanyUserController controller,
+      UserAdStatusService adStatusService,
+      HttpContext context
+    ) =>
+    {
+      return await controller.GetMineAdStatus(
+        context.User,
+        adStatusService);
+    })
+    .RequireAuthorization();
+
+    group.MapPost("/mine/ad-free", async (
+      CompanyUserController controller,
+      UserAdStatusService adStatusService,
+      HttpContext context
+    ) =>
+    {
+      return await controller.GrantMineAdFree(
+        context.User,
+        adStatusService);
     })
     .RequireAuthorization();
 

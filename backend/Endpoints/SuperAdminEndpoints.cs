@@ -1,4 +1,5 @@
 using backend.Controllers;
+using backend.Dtos.SuperAdminDtos;
 
 namespace backend.Endpoints;
 
@@ -19,5 +20,10 @@ public static class SuperAdminEndpoints
       int adminId,
       SuperAdminController controller) =>
       controller.DeleteAdmin(adminId));
+    group.MapPut("/users/{userId:int}/ad-status", (
+      int userId,
+      UpdateUserAdStatusDto data,
+      SuperAdminController controller) =>
+      controller.UpdateUserAdStatus(userId, data));
   }
 }
