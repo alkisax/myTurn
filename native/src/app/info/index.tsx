@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemeContext } from "@/context/ThemeContext";
 import Navbar from "@/layout/Navbar";
@@ -10,7 +11,7 @@ const Info = () => {
   const globalStyles = createGlobalStyles(colors);
 
   return (
-    <View style={globalStyles.screen}>
+    <SafeAreaView edges={["bottom"]} style={globalStyles.screen}>
       <Navbar minimal />
 
       <ScrollView
@@ -116,7 +117,7 @@ const Info = () => {
           </Text>
         </InfoSection>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

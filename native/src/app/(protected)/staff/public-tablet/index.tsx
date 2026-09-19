@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect } from "react";
 import { BackHandler, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { UserAuthContext } from "@/authLogin/context/UserAuthContext";
 import { handleLogout } from "@/authLogin/authFunctions";
@@ -39,7 +40,8 @@ const PublicTablet = () => {
 
   if (!session) {
     return (
-      <View style={[globalStyles.screen, styles.tabletContent]}>
+      <SafeAreaView edges={["top", "bottom"]} style={globalStyles.screen}>
+        <View style={styles.tabletContent}>
         <Text style={globalStyles.title}>Public tablet unavailable</Text>
         <Text style={globalStyles.text}>
           This public tablet requires an active staff session.
@@ -52,15 +54,14 @@ const PublicTablet = () => {
             Back to Staff Workspace
           </Text>
         </Pressable>
-      </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView
-      style={globalStyles.screen}
-      contentContainerStyle={styles.tabletContent}
-    >
+    <SafeAreaView edges={["top", "bottom"]} style={globalStyles.screen}>
+      <ScrollView contentContainerStyle={styles.tabletContent}>
       <Text style={globalStyles.title}>MyTurn</Text>
       <Text style={globalStyles.text}>NOW SERVING</Text>
       <View style={[globalStyles.card, styles.tabletCard]}>
@@ -87,7 +88,8 @@ const PublicTablet = () => {
       >
         <Text style={globalStyles.primaryButtonText}>Issue a Ticket</Text>
       </Pressable>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

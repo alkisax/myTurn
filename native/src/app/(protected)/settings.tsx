@@ -3,6 +3,7 @@
 // settings.tsx
 
 import { View, Text, ScrollView } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useContext } from 'react'
 import { UserAuthContext } from '@/authLogin/context/UserAuthContext'
 import { ThemeContext } from '@/context/ThemeContext'
@@ -17,7 +18,7 @@ const Settings = () => {
   if (!user) return null
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={globalStyles.scrollContainer}>
 
         <Text style={[globalStyles.title, { marginBottom: 20 }]}>
@@ -35,7 +36,7 @@ const Settings = () => {
         <DeleteAccountButton />
 
       </ScrollView>
-    </View>
+    </SafeAreaView>
   )
 }
 

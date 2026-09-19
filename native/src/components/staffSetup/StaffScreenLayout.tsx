@@ -1,5 +1,6 @@
 import { useContext, type ReactNode } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemeContext } from "@/context/ThemeContext";
 import Navbar from "@/layout/Navbar";
@@ -9,10 +10,10 @@ const StaffScreenLayout = ({ children }: { children: ReactNode }) => {
   const { colors } = useContext(ThemeContext);
   const globalStyles = createGlobalStyles(colors);
   return (
-    <View style={globalStyles.screen}>
+    <SafeAreaView edges={["bottom"]} style={globalStyles.screen}>
       <Navbar />
       {children}
-    </View>
+    </SafeAreaView>
   );
 };
 

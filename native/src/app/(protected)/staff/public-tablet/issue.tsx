@@ -2,6 +2,7 @@ import { useContext } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemeContext } from "@/context/ThemeContext";
 import { publicTabletTicketStorageKey } from "@/constants/constants";
@@ -37,10 +38,8 @@ const PublicTabletIssueTicket = () => {
   };
 
   return (
-    <ScrollView
-      style={globalStyles.screen}
-      contentContainerStyle={styles.tabletContent}
-    >
+    <SafeAreaView edges={["top", "bottom"]} style={globalStyles.screen}>
+      <ScrollView contentContainerStyle={styles.tabletContent}>
       <Text style={globalStyles.title}>Issue a Ticket</Text>
       <TextInput
         value={ticketOptions.email}
@@ -127,7 +126,8 @@ const PublicTabletIssueTicket = () => {
       >
         <Text style={globalStyles.secondaryButtonText}>Back to Kiosk Home</Text>
       </Pressable>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

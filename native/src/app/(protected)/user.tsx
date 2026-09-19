@@ -17,6 +17,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useState, useContext, useCallback } from "react";
 // καλούμε το api που φτιάξαμε στο authlogin/services για να κάνει intercept το 401 γιατι τώρα κρατάμε Logged in τον χρηστη οταν offline
 import { api } from "@/authLogin/services/api";
@@ -122,7 +123,7 @@ export default function UserPage() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={[
@@ -138,7 +139,7 @@ export default function UserPage() {
           </Text>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import QRCode from "react-native-qrcode-svg";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   publicTabletTicketStorageKey,
@@ -66,10 +67,8 @@ const PublicTabletTicketResult = () => {
   const trackingUrl = `${publicWebUrl}/track/${result.ticket.trackingToken}`;
 
   return (
-    <ScrollView
-      style={globalStyles.screen}
-      contentContainerStyle={styles.tabletContent}
-    >
+    <SafeAreaView edges={["top", "bottom"]} style={globalStyles.screen}>
+      <ScrollView contentContainerStyle={styles.tabletContent}>
       <Text style={globalStyles.title}>Your Ticket</Text>
       <View style={[globalStyles.card, styles.tabletCard]}>
         <Text style={styles.ticketNumber}>#{result.ticket.number}</Text>
@@ -103,7 +102,8 @@ const PublicTabletTicketResult = () => {
       >
         <Text style={globalStyles.primaryButtonText}>Back to Kiosk Home</Text>
       </Pressable>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

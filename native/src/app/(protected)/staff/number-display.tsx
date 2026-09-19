@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useStaffContext } from "@/context/useStaffContext";
 import useStaffNumberDisplay from "@/hooks/staffPageHooks/useStaffNumberDisplay";
@@ -25,22 +26,22 @@ const StaffNumberDisplay = () => {
 
   if (!session) {
     return (
-      <View style={[styles.displayScreen, styles.displayContent]}>
+      <SafeAreaView edges={["top", "bottom"]} style={styles.displayScreen}>
+        <View style={styles.displayContent}>
         <Text style={styles.displayTitle}>
           This display requires an active staff session.
         </Text>
         <Pressable onPress={handleExit}>
           <Text style={styles.displayText}>Back to Staff Workspace</Text>
         </Pressable>
-      </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.displayScreen}
-      contentContainerStyle={styles.displayContent}
-    >
+    <SafeAreaView edges={["top", "bottom"]} style={styles.displayScreen}>
+      <ScrollView contentContainerStyle={styles.displayContent}>
       <View style={styles.displayHeader}>
         <Text style={styles.displayTitle}>MyTurn</Text>
         <Pressable onPress={handleExit}>
@@ -81,7 +82,8 @@ const StaffNumberDisplay = () => {
           </View>
         );
       })}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
