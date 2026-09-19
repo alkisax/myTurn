@@ -72,7 +72,7 @@ export default function Index() {
       {!isLoading && user && !adStatus.loading && !adStatus.hidden ? (
         <>
           {!adStatus.hasPaid ? <AdsBanner /> : null}
-          <UserAdStatusLine {...adStatus} />
+          <UserAdStatusLine />
         </>
       ) : null}
     </SafeAreaView>

@@ -1,14 +1,8 @@
 import { useContext } from "react";
 import { Text } from "react-native";
 
+import useUserAdStatus from "@/hooks/useUserAdStatus";
 import { ThemeContext } from "@/context/ThemeContext";
-
-interface UserAdStatusLineProps {
-  hasPaid: boolean;
-  adFreeUntil: string | null;
-  loading: boolean;
-  hidden: boolean;
-}
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "2-digit",
@@ -19,13 +13,9 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   hour12: false,
 });
 
-const UserAdStatusLine = ({
-  hasPaid,
-  adFreeUntil,
-  loading,
-  hidden,
-}: UserAdStatusLineProps) => {
+const UserAdStatusLine = () => {
   const { colors } = useContext(ThemeContext);
+  const { hasPaid, adFreeUntil, loading, hidden } = useUserAdStatus();
 
   if (loading || hidden) {
     return null;
