@@ -54,7 +54,9 @@ const SuperAdminLayout = () => {
               <SuperAdminAdminsPanel
                 admins={superAdmin.admins}
                 deletingAdminId={superAdmin.deletingAdminId}
+                updatingAdStatusId={superAdmin.updatingAdStatusId}
                 onDelete={superAdmin.deleteAdmin}
+                onUpdateAdStatus={superAdmin.updateAdminAdStatus}
               />
             )}
             {activePanel === "companies" && (

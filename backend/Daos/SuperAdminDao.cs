@@ -47,6 +47,8 @@ public class SuperAdminDao(MyTurnContext db)
       admin.Role,
       admin.CreatedAt,
       admin.UpdatedAt,
+      admin.HasPaid,
+      admin.AdFreeUntil,
       memberships
         .Where(item => item.UserId == admin.Id)
         .Select(item => new SuperAdminCompanyLinkDto(

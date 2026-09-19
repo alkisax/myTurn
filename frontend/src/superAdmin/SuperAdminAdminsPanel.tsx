@@ -7,7 +7,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  FormControlLabel,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -15,6 +17,8 @@ import {
   TableHead,
   TableRow,
   Typography,
+  Switch,
+  TextField,
 } from "@mui/material";
 
 import type { SuperAdminAdmin } from "../hooks/useSuperAdmin";
@@ -22,18 +26,66 @@ import type { SuperAdminAdmin } from "../hooks/useSuperAdmin";
 interface Props {
   admins: SuperAdminAdmin[];
   deletingAdminId: number | null;
+  updatingAdStatusId: number | null;
   onDelete: (adminId: number) => Promise<void>;
+  onUpdateAdStatus: (
+    adminId: number,
+    hasPaid: boolean,
+    adFreeUntil: string | null,
+  ) => Promise<void>;
 }
+
+const toDateTimeLocal = (value: string | null) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+};
 
 const SuperAdminAdminsPanel = ({
   admins,
   deletingAdminId,
+  updatingAdStatusId,
   onDelete,
+  onUpdateAdStatus,
 }: Props) => {
   const [adminToDelete, setAdminToDelete] = useState<SuperAdminAdmin | null>(
     null,
   );
   const [deleteError, setDeleteError] = useState("");
+  const [adminForMonetization, setAdminForMonetization] =
+    useState<SuperAdminAdmin | null>(null);
+  const [hasPaid, setHasPaid] = useState(false);
+  const [adFreeUntil, setAdFreeUntil] = useState("");
+  const [monetizationError, setMonetizationError] = useState("");
+
+  const openMonetization = (admin: SuperAdminAdmin) => {
+    setAdminForMonetization(admin);
+    setHasPaid(admin.hasPaid);
+    setAdFreeUntil(toDateTimeLocal(admin.adFreeUntil));
+    setMonetizationError("");
+  };
+
+  const handleMonetizationSave = async () => {
+    if (!adminForMonetization) return;
+
+    setMonetizationError("");
+    try {
+      await onUpdateAdStatus(
+        adminForMonetization.id,
+        hasPaid,
+        adFreeUntil ? new Date(adFreeUntil).toISOString() : null,
+      );
+      setAdminForMonetization(null);
+    } catch (error: unknown) {
+      setMonetizationError(
+        error instanceof Error
+          ? error.message
+          : "The monetization status could not be updated.",
+      );
+    }
+  };
 
   const handleDelete = async () => {
     if (!adminToDelete) {
@@ -102,6 +154,16 @@ const SuperAdminAdminsPanel = ({
                   </TableCell>
                   <TableCell align="right">
                     <Button
+                      variant="outlined"
+                      onClick={() => openMonetization(admin)}
+                      disabled={
+                        deletingAdminId !== null || updatingAdStatusId !== null
+                      }
+                      sx={{ mr: 1 }}
+                    >
+                      Monetization
+                    </Button>
+                    <Button
                       color="error"
                       variant="outlined"
                       onClick={() => setAdminToDelete(admin)}
@@ -139,6 +201,60 @@ const SuperAdminAdminsPanel = ({
             disabled={deletingAdminId !== null}
           >
             {deletingAdminId !== null ? "Deleting..." : "Delete permanently"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={adminForMonetization !== null}
+        onClose={() => setAdminForMonetization(null)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Monetization</DialogTitle>
+        <DialogContent>
+          {adminForMonetization && (
+            <Stack spacing={2} sx={{ pt: 1 }}>
+              <Typography>
+                {adminForMonetization.name || adminForMonetization.username} (
+                {adminForMonetization.username})
+              </Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={hasPaid}
+                    onChange={(event) => setHasPaid(event.target.checked)}
+                  />
+                }
+                label="Has Paid"
+              />
+              <TextField
+                label="Ad Free Until"
+                type="datetime-local"
+                value={adFreeUntil}
+                onChange={(event) => setAdFreeUntil(event.target.value)}
+                slotProps={{ inputLabel: { shrink: true } }}
+                helperText="Leave empty to clear the ad-free period."
+              />
+              {monetizationError && (
+                <Alert severity="error">{monetizationError}</Alert>
+              )}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setAdminForMonetization(null)}
+            disabled={updatingAdStatusId !== null}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => void handleMonetizationSave()}
+            disabled={updatingAdStatusId !== null}
+          >
+            {updatingAdStatusId !== null ? "Saving..." : "Save"}
           </Button>
         </DialogActions>
       </Dialog>

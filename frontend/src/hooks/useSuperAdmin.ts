@@ -19,6 +19,8 @@ export interface SuperAdminAdmin {
   role: "ADMIN";
   createdAt: string;
   updatedAt: string;
+  hasPaid: boolean;
+  adFreeUntil: string | null;
   companies: SuperAdminCompanyLink[];
 }
 
@@ -101,6 +103,9 @@ const useSuperAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deletingAdminId, setDeletingAdminId] = useState<number | null>(null);
+  const [updatingAdStatusId, setUpdatingAdStatusId] = useState<number | null>(
+    null,
+  );
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -222,6 +227,34 @@ const useSuperAdmin = () => {
     }
   };
 
+  const updateAdminAdStatus = async (
+    adminId: number,
+    hasPaid: boolean,
+    adFreeUntil: string | null,
+  ) => {
+    setUpdatingAdStatusId(adminId);
+    setError("");
+
+    try {
+      await axios.put(
+        `${backendUrl}/superadmin/users/${adminId}/ad-status`,
+        { hasPaid, adFreeUntil },
+        authConfig(),
+      );
+      await loadAll();
+    } catch (requestError: unknown) {
+      throw new Error(
+        getErrorMessage(
+          requestError,
+          "The monetization status could not be updated.",
+        ),
+        { cause: requestError },
+      );
+    } finally {
+      setUpdatingAdStatusId(null);
+    }
+  };
+
   return {
     admins,
     companies,
@@ -229,8 +262,10 @@ const useSuperAdmin = () => {
     loading,
     error,
     deletingAdminId,
+    updatingAdStatusId,
     loadAll,
     deleteAdmin,
+    updateAdminAdStatus,
   };
 };
 

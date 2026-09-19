@@ -23,6 +23,8 @@ public record SuperAdminAdminDto(
   string Role,
   DateTime CreatedAt,
   DateTime UpdatedAt,
+  bool HasPaid,
+  DateTime? AdFreeUntil,
   IReadOnlyList<SuperAdminCompanyLinkDto> Companies
 );
 
