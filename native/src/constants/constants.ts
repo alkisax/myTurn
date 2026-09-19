@@ -13,5 +13,10 @@ export const publicTabletTicketStorageKey =
 
 export const appName = "My Turn";
 
-export const bannerAdUnitId = "ca-app-pub-change later";
-export const interstitialAdUnitId = "ca-app-pub-change later";
+//test
+export const bannerAdUnitId = 'ca-app-pub-3940256099942544/9214589741';
+export const interstitialAdUnitId = 'ca-app-pub-3940256099942544/1033173712';
+
+// official
+// export const bannerAdUnitId = "ca-app-pub-4041382605494077/4503369631";
+// export const interstitialAdUnitId = "ca-app-pub-4041382605494077/7886237568";

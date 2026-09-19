@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Modal,
@@ -25,6 +25,8 @@ import useAdminPanel, {
   type AdminPanelApi,
 } from "@/hooks/adminPageHooks/useAdminPanel";
 import { COLORS, createGlobalStyles } from "@/styles/global";
+import MockInterstitialAd from "@/ads/MockInterstitialAd";
+import useUserAdStatus from "@/hooks/useUserAdStatus";
 import type {
   AdminCompany,
   AdminDesk,
@@ -119,6 +121,9 @@ export default function AdminPanel() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [infoCompany, setInfoCompany] = useState<AdminCompany | null>(null);
+  const adStatus = useUserAdStatus();
+  const [showInterstitial, setShowInterstitial] = useState(false);
+  const interstitialShownRef = useRef(false);
 
   const isAdmin = Boolean(
     user?.roles.includes("ADMIN") || user?.roles.includes("SUPERADMIN"),
@@ -129,6 +134,22 @@ export default function AdminPanel() {
       void admin.loadAnalytics();
     }
   }, [activeTab, admin.loadAnalytics, admin.selectedCompanyId]);
+
+  useEffect(() => {
+    if (
+      !adStatus.loading &&
+      !adStatus.hidden &&
+      !interstitialShownRef.current
+    ) {
+      interstitialShownRef.current = true;
+      setShowInterstitial(!adStatus.hasPaid);
+    }
+  }, [adStatus.hasPaid, adStatus.hidden, adStatus.loading]);
+
+  const completeInterstitial = async () => {
+    await adStatus.grantAdFree();
+    setShowInterstitial(false);
+  };
 
   if (!isAdmin) {
     return (
@@ -762,6 +783,10 @@ export default function AdminPanel() {
   return (
     <SafeAreaView edges={["bottom"]} style={globalStyles.screen}>
       <Navbar />
+      <MockInterstitialAd
+        visible={showInterstitial}
+        onCompleted={() => void completeInterstitial()}
+      />
       <KeyboardAwareScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"

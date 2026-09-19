@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 import StaffScreenLayout from "@/components/staffSetup/StaffScreenLayout";
@@ -10,12 +10,33 @@ import { ThemeContext } from "@/context/ThemeContext";
 import { useStaffContext } from "@/context/useStaffContext";
 import { createGlobalStyles } from "@/styles/global";
 import { createStaffStyles } from "@/styles/staff.styles";
+import MockInterstitialAd from "@/ads/MockInterstitialAd";
+import useUserAdStatus from "@/hooks/useUserAdStatus";
 
 const Staff = () => {
   const { colors } = useContext(ThemeContext);
   const globalStyles = createGlobalStyles(colors);
   const styles = createStaffStyles(colors);
   const staff = useStaffContext();
+  const adStatus = useUserAdStatus();
+  const [showInterstitial, setShowInterstitial] = useState(false);
+  const interstitialShownRef = useRef(false);
+
+  useEffect(() => {
+    if (
+      !adStatus.loading &&
+      !adStatus.hidden &&
+      !interstitialShownRef.current
+    ) {
+      interstitialShownRef.current = true;
+      setShowInterstitial(!adStatus.hasPaid);
+    }
+  }, [adStatus.hasPaid, adStatus.hidden, adStatus.loading]);
+
+  const completeInterstitial = async () => {
+    await adStatus.grantAdFree();
+    setShowInterstitial(false);
+  };
 
   const renderCurrentStep = () => {
     if (staff.session && staff.selectedDesk) {
@@ -78,6 +99,10 @@ const Staff = () => {
 
   return (
     <StaffScreenLayout>
+      <MockInterstitialAd
+        visible={showInterstitial}
+        onCompleted={() => void completeInterstitial()}
+      />
       <ScrollView
         style={globalStyles.screen}
         contentContainerStyle={styles.content}

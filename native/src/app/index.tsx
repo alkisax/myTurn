@@ -8,6 +8,8 @@ import { UserAuthContext } from "@/authLogin/context/UserAuthContext";
 import Navbar from "@/layout/Navbar";
 import { createGlobalStyles } from "@/styles/global";
 import UserAdStatusLine from "@/components/UserAdStatusLine";
+import useUserAdStatus from "@/hooks/useUserAdStatus";
+import MockAdBanner from "@/ads/MockAdBanner";
 
 export default function Index() {
   const { colors } = useContext(ThemeContext);
@@ -15,6 +17,7 @@ export default function Index() {
   const styles = createStyles(colors);
   const router = useRouter();
   const { user, isLoading } = useContext(UserAuthContext);
+  const adStatus = useUserAdStatus();
 
   return (
     <SafeAreaView edges={["bottom"]} style={globalStyles.screen}>
@@ -66,7 +69,12 @@ export default function Index() {
         </View>
       </KeyboardAwareScrollView>
 
-      {!isLoading && user ? <UserAdStatusLine /> : null}
+      {!isLoading && user && !adStatus.loading && !adStatus.hidden ? (
+        <>
+          {!adStatus.hasPaid ? <MockAdBanner /> : null}
+          <UserAdStatusLine {...adStatus} />
+        </>
+      ) : null}
     </SafeAreaView>
   );
 }

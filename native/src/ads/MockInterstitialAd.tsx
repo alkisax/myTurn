@@ -13,9 +13,12 @@ const MockInterstitialAd = ({
   visible,
   onCompleted,
 }: MockInterstitialAdProps) => {
-  const { colors, language } = useContext(ThemeContext);
+  const { colors } = useContext(ThemeContext);
+  const language = "en";
   const globalStyles = createGlobalStyles(colors);
   const [countdown, setCountdown] = useState(3);
+  const [completed, setCompleted] = useState(false);
+  const countdownRef = useRef(3);
   const completionRef = useRef(onCompleted);
 
   completionRef.current = onCompleted;
@@ -23,25 +26,33 @@ const MockInterstitialAd = ({
   useEffect(() => {
     if (!visible) {
       setCountdown(3);
+      countdownRef.current = 3;
+      setCompleted(false);
       return;
     }
 
     setCountdown(3);
+    countdownRef.current = 3;
+    setCompleted(false);
 
     const timer = setInterval(() => {
-      setCountdown((currentCountdown) => {
-        if (currentCountdown <= 1) {
-          clearInterval(timer);
-          completionRef.current();
-          return 1;
-        }
+      countdownRef.current = Math.max(countdownRef.current - 1, 1);
+      setCountdown(countdownRef.current);
 
-        return currentCountdown - 1;
-      });
+      if (countdownRef.current === 1) {
+        clearInterval(timer);
+        setCompleted(true);
+      }
     }, 1000);
 
     return () => clearInterval(timer);
   }, [visible]);
+
+  useEffect(() => {
+    if (visible && completed) {
+      completionRef.current();
+    }
+  }, [completed, visible]);
 
   const text = language === 'en'
     ? {

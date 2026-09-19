@@ -5,7 +5,8 @@ import { ThemeContext } from '@/context/ThemeContext';
 import { createGlobalStyles, SPACING } from '@/styles/global';
 
 const MockAdBanner = () => {
-  const { colors, language } = useContext(ThemeContext);
+  const { colors } = useContext(ThemeContext);
+  const language = "en";
   const globalStyles = createGlobalStyles(colors);
 
   return (
