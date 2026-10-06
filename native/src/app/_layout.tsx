@@ -1,6 +1,7 @@
 // native/src/app/_layout.tsx
 
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AdsConsentProvider } from "@/context/AdsConsentContext";
 import { UserAdStatusProvider } from "@/context/UserAdStatusContext";
 import { UserProvider } from "@/authLogin/context/UserAuthContext";
 import { Stack } from "expo-router";
@@ -12,11 +13,13 @@ export default function RootLayout() {
       <ThemeProvider>
         <UserProvider>
           <UserAdStatusProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-              }}
-            />
+            <AdsConsentProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+              />
+            </AdsConsentProvider>
           </UserAdStatusProvider>
         </UserProvider>
       </ThemeProvider>

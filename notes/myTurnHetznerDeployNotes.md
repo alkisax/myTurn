@@ -95,6 +95,7 @@ pm2 start "dotnet backend.dll" --name myturn-backend
 pm2 save
 
 nano /etc/nginx/sites-available/myturn.portfolio-projects.space
+cat /etc/nginx/sites-available/myturn.portfolio-projects.space
 # Η εντολή φτιάχνει μια «συντόμευση» του config μέσα στο sites-enabled, ώστε το nginx να αρχίσει να το χρησιμοποιεί.
 ln -s /etc/nginx/sites-available/myturn.portfolio-projects.space \
       /etc/nginx/sites-enabled/

@@ -5,15 +5,21 @@ import {
 } from "react-native-google-mobile-ads";
 
 import { interstitialAdUnitId } from "@/constants/constants";
+import { useAdsConsent } from "@/context/AdsConsentContext";
 
 type CompletionResolver = (completed: boolean) => void;
 
 export const useInterstitialAd = () => {
+  const { isConsentReady, canRequestAds } = useAdsConsent();
   const adRef = useRef<InterstitialAd | null>(null);
   const completionResolverRef = useRef<CompletionResolver | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
+    if (!isConsentReady || !canRequestAds) {
+      return undefined;
+    }
+
     const ad = InterstitialAd.createForAdRequest(interstitialAdUnitId, {
       requestNonPersonalizedAdsOnly: true,
     });
@@ -48,7 +54,7 @@ export const useInterstitialAd = () => {
       completionResolverRef.current = null;
       adRef.current = null;
     };
-  }, []);
+  }, [canRequestAds, isConsentReady]);
 
   const showInterstitial = () => {
     const ad = adRef.current;

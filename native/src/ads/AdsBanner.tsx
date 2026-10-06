@@ -3,11 +3,13 @@ import { View } from "react-native";
 import { BannerAd, BannerAdSize } from "react-native-google-mobile-ads";
 
 import { bannerAdUnitId } from "@/constants/constants";
+import { useAdsConsent } from "@/context/AdsConsentContext";
 
 const AdsBanner = () => {
+  const { isConsentReady, canRequestAds } = useAdsConsent();
   const [failed, setFailed] = useState(false);
 
-  if (failed) {
+  if (!isConsentReady || !canRequestAds || failed) {
     return null;
   }
 

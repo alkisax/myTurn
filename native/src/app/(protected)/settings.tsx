@@ -2,10 +2,12 @@
 
 // settings.tsx
 
-import { View, Text, ScrollView } from 'react-native'
+import { View, Text, ScrollView, Pressable } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useContext } from 'react'
+import { AdsConsentPrivacyOptionsRequirementStatus } from 'react-native-google-mobile-ads'
 import { UserAuthContext } from '@/authLogin/context/UserAuthContext'
+import { useAdsConsent } from '@/context/AdsConsentContext'
 import { ThemeContext } from '@/context/ThemeContext'
 import { createGlobalStyles } from '@/styles/global'
 import DeleteAccountButton from '@/components/DeleteAccountButton.native'
@@ -14,6 +16,10 @@ const Settings = () => {
   const { user } = useContext(UserAuthContext)
   const { colors } = useContext(ThemeContext)
   const globalStyles = createGlobalStyles(colors)
+  const {
+    privacyOptionsRequirementStatus,
+    showPrivacyOptions,
+  } = useAdsConsent()
 
   if (!user) return null
 
@@ -34,6 +40,18 @@ const Settings = () => {
         </View>
 
         <DeleteAccountButton />
+
+        {privacyOptionsRequirementStatus ===
+          AdsConsentPrivacyOptionsRequirementStatus.REQUIRED && (
+            <Pressable
+              onPress={() => void showPrivacyOptions()}
+              style={globalStyles.primaryButton}
+            >
+              <Text style={globalStyles.primaryButtonText}>
+                Privacy choices
+              </Text>
+            </Pressable>
+          )}
 
       </ScrollView>
     </SafeAreaView>
